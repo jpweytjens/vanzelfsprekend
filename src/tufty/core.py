@@ -94,12 +94,12 @@ def xlabel(ax, text):
     return ax.xaxis.label
 
 
-def ylabel(ax, text):
-    """Set a horizontal y-label that sits above the left spine's top end.
+def ylabel(ax, text, flush=False):
+    """Set a horizontal y-label at the top of the left spine.
 
     Call after `tuftify`. Horizontal clearance from the tick labels is
-    matplotlib's own per-draw computation; tufty only aligns the label's
-    bottom edge with the spine top.
+    matplotlib's own per-draw computation; tufty only aligns the label
+    vertically.
 
     Parameters
     ----------
@@ -107,6 +107,11 @@ def ylabel(ax, text):
         A tuftified axes.
     text : str
         The label text.
+    flush : bool
+        If True, anchor the label at the topmost tick with
+        `va='center_baseline'`, the alignment y tick labels use, so the
+        label sits flush with the top tick label. If False, place it
+        above the spine's top end.
 
     Returns
     -------
@@ -114,8 +119,11 @@ def ylabel(ax, text):
         The label artist.
     """
     ax.set_ylabel(text, rotation=0)
-    ax.yaxis.label.set_verticalalignment("bottom")
+    ax.yaxis.label.set_verticalalignment("center_baseline" if flush else "bottom")
     ax.yaxis.label.set_horizontalalignment("right")
+    state = getattr(ax, _STATE_ATTR, None)
+    if state is not None:
+        state["ylabel_flush"] = flush
     _apply(ax)
     return ax.yaxis.label
 
@@ -163,8 +171,13 @@ def _place_labels(ax, bounds):
             changed = True
     span = bounds["left"]
     if span is not None and ax.get_ylabel():
+        anchor = span[1]
+        if getattr(ax, _STATE_ATTR).get("ylabel_flush"):
+            locs = ax.yaxis.get_majorticklocs()
+            if len(locs):
+                anchor = max(locs)
         vmin, vmax = ax.get_ylim()
-        frac = (span[1] - vmin) / (vmax - vmin)
+        frac = (anchor - vmin) / (vmax - vmin)
         pos = ax.yaxis.label.get_position()
         if pos[1] != frac:
             ax.yaxis.label.set_position((pos[0], frac))

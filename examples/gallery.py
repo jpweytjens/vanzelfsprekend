@@ -30,7 +30,7 @@ def histogram():
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25, color="0.4")
     tufty.tuftify(ax)
     tufty.xlabel(ax, "value")
-    tufty.ylabel(ax, "count")
+    tufty.ylabel(ax, "count", flush=True)
     fig.savefig(OUTPUT / "histogram.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -39,6 +39,7 @@ def main():
     OUTPUT.mkdir(exist_ok=True)
     scatter("nice")
     scatter("data")
+    scatter("loose")
     histogram()
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")
 
