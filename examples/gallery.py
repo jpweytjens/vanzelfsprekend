@@ -35,12 +35,39 @@ def histogram():
     plt.close(fig)
 
 
+def custom_ticks():
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
+    tufty.tuftify(ax, frame="nice")
+    ax.set_xticks([1, 3, 5, 7, 9])
+    tufty.xlabel(ax, "time (s)")
+    tufty.ylabel(ax, "voltage", flush=True)
+    fig.savefig(OUTPUT / "custom_ticks.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def minimal():
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
+    tufty.tuftify(ax, frame="data")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    tufty.xlabel(ax, "time (s)")
+    tufty.ylabel(ax, "voltage", flush=True)
+    fig.savefig(OUTPUT / "minimal.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     OUTPUT.mkdir(exist_ok=True)
     scatter("nice")
     scatter("data")
     scatter("loose")
     histogram()
+    custom_ticks()
+    minimal()
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")
 
 
