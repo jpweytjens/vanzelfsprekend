@@ -1,5 +1,6 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
+import matplotlib as mpl
 import numpy as np
 from matplotlib.ticker import AutoLocator, Locator
 from mizani.breaks import breaks_extended
@@ -68,24 +69,54 @@ class TalbotLocator(Locator):
         return ticks
 
     def view_limits(self, vmin, vmax):
-        """Return nice limits that bound `vmin`..`vmax`.
+        """Return view limits for `vmin`..`vmax`.
 
-        matplotlib calls this during autoscaling when
-        `axes.autolimit_mode` is set to 'round_numbers', so view limits
-        agree with a loose range frame.
+        matplotlib calls this on every autoscale, not only when
+        `axes.autolimit_mode` is `'round_numbers'`, so a loose locator
+        and a plain one need different behavior to avoid inflating the
+        view every draw.
+
+        If this is a loose locator attached to an axis, the axis's data
+        interval (not `vmin`/`vmax`) is used to compute the loose tick
+        span, so the view comes out edge-to-edge with the loose range
+        frame regardless of margin padding. Otherwise `vmin`, `vmax`
+        are returned unchanged unless
+        `matplotlib.rcParams["axes.autolimit_mode"]` is
+        `'round_numbers'`, in which case they are rounded outward to
+        nice numbers covering the input, matching `MaxNLocator`.
+
+        Either covering guarantee (loose span or round-numbers
+        rounding) holds only up to a `1e-9 * step` float tolerance,
+        since mizani's breaks carry float dust (e.g. the first break of
+        `(2.3, 2.31)` comes out as `2.3 + 4.4e-16`).
 
         Parameters
         ----------
         vmin, vmax : float
-            The data limits to bound.
+            The proposed view limits.
 
         Returns
         -------
         tuple of float
-            Nice lower and upper limits covering the input.
+            Lower and upper view limits.
         """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
+
+        if self._loose and self.axis is not None:
+            dmin, dmax = self.axis.get_data_interval()
+            if np.isfinite([dmin, dmax]).all() and dmin != dmax:
+                try:
+                    ticks = self._cover((dmin, dmax))
+                    if ticks.size >= 2:
+                        ticks = _extend_to_cover(ticks, dmin, dmax)
+                        return float(ticks[0]), float(ticks[-1])
+                except (OverflowError, ValueError, FloatingPointError):
+                    pass
+                return super().view_limits(vmin, vmax)
+
+        if mpl.rcParams["axes.autolimit_mode"] != "round_numbers":
+            return super().view_limits(vmin, vmax)
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:

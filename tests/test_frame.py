@@ -132,3 +132,27 @@ def test_loose_frame_bounds_contain_data(scatter_ax):
         assert hi >= dmax
         assert lo == ticks.min()
         assert hi == ticks.max()
+
+
+def test_nice_frame_leaves_view_limits_alone():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    x, y = rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50)
+    ax.scatter(x, y)
+    tuftify(ax)
+    fig.canvas.draw()
+    pad = 0.05 * (x.max() - x.min())
+    assert ax.get_xlim() == pytest.approx((x.min() - pad, x.max() + pad))
+    plt.close(fig)
+
+
+def test_loose_frame_view_equals_tick_span():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    tuftify(ax, frame="loose")
+    fig.canvas.draw()
+    for axis, get_lim in ((ax.xaxis, ax.get_xlim), (ax.yaxis, ax.get_ylim)):
+        ticks = axis.get_majorticklocs()
+        assert get_lim() == pytest.approx((ticks.min(), ticks.max()))
+    plt.close(fig)

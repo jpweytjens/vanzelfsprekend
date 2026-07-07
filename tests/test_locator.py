@@ -60,7 +60,8 @@ def test_loose_without_extension_when_already_covered():
 
 
 def test_view_limits_bound_the_range():
-    lo, hi = TalbotLocator().view_limits(0.3, 9.7)
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator().view_limits(0.3, 9.7)
     assert lo <= 0.3
     assert hi >= 9.7
 
@@ -79,12 +80,28 @@ def test_loose_bounds_large_magnitude_range():
 
 def test_view_limits_bound_large_magnitude_range():
     vmin, vmax = -3049020730.258315, 2605259400.20343
-    lo, hi = TalbotLocator().view_limits(vmin, vmax)
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator().view_limits(vmin, vmax)
     assert lo <= vmin
     assert hi >= vmax
 
 
 def test_view_limits_swapped_input():
-    lo, hi = TalbotLocator().view_limits(9.7, 0.3)
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator().view_limits(9.7, 0.3)
     assert lo <= 0.3
     assert hi >= 9.7
+
+
+def test_view_limits_data_mode_returns_input():
+    with plt.rc_context({"axes.autolimit_mode": "data"}):
+        lo, hi = TalbotLocator().view_limits(0.3, 9.7)
+    assert (lo, hi) == (0.3, 9.7)
+
+
+def test_view_limits_round_numbers_rounds_outward():
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator().view_limits(0.3, 9.7)
+    assert lo <= 0.3
+    assert hi >= 9.7
+    assert (lo, hi) != (0.3, 9.7)
