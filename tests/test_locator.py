@@ -43,3 +43,48 @@ def test_empty_axes_draw_does_not_raise():
     ax.xaxis.set_major_locator(TalbotLocator())
     fig.canvas.draw()
     plt.close(fig)
+
+
+def test_loose_ticks_bound_the_range():
+    ticks = TalbotLocator(loose=True).tick_values(-3.2, 4.1)
+    assert ticks.min() <= -3.2
+    assert ticks.max() >= 4.1
+    steps = np.diff(ticks)
+    np.testing.assert_allclose(steps, steps[0])
+
+
+def test_loose_without_extension_when_already_covered():
+    ticks = TalbotLocator(loose=True).tick_values(0.0, 100.0)
+    assert ticks.min() == 0.0
+    assert ticks.max() == 100.0
+
+
+def test_view_limits_bound_the_range():
+    lo, hi = TalbotLocator().view_limits(0.3, 9.7)
+    assert lo <= 0.3
+    assert hi >= 9.7
+
+
+def test_view_limits_degenerate_does_not_raise():
+    lo, hi = TalbotLocator().view_limits(2.0, 2.0)
+    assert lo < hi
+
+
+def test_loose_bounds_large_magnitude_range():
+    vmin, vmax = -3049020730.258315, 2605259400.20343
+    ticks = TalbotLocator(n=5, loose=True).tick_values(vmin, vmax)
+    assert ticks.min() <= vmin
+    assert ticks.max() >= vmax
+
+
+def test_view_limits_bound_large_magnitude_range():
+    vmin, vmax = -3049020730.258315, 2605259400.20343
+    lo, hi = TalbotLocator().view_limits(vmin, vmax)
+    assert lo <= vmin
+    assert hi >= vmax
+
+
+def test_view_limits_swapped_input():
+    lo, hi = TalbotLocator().view_limits(9.7, 0.3)
+    assert lo <= 0.3
+    assert hi >= 9.7

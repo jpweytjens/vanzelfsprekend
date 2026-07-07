@@ -119,3 +119,16 @@ def test_empty_axes_never_raises():
     tuftify(ax)
     fig.canvas.draw()
     plt.close(fig)
+
+
+def test_loose_frame_bounds_contain_data(scatter_ax):
+    ax = tuftify(scatter_ax, frame="loose")
+    ax.figure.canvas.draw()
+    for axis, spine_name in ((ax.xaxis, "bottom"), (ax.yaxis, "left")):
+        lo, hi = ax.spines[spine_name].get_bounds()
+        dmin, dmax = axis.get_data_interval()
+        ticks = axis.get_majorticklocs()
+        assert lo <= dmin
+        assert hi >= dmax
+        assert lo == ticks.min()
+        assert hi == ticks.max()

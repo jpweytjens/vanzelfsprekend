@@ -21,9 +21,11 @@ def tuftify(ax, frame="nice", n=5):
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    frame : {'nice', 'data'}
+    frame : {'nice', 'data', 'loose'}
         `'nice'` ends the spines at the outermost ticks, `'data'` at
-        the exact data minimum and maximum.
+        the exact data minimum and maximum. `'loose'` ends the spines
+        at nice numbers bounding the data (frame may extend up to one
+        tick step beyond the data).
     n : int
         Desired number of ticks per axis.
 
@@ -32,8 +34,8 @@ def tuftify(ax, frame="nice", n=5):
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    if frame not in ("nice", "data"):
-        raise ValueError(f"frame must be 'nice' or 'data', got {frame!r}")
+    if frame not in ("nice", "data", "loose"):
+        raise ValueError(f"frame must be 'nice', 'data' or 'loose', got {frame!r}")
 
     state = getattr(ax, _STATE_ATTR, None)
     if state is None:
@@ -57,7 +59,7 @@ def tuftify(ax, frame="nice", n=5):
                 stacklevel=2,
             )
             continue
-        axis.set_major_locator(TalbotLocator(n=n))
+        axis.set_major_locator(TalbotLocator(n=n, loose=frame == "loose"))
         active.add(name)
     state["active"] = active
 
@@ -176,8 +178,10 @@ def _frame_span(axis, frame):
         return None
     if frame == "data":
         return (dmin, dmax)
-    ticks = [t for t in axis.get_majorticklocs() if dmin <= t <= dmax]
-    if not ticks:
+    ticks = axis.get_majorticklocs()
+    if frame == "nice":
+        ticks = [t for t in ticks if dmin <= t <= dmax]
+    if len(ticks) == 0:
         return None
     return (min(ticks), max(ticks))
 
