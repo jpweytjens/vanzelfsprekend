@@ -101,3 +101,21 @@ def test_log_axis_warns_and_is_skipped():
     assert ax.yaxis.get_major_locator() is locator_before
     fig.canvas.draw()
     plt.close(fig)
+
+
+def test_categorical_axis_warns_and_is_skipped():
+    fig, ax = plt.subplots()
+    ax.bar(["a", "b", "c"], [1, 2, 3])
+    locator_before = ax.xaxis.get_major_locator()
+    with pytest.warns(UserWarning, match="x-axis"):
+        tuftify(ax)
+    assert ax.xaxis.get_major_locator() is locator_before
+    fig.canvas.draw()
+    plt.close(fig)
+
+
+def test_empty_axes_never_raises():
+    fig, ax = plt.subplots()
+    tuftify(ax)
+    fig.canvas.draw()
+    plt.close(fig)

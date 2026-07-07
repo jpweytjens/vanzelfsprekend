@@ -50,6 +50,13 @@ def tuftify(ax, frame="nice", n=5):
                 stacklevel=2,
             )
             continue
+        if axis.get_converter() is not None:
+            warnings.warn(
+                f"tufty: {name}-axis has a units converter; "
+                "only plain linear axes are supported, leaving it untouched",
+                stacklevel=2,
+            )
+            continue
         axis.set_major_locator(TalbotLocator(n=n))
         active.add(name)
     state["active"] = active
