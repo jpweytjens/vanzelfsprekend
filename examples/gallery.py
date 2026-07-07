@@ -20,7 +20,7 @@ def scatter(frame):
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
     tufty.tuftify(ax, frame=frame)
     tufty.xlabel(ax, "time (s)")
-    tufty.ylabel(ax, "voltage")
+    tufty.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / f"scatter_{frame}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
