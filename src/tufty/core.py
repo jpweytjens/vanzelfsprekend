@@ -173,3 +173,20 @@ def _frame_span(axis, frame):
     if not ticks:
         return None
     return (min(ticks), max(ticks))
+
+
+def register():
+    """Add a `tuftify` method to `matplotlib.axes.Axes`.
+
+    Opt-in monkeypatching: after calling this once, `ax.tuftify(...)`
+    delegates to `tuftify(ax, ...)`. Calling it again is a no-op.
+    """
+    from matplotlib.axes import Axes
+
+    if getattr(Axes, "tuftify", None) is not None:
+        return
+
+    def _tuftify_method(self, frame="nice", n=5):
+        return tuftify(self, frame=frame, n=n)
+
+    Axes.tuftify = _tuftify_method
