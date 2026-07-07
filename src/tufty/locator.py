@@ -48,7 +48,10 @@ class TalbotLocator(Locator):
             vmin, vmax = vmax, vmin
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return AutoLocator().tick_values(*self.nonsingular(vmin, vmax))
-        ticks = self._breaks((vmin, vmax))
+        try:
+            ticks = self._breaks((vmin, vmax))
+        except (OverflowError, ValueError, FloatingPointError):
+            return AutoLocator().tick_values(vmin, vmax)
         if ticks.size == 0:
             return AutoLocator().tick_values(vmin, vmax)
         return ticks

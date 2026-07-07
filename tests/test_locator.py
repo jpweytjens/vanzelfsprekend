@@ -33,6 +33,11 @@ def test_degenerate_inputs_do_not_raise(vmin, vmax):
     assert len(ticks) > 0
 
 
+def test_huge_range_does_not_raise():
+    ticks = TalbotLocator().tick_values(-1e300, 1e300)
+    assert len(ticks) > 0
+
+
 def test_empty_axes_draw_does_not_raise():
     fig, ax = plt.subplots()
     ax.xaxis.set_major_locator(TalbotLocator())
