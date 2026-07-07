@@ -7,6 +7,8 @@ from klaarte.hook import add_applier, ensure_state, get_state, run_appliers
 def xlabel(ax, text, labelpad=None):
     """Set an x-label that sits below the right end of the bottom spine.
 
+    Call after `range_frame`.
+
     Parameters
     ----------
     ax : matplotlib.axes.Axes
@@ -34,6 +36,8 @@ def xlabel(ax, text, labelpad=None):
 
 def ylabel(ax, text, flush=False, labelpad=None):
     """Set a horizontal y-label at the top of the left spine.
+
+    Call after `range_frame`.
 
     Parameters
     ----------

@@ -63,7 +63,6 @@ def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=N
         }
         state["frame"] = frame_state
     frame_state["mode"] = frame
-    frame_state["offset"] = offset
 
     active = set()
     for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):

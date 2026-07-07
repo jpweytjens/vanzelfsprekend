@@ -1,4 +1,4 @@
-"""Render sample tufty figures to PNG for eyeballing."""
+"""Render sample klaarte figures to PNG for eyeballing."""
 
 from pathlib import Path
 

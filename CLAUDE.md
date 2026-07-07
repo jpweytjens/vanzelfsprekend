@@ -9,5 +9,5 @@ Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number
 
 ## Working docs (local only)
 
-- Spec: `docs/superpowers/specs/2026-07-07-tufty-rebuild-design.md`
-- Plan: `docs/superpowers/plans/2026-07-07-tufty-rebuild.md`
+- Spec: `docs/superpowers/specs/2026-07-07-klaarte-foundation-design.md`
+- Plan: `docs/superpowers/plans/2026-07-07-klaarte-foundation.md`

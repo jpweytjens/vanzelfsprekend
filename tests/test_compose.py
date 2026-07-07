@@ -123,3 +123,16 @@ def test_ontklaar_method_via_register():
     assert not hasattr(ax, "_klaarte_state")
     klaarte.unregister()
     plt.close(fig)
+
+
+def test_ontklaar_after_repeated_range_frame_restores_original_locator():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    original = ax.xaxis.get_major_locator()
+    klaarte.range_frame(ax)
+    klaarte.range_frame(ax, frame="data")
+    fig.canvas.draw()
+    klaarte.ontklaar(ax)
+    assert ax.xaxis.get_major_locator() is original
+    plt.close(fig)
