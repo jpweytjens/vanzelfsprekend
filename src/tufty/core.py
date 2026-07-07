@@ -60,6 +60,57 @@ def tuftify(ax, frame="nice", n=5):
     return ax
 
 
+def xlabel(ax, text):
+    """Set an x-label that sits below the right end of the bottom spine.
+
+    Call after `tuftify`. Vertical clearance from the tick labels is
+    matplotlib's own per-draw computation; tufty only aligns the label's
+    right edge with the spine end.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        A tuftified axes.
+    text : str
+        The label text.
+
+    Returns
+    -------
+    matplotlib.text.Text
+        The label artist.
+    """
+    ax.set_xlabel(text)
+    ax.xaxis.label.set_horizontalalignment("right")
+    _apply(ax)
+    return ax.xaxis.label
+
+
+def ylabel(ax, text):
+    """Set a horizontal y-label that sits above the left spine's top end.
+
+    Call after `tuftify`. Horizontal clearance from the tick labels is
+    matplotlib's own per-draw computation; tufty only aligns the label's
+    bottom edge with the spine top.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        A tuftified axes.
+    text : str
+        The label text.
+
+    Returns
+    -------
+    matplotlib.text.Text
+        The label artist.
+    """
+    ax.set_ylabel(text, rotation=0)
+    ax.yaxis.label.set_verticalalignment("bottom")
+    ax.yaxis.label.set_horizontalalignment("right")
+    _apply(ax)
+    return ax.yaxis.label
+
+
 def _make_on_draw(ax):
     def _on_draw(event):
         if _apply(ax):
@@ -73,6 +124,7 @@ def _apply(ax):
     if state is None:
         return False
     changed = False
+    bounds = {"bottom": None, "left": None}
     for name, axis, spine_name in (
         ("x", ax.xaxis, "bottom"),
         ("y", ax.yaxis, "left"),
@@ -80,11 +132,33 @@ def _apply(ax):
         if name not in state["active"]:
             continue
         span = _frame_span(axis, state["frame"])
+        bounds[spine_name] = span
         if span is None:
             continue
         spine = ax.spines[spine_name]
         if spine.get_bounds() != span:
             spine.set_bounds(*span)
+            changed = True
+    return _place_labels(ax, bounds) or changed
+
+
+def _place_labels(ax, bounds):
+    changed = False
+    span = bounds["bottom"]
+    if span is not None and ax.get_xlabel():
+        vmin, vmax = ax.get_xlim()
+        frac = (span[1] - vmin) / (vmax - vmin)
+        pos = ax.xaxis.label.get_position()
+        if pos[0] != frac:
+            ax.xaxis.label.set_position((frac, pos[1]))
+            changed = True
+    span = bounds["left"]
+    if span is not None and ax.get_ylabel():
+        vmin, vmax = ax.get_ylim()
+        frac = (span[1] - vmin) / (vmax - vmin)
+        pos = ax.yaxis.label.get_position()
+        if pos[1] != frac:
+            ax.yaxis.label.set_position((pos[0], frac))
             changed = True
     return changed
 
