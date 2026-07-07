@@ -30,7 +30,7 @@ def histogram():
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25, color="0.4")
     tufty.tuftify(ax)
     tufty.xlabel(ax, "value")
-    tufty.ylabel(ax, "count", flush=True)
+    tufty.ylabel(ax, "count", flush=True, labelpad=10)
     fig.savefig(OUTPUT / "histogram.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

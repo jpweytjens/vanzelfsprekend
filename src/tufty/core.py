@@ -78,7 +78,7 @@ def tuftify(ax, frame="nice", n=5, offset=None):
     return ax
 
 
-def xlabel(ax, text):
+def xlabel(ax, text, labelpad=None):
     """Set an x-label that sits below the right end of the bottom spine.
 
     Call after `tuftify`. Vertical clearance from the tick labels is
@@ -91,19 +91,24 @@ def xlabel(ax, text):
         A tuftified axes.
     text : str
         The label text.
+    labelpad : float, optional
+        Gap in points between the label and the tick-label column, whose
+        edge is set by the *widest* tick label (matplotlib's own per-draw
+        computation). `None` keeps matplotlib's default (rcParam
+        `axes.labelpad`, 4.0).
 
     Returns
     -------
     matplotlib.text.Text
         The label artist.
     """
-    ax.set_xlabel(text)
+    ax.set_xlabel(text, labelpad=labelpad)
     ax.xaxis.label.set_horizontalalignment("right")
     _apply(ax)
     return ax.xaxis.label
 
 
-def ylabel(ax, text, flush=False):
+def ylabel(ax, text, flush=False, labelpad=None):
     """Set a horizontal y-label at the top of the left spine.
 
     Call after `tuftify`. Horizontal clearance from the tick labels is
@@ -121,13 +126,18 @@ def ylabel(ax, text, flush=False):
         `va='center_baseline'`, the alignment y tick labels use, so the
         label sits flush with the top tick label. If False, place it
         above the spine's top end.
+    labelpad : float, optional
+        Gap in points between the label and the tick-label column, whose
+        edge is set by the *widest* tick label (matplotlib's own per-draw
+        computation). `None` keeps matplotlib's default (rcParam
+        `axes.labelpad`, 4.0).
 
     Returns
     -------
     matplotlib.text.Text
         The label artist.
     """
-    ax.set_ylabel(text, rotation=0)
+    ax.set_ylabel(text, rotation=0, labelpad=labelpad)
     ax.yaxis.label.set_verticalalignment("center_baseline" if flush else "bottom")
     ax.yaxis.label.set_horizontalalignment("right")
     state = getattr(ax, _STATE_ATTR, None)

@@ -81,6 +81,43 @@ def test_flush_ylabel_top_aligns_with_top_tick_label():
     plt.close(fig)
 
 
+def _make_labeled_ax(*, xlabelpad=None, ylabelpad=None):
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    tufty.tuftify(ax)
+    tufty.xlabel(ax, "time (s)", labelpad=xlabelpad)
+    tufty.ylabel(ax, "voltage", labelpad=ylabelpad)
+    fig.canvas.draw()
+    return fig, ax
+
+
+def test_ylabel_labelpad_shifts_right_edge_left():
+    fig_default, ax_default = _make_labeled_ax()
+    fig_pad, ax_pad = _make_labeled_ax(ylabelpad=20)
+    default_x1 = ax_default.yaxis.label.get_window_extent(
+        fig_default.canvas.get_renderer()
+    ).x1
+    pad_x1 = ax_pad.yaxis.label.get_window_extent(fig_pad.canvas.get_renderer()).x1
+    expected_shift = (20 - 4) * fig_pad.dpi / 72
+    assert abs((default_x1 - pad_x1) - expected_shift) < 1
+    plt.close(fig_default)
+    plt.close(fig_pad)
+
+
+def test_xlabel_labelpad_shifts_down():
+    fig_default, ax_default = _make_labeled_ax()
+    fig_pad, ax_pad = _make_labeled_ax(xlabelpad=20)
+    default_y0 = ax_default.xaxis.label.get_window_extent(
+        fig_default.canvas.get_renderer()
+    ).y0
+    pad_y0 = ax_pad.xaxis.label.get_window_extent(fig_pad.canvas.get_renderer()).y0
+    expected_shift = (20 - 4) * fig_pad.dpi / 72
+    assert abs((default_y0 - pad_y0) - expected_shift) < 1
+    plt.close(fig_default)
+    plt.close(fig_pad)
+
+
 def test_flush_ylabel_with_loose_frame_no_overlap():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
