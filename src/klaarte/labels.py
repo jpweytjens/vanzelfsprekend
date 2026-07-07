@@ -24,10 +24,9 @@ def xlabel(ax, text, labelpad=None):
     matplotlib.text.Text
         The label artist.
     """
-    ensure_state(ax)
+    _labels_state(ax)
     ax.set_xlabel(text, labelpad=labelpad)
     ax.xaxis.label.set_horizontalalignment("right")
-    _labels_state(ax)
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
     return ax.xaxis.label
@@ -56,11 +55,10 @@ def ylabel(ax, text, flush=False, labelpad=None):
     matplotlib.text.Text
         The label artist.
     """
-    ensure_state(ax)
+    _labels_state(ax)["ylabel_flush"] = flush
     ax.set_ylabel(text, rotation=0, labelpad=labelpad)
     ax.yaxis.label.set_verticalalignment("center_baseline" if flush else "bottom")
     ax.yaxis.label.set_horizontalalignment("right")
-    _labels_state(ax)["ylabel_flush"] = flush
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
     return ax.yaxis.label
@@ -70,9 +68,24 @@ def _labels_state(ax):
     state = ensure_state(ax)
     ls = state.get("labels")
     if ls is None:
-        ls = {"ylabel_flush": False}
+        ls = {
+            "ylabel_flush": False,
+            "snapshot": {
+                "x": _label_props(ax.xaxis.label),
+                "y": _label_props(ax.yaxis.label),
+            },
+        }
         state["labels"] = ls
     return ls
+
+
+def _label_props(label):
+    return {
+        "ha": label.get_horizontalalignment(),
+        "va": label.get_verticalalignment(),
+        "rotation": label.get_rotation(),
+        "position": label.get_position(),
+    }
 
 
 def _apply_labels(ax):

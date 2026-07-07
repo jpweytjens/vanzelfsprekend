@@ -48,7 +48,19 @@ def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=N
     state = ensure_state(ax)
     frame_state = state.get("frame")
     if frame_state is None:
-        frame_state = {"active": set()}
+        frame_state = {
+            "active": set(),
+            "snapshot": {
+                "locators": {
+                    "x": ax.xaxis.get_major_locator(),
+                    "y": ax.yaxis.get_major_locator(),
+                },
+                "top_visible": ax.spines["top"].get_visible(),
+                "right_visible": ax.spines["right"].get_visible(),
+                "left_position": ax.spines["left"].get_position(),
+                "bottom_position": ax.spines["bottom"].get_position(),
+            },
+        }
         state["frame"] = frame_state
     frame_state["mode"] = frame
     frame_state["offset"] = offset

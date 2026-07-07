@@ -56,3 +56,16 @@ def _make_on_draw(ax):
             event.canvas.draw_idle()
 
     return _on_draw
+
+
+def disconnect(ax):
+    """Disconnect `ax`'s draw hook."""
+    state = get_state(ax)
+    if state is not None:
+        ax.figure.canvas.mpl_disconnect(state["cid"])
+
+
+def clear_state(ax):
+    """Delete `ax`'s klaarte state attribute if present."""
+    if hasattr(ax, _STATE_ATTR):
+        delattr(ax, _STATE_ATTR)
