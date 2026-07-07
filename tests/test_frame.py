@@ -83,7 +83,7 @@ def test_repeated_calls_keep_one_hook(scatter_ax):
     first_cid = ax._klaarte_state["cid"]
     tuftify(ax, frame="data")
     assert ax._klaarte_state["cid"] == first_cid
-    assert ax._klaarte_state["frame"] == "data"
+    assert ax._klaarte_state["frame"]["mode"] == "data"
 
 
 def test_invalid_frame_raises(scatter_ax):
@@ -172,3 +172,32 @@ def test_nice_frame_keeps_spines_in_place(scatter_ax):
 def test_explicit_offset_overrides_default(scatter_ax):
     ax = tuftify(scatter_ax, offset=12)
     assert ax.spines["left"].get_position() == ("outward", 12)
+
+
+def test_one_hook_shared_by_frame_and_labels():
+    import klaarte
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    klaarte.tuftify(ax)
+    klaarte.xlabel(ax, "t")
+    klaarte.ylabel(ax, "v")
+    state = ax._klaarte_state
+    assert set(state["appliers"]) == {"frame", "labels"}
+    assert isinstance(state["cid"], int)
+    plt.close(fig)
+
+
+def test_draw_hook_swallows_applier_errors():
+    import klaarte
+    from klaarte import hook
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    klaarte.tuftify(ax)
+
+    def boom(_ax):
+        raise RuntimeError("applier blew up")
+
+    hook.add_applier(ax, "boom", boom)
+    fig.canvas.draw()  # must not raise
+    plt.close(fig)
