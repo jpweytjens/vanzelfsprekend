@@ -9,7 +9,7 @@ from tufty.locator import TalbotLocator
 _STATE_ATTR = "_tufty_state"
 
 
-def tuftify(ax, frame="nice", n=5, offset=None):
+def tuftify(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
     """Turn `ax` into a Tufte-style range frame.
 
     Installs `TalbotLocator` on both axes, hides the top and right
@@ -33,6 +33,10 @@ def tuftify(ax, frame="nice", n=5, offset=None):
         `None` resolves to 8 for `frame='loose'` (prevents the spines
         meeting at the corner, since the loose view equals the tick
         span) and 0 otherwise.
+    nice_numbers : sequence of float, optional
+        Advanced pass-through to `TalbotLocator`; see there for details.
+    weights : dict, optional
+        Advanced pass-through to `TalbotLocator`; see there for details.
 
     Returns
     -------
@@ -66,7 +70,9 @@ def tuftify(ax, frame="nice", n=5, offset=None):
                 stacklevel=2,
             )
             continue
-        axis.set_major_locator(TalbotLocator(n=n, loose=frame == "loose"))
+        axis.set_major_locator(
+            TalbotLocator(n=n, loose=frame == "loose", nice_numbers=nice_numbers, weights=weights)
+        )
         active.add(name)
     state["active"] = active
 
@@ -229,7 +235,9 @@ def register():
     if getattr(Axes, "tuftify", None) is not None:
         return
 
-    def _tuftify_method(self, frame="nice", n=5, offset=None):
-        return tuftify(self, frame=frame, n=n, offset=offset)
+    def _tuftify_method(self, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
+        return tuftify(
+            self, frame=frame, n=n, offset=offset, nice_numbers=nice_numbers, weights=weights
+        )
 
     Axes.tuftify = _tuftify_method

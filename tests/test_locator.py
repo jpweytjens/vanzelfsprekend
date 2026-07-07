@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from tufty import TalbotLocator
+from tufty import TalbotLocator, tuftify
 
 
 def test_matches_mizani_directly():
@@ -105,3 +105,35 @@ def test_view_limits_round_numbers_rounds_outward():
     assert lo <= 0.3
     assert hi >= 9.7
     assert (lo, hi) != (0.3, 9.7)
+
+
+def test_nice_numbers_forwarded_to_mizani():
+    expected = breaks_extended(n=5, Q=[1, 2.5, 5], only_inside=True)((0.4, 9.6))
+    result = TalbotLocator(nice_numbers=[1, 2.5, 5]).tick_values(0.4, 9.6)
+    np.testing.assert_allclose(result, expected)
+
+
+def test_weights_merged_over_defaults_in_slot_order():
+    expected = breaks_extended(n=5, only_inside=True, w=(0.25, 0.4, 0.5, 0.05))((0.3, 9.7))
+    result = TalbotLocator(weights={"coverage": 0.4}).tick_values(0.3, 9.7)
+    np.testing.assert_allclose(result, expected)
+
+
+def test_weights_invalid_key_raises_value_error():
+    with pytest.raises(ValueError, match="coverge"):
+        TalbotLocator(weights={"coverge": 0.4})
+
+
+def test_tuftify_nice_numbers_forwarded_to_both_axes():
+    nice = [1, 2.5, 5]
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    tuftify(ax, nice_numbers=nice)
+    fig.canvas.draw()
+    expected = breaks_extended(n=5, Q=nice, only_inside=True)
+    for axis in (ax.xaxis, ax.yaxis):
+        np.testing.assert_allclose(
+            axis.get_majorticklocs(), expected(tuple(axis.get_data_interval()))
+        )
+    plt.close(fig)

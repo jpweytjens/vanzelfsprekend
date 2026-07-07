@@ -5,6 +5,9 @@ import numpy as np
 from matplotlib.ticker import AutoLocator, Locator
 from mizani.breaks import breaks_extended
 
+_DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
+_DEFAULT_WEIGHTS = {"simplicity": 0.25, "coverage": 0.2, "density": 0.5, "legibility": 0.05}
+
 
 class TalbotLocator(Locator):
     """Place ticks on nice numbers inside the data range.
@@ -26,12 +29,44 @@ class TalbotLocator(Locator):
     loose : bool
         If True, extend the tick grid outward by whole steps so the
         outermost ticks bound the data interval. Default is False.
+    nice_numbers : sequence of float, optional
+        Advanced tuning of the underlying Talbot extended-Wilkinson
+        search: preferred step mantissas for the tick-step search
+        (mizani's `Q`). Biases which step sizes the search considers;
+        the chosen step may be a whole multiple of an entry, and ticks
+        are multiples of the step, so tick values are not strictly
+        limited to these mantissas. `None` uses mizani's default
+        `(1, 5, 2, 2.5, 4, 3)`.
+    weights : dict, optional
+        Advanced tuning of the underlying Talbot extended-Wilkinson
+        search: a partial mapping of weights for the four scoring
+        criteria, merged over the defaults `{"simplicity": 0.25,
+        "coverage": 0.2, "density": 0.5, "legibility": 0.05}` (mizani's
+        `w`). Keys must be a subset of `{"simplicity", "coverage",
+        "density", "legibility"}`.
     """
 
-    def __init__(self, n: int = 5, loose: bool = False):
+    def __init__(self, n: int = 5, loose: bool = False, nice_numbers=None, weights=None):
+        valid_keys = set(_DEFAULT_WEIGHTS)
+        if weights is not None:
+            bad_keys = set(weights) - valid_keys
+            if bad_keys:
+                raise ValueError(
+                    f"invalid weights key(s) {sorted(bad_keys)}; valid keys are "
+                    f"{sorted(valid_keys)}"
+                )
+        merged_weights = {**_DEFAULT_WEIGHTS, **(weights or {})}
+        q = tuple(nice_numbers) if nice_numbers is not None else _DEFAULT_Q
+        w = (
+            merged_weights["simplicity"],
+            merged_weights["coverage"],
+            merged_weights["density"],
+            merged_weights["legibility"],
+        )
+
         self._loose = loose
-        self._breaks = breaks_extended(n=n, only_inside=not loose)
-        self._cover = self._breaks if loose else breaks_extended(n=n)
+        self._breaks = breaks_extended(n=n, Q=q, only_inside=not loose, w=w)
+        self._cover = self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
 
     def __call__(self):
         """Return tick locations computed from the axis data interval."""
