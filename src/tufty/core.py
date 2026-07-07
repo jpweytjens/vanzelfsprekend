@@ -124,7 +124,7 @@ def _apply(ax):
     if state is None:
         return False
     changed = False
-    bounds = {"bottom": None, "left": None}
+    bounds: dict[str, tuple[float, float] | None] = {"bottom": None, "left": None}
     for name, axis, spine_name in (
         ("x", ax.xaxis, "bottom"),
         ("y", ax.yaxis, "left"),
