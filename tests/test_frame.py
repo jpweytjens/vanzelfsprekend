@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from tufty import tuftify
+from klaarte import tuftify
 
 
 @pytest.fixture
@@ -80,10 +80,10 @@ def test_histogram():
 
 def test_repeated_calls_keep_one_hook(scatter_ax):
     ax = tuftify(scatter_ax)
-    first_cid = ax._tufty_state["cid"]
+    first_cid = ax._klaarte_state["cid"]
     tuftify(ax, frame="data")
-    assert ax._tufty_state["cid"] == first_cid
-    assert ax._tufty_state["frame"] == "data"
+    assert ax._klaarte_state["cid"] == first_cid
+    assert ax._klaarte_state["frame"] == "data"
 
 
 def test_invalid_frame_raises(scatter_ax):

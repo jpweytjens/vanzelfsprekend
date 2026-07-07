@@ -9,7 +9,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-import tufty
+import klaarte
 
 OUTPUT = Path(__file__).parent / "output"
 
@@ -18,9 +18,9 @@ def scatter(frame):
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-    tufty.tuftify(ax, frame=frame)
-    tufty.xlabel(ax, "time (s)")
-    tufty.ylabel(ax, "voltage", flush=True)
+    klaarte.tuftify(ax, frame=frame)
+    klaarte.xlabel(ax, "time (s)")
+    klaarte.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / f"scatter_{frame}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -28,9 +28,9 @@ def scatter(frame):
 def histogram():
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25, color="0.4")
-    tufty.tuftify(ax)
-    tufty.xlabel(ax, "value")
-    tufty.ylabel(ax, "count", flush=True, labelpad=10)
+    klaarte.tuftify(ax)
+    klaarte.xlabel(ax, "value")
+    klaarte.ylabel(ax, "count", flush=True, labelpad=10)
     fig.savefig(OUTPUT / "histogram.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -39,10 +39,10 @@ def custom_ticks():
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-    tufty.tuftify(ax, frame="nice")
+    klaarte.tuftify(ax, frame="nice")
     ax.set_xticks([1, 3, 5, 7, 9])
-    tufty.xlabel(ax, "time (s)")
-    tufty.ylabel(ax, "voltage", flush=True)
+    klaarte.xlabel(ax, "time (s)")
+    klaarte.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / "custom_ticks.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -51,11 +51,11 @@ def minimal():
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-    tufty.tuftify(ax, frame="data")
+    klaarte.tuftify(ax, frame="data")
     ax.set_xticks([])
     ax.set_yticks([])
-    tufty.xlabel(ax, "time (s)")
-    tufty.ylabel(ax, "voltage", flush=True)
+    klaarte.xlabel(ax, "time (s)")
+    klaarte.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / "minimal.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

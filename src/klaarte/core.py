@@ -4,9 +4,9 @@ import warnings
 
 import numpy as np
 
-from tufty.locator import TalbotLocator
+from klaarte.locator import TalbotLocator
 
-_STATE_ATTR = "_tufty_state"
+_STATE_ATTR = "_klaarte_state"
 
 
 def tuftify(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):

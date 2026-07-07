@@ -1,4 +1,4 @@
-# tufty
+# klaarte
 
 Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number ticks inside the data range (mizani `breaks_extended`), axis labels at the spine ends.
 

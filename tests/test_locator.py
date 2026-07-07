@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from tufty import TalbotLocator, tuftify
+from klaarte import TalbotLocator, tuftify
 
 
 def test_matches_mizani_directly():

@@ -1,5 +1,5 @@
-import tufty
+import klaarte
 
 
 def test_package_imports():
-    assert tufty is not None
+    assert klaarte is not None
