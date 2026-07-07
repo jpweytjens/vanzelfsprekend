@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from klaarte import tuftify
+from klaarte import range_frame
 
 
 @pytest.fixture
@@ -21,27 +21,27 @@ def outermost_ticks(axis):
 
 
 def test_nice_frame_bounds_equal_outermost_ticks(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     ax.figure.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
     assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
 
 
 def test_data_frame_bounds_equal_data_extremes(scatter_ax):
-    ax = tuftify(scatter_ax, frame="data")
+    ax = range_frame(scatter_ax, frame="data")
     ax.figure.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == tuple(ax.xaxis.get_data_interval())
     assert ax.spines["left"].get_bounds() == tuple(ax.yaxis.get_data_interval())
 
 
 def test_top_and_right_spines_hidden(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     assert not ax.spines["top"].get_visible()
     assert not ax.spines["right"].get_visible()
 
 
 def test_bounds_track_new_data(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     ax.figure.canvas.draw()
     before = ax.spines["bottom"].get_bounds()
     ax.scatter([25.0], [10.0])
@@ -52,7 +52,7 @@ def test_bounds_track_new_data(scatter_ax):
 
 
 def test_bounds_survive_resize(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     fig = ax.figure
     fig.canvas.draw()
     fig.set_size_inches(3, 2)
@@ -62,7 +62,7 @@ def test_bounds_survive_resize(scatter_ax):
 
 
 def test_bounds_survive_xlim_change(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     ax.figure.canvas.draw()
     ax.set_xlim(-5, 30)
     ax.figure.canvas.draw()
@@ -72,23 +72,23 @@ def test_bounds_survive_xlim_change(scatter_ax):
 def test_histogram():
     fig, ax = plt.subplots()
     ax.hist(np.random.default_rng(1).normal(size=200))
-    tuftify(ax)
+    range_frame(ax)
     fig.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
     plt.close(fig)
 
 
 def test_repeated_calls_keep_one_hook(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     first_cid = ax._klaarte_state["cid"]
-    tuftify(ax, frame="data")
+    range_frame(ax, frame="data")
     assert ax._klaarte_state["cid"] == first_cid
     assert ax._klaarte_state["frame"]["mode"] == "data"
 
 
 def test_invalid_frame_raises(scatter_ax):
     with pytest.raises(ValueError, match="frame"):
-        tuftify(scatter_ax, frame="tight")
+        range_frame(scatter_ax, frame="tight")
 
 
 def test_log_axis_warns_and_is_skipped():
@@ -97,7 +97,7 @@ def test_log_axis_warns_and_is_skipped():
     ax.set_yscale("log")
     locator_before = ax.yaxis.get_major_locator()
     with pytest.warns(UserWarning, match="y-axis"):
-        tuftify(ax)
+        range_frame(ax)
     assert ax.yaxis.get_major_locator() is locator_before
     fig.canvas.draw()
     plt.close(fig)
@@ -108,7 +108,7 @@ def test_categorical_axis_warns_and_is_skipped():
     ax.bar(["a", "b", "c"], [1, 2, 3])
     locator_before = ax.xaxis.get_major_locator()
     with pytest.warns(UserWarning, match="x-axis"):
-        tuftify(ax)
+        range_frame(ax)
     assert ax.xaxis.get_major_locator() is locator_before
     fig.canvas.draw()
     plt.close(fig)
@@ -116,13 +116,13 @@ def test_categorical_axis_warns_and_is_skipped():
 
 def test_empty_axes_never_raises():
     fig, ax = plt.subplots()
-    tuftify(ax)
+    range_frame(ax)
     fig.canvas.draw()
     plt.close(fig)
 
 
 def test_loose_frame_bounds_contain_data(scatter_ax):
-    ax = tuftify(scatter_ax, frame="loose")
+    ax = range_frame(scatter_ax, frame="loose")
     ax.figure.canvas.draw()
     for axis, spine_name in ((ax.xaxis, "bottom"), (ax.yaxis, "left")):
         lo, hi = ax.spines[spine_name].get_bounds()
@@ -139,7 +139,7 @@ def test_nice_frame_leaves_view_limits_alone():
     rng = np.random.default_rng(0)
     x, y = rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50)
     ax.scatter(x, y)
-    tuftify(ax)
+    range_frame(ax)
     fig.canvas.draw()
     pad = 0.05 * (x.max() - x.min())
     assert ax.get_xlim() == pytest.approx((x.min() - pad, x.max() + pad))
@@ -150,7 +150,7 @@ def test_loose_frame_view_equals_tick_span():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    tuftify(ax, frame="loose")
+    range_frame(ax, frame="loose")
     fig.canvas.draw()
     for axis, get_lim in ((ax.xaxis, ax.get_xlim), (ax.yaxis, ax.get_ylim)):
         ticks = axis.get_majorticklocs()
@@ -159,18 +159,18 @@ def test_loose_frame_view_equals_tick_span():
 
 
 def test_loose_frame_offsets_spines_outward_by_default(scatter_ax):
-    ax = tuftify(scatter_ax, frame="loose")
+    ax = range_frame(scatter_ax, frame="loose")
     assert ax.spines["bottom"].get_position() == ("outward", 8)
     assert ax.spines["left"].get_position() == ("outward", 8)
 
 
 def test_nice_frame_keeps_spines_in_place(scatter_ax):
-    ax = tuftify(scatter_ax)
+    ax = range_frame(scatter_ax)
     assert ax.spines["bottom"].get_position() == ("outward", 0)
 
 
 def test_explicit_offset_overrides_default(scatter_ax):
-    ax = tuftify(scatter_ax, offset=12)
+    ax = range_frame(scatter_ax, offset=12)
     assert ax.spines["left"].get_position() == ("outward", 12)
 
 
@@ -179,7 +179,7 @@ def test_one_hook_shared_by_frame_and_labels():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.tuftify(ax)
+    klaarte.range_frame(ax)
     klaarte.xlabel(ax, "t")
     klaarte.ylabel(ax, "v")
     state = ax._klaarte_state
@@ -193,7 +193,7 @@ def test_draw_hook_swallows_applier_errors():
     from klaarte import hook
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
-    klaarte.tuftify(ax)
+    klaarte.range_frame(ax)
 
     def boom(_ax):
         raise RuntimeError("applier blew up")

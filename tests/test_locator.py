@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from klaarte import TalbotLocator, tuftify
+from klaarte import TalbotLocator, range_frame
 
 
 def test_matches_mizani_directly():
@@ -124,12 +124,12 @@ def test_weights_invalid_key_raises_value_error():
         TalbotLocator(weights={"coverge": 0.4})
 
 
-def test_tuftify_nice_numbers_forwarded_to_both_axes():
+def test_range_frame_nice_numbers_forwarded_to_both_axes():
     nice = [1, 2.5, 5]
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    tuftify(ax, nice_numbers=nice)
+    range_frame(ax, nice_numbers=nice)
     fig.canvas.draw()
     expected = breaks_extended(n=5, Q=nice, only_inside=True)
     for axis in (ax.xaxis, ax.yaxis):

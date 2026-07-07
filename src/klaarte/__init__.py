@@ -1,6 +1,8 @@
-"""Tufte-style range frames for matplotlib."""
+"""Clear, minimal-ink axes for matplotlib."""
 
-from klaarte.core import register, tuftify, xlabel, ylabel
+from klaarte.compose import klaar, register
+from klaarte.frame import range_frame
+from klaarte.labels import xlabel, ylabel
 from klaarte.locator import TalbotLocator
 
-__all__ = ["TalbotLocator", "register", "tuftify", "xlabel", "ylabel"]
+__all__ = ["TalbotLocator", "klaar", "range_frame", "register", "xlabel", "ylabel"]
