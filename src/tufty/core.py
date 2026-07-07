@@ -9,7 +9,7 @@ from tufty.locator import TalbotLocator
 _STATE_ATTR = "_tufty_state"
 
 
-def tuftify(ax, frame="nice", n=5):
+def tuftify(ax, frame="nice", n=5, offset=None):
     """Turn `ax` into a Tufte-style range frame.
 
     Installs `TalbotLocator` on both axes, hides the top and right
@@ -28,6 +28,11 @@ def tuftify(ax, frame="nice", n=5):
         tick step beyond the data).
     n : int
         Desired number of ticks per axis.
+    offset : float, optional
+        Outward displacement of the left and bottom spines, in points.
+        `None` resolves to 8 for `frame='loose'` (prevents the spines
+        meeting at the corner, since the loose view equals the tick
+        span) and 0 otherwise.
 
     Returns
     -------
@@ -36,6 +41,8 @@ def tuftify(ax, frame="nice", n=5):
     """
     if frame not in ("nice", "data", "loose"):
         raise ValueError(f"frame must be 'nice', 'data' or 'loose', got {frame!r}")
+    if offset is None:
+        offset = 8 if frame == "loose" else 0
 
     state = getattr(ax, _STATE_ATTR, None)
     if state is None:
@@ -65,6 +72,8 @@ def tuftify(ax, frame="nice", n=5):
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_position(("outward", offset))
+    ax.spines["bottom"].set_position(("outward", offset))
     _apply(ax)
     return ax
 
@@ -210,7 +219,7 @@ def register():
     if getattr(Axes, "tuftify", None) is not None:
         return
 
-    def _tuftify_method(self, frame="nice", n=5):
-        return tuftify(self, frame=frame, n=n)
+    def _tuftify_method(self, frame="nice", n=5, offset=None):
+        return tuftify(self, frame=frame, n=n, offset=offset)
 
     Axes.tuftify = _tuftify_method

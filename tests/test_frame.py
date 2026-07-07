@@ -156,3 +156,19 @@ def test_loose_frame_view_equals_tick_span():
         ticks = axis.get_majorticklocs()
         assert get_lim() == pytest.approx((ticks.min(), ticks.max()))
     plt.close(fig)
+
+
+def test_loose_frame_offsets_spines_outward_by_default(scatter_ax):
+    ax = tuftify(scatter_ax, frame="loose")
+    assert ax.spines["bottom"].get_position() == ("outward", 8)
+    assert ax.spines["left"].get_position() == ("outward", 8)
+
+
+def test_nice_frame_keeps_spines_in_place(scatter_ax):
+    ax = tuftify(scatter_ax)
+    assert ax.spines["bottom"].get_position() == ("outward", 0)
+
+
+def test_explicit_offset_overrides_default(scatter_ax):
+    ax = tuftify(scatter_ax, offset=12)
+    assert ax.spines["left"].get_position() == ("outward", 12)

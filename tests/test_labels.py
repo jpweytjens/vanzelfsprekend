@@ -79,3 +79,20 @@ def test_flush_ylabel_top_aligns_with_top_tick_label():
     assert abs(label.y1 - top.y1) < 1
     assert all(not label.overlaps(b) for b in ticks)
     plt.close(fig)
+
+
+def test_flush_ylabel_with_loose_frame_no_overlap():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    tufty.tuftify(ax, frame="loose")
+    tufty.ylabel(ax, "voltage", flush=True)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    label = ax.yaxis.label.get_window_extent(renderer)
+    ticks = tick_label_bboxes(ax.yaxis, renderer)
+    assert ticks
+    assert all(not label.overlaps(b) for b in ticks)
+    top = max(ticks, key=lambda b: b.y1)
+    assert abs(label.y1 - top.y1) < 1
+    plt.close(fig)

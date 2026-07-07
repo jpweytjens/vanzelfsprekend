@@ -8,9 +8,10 @@ def test_register_adds_working_method_and_is_reentrant():
     tufty.register()
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
-    result = ax.tuftify(frame="data")
+    result = ax.tuftify(frame="data", offset=5)
     assert result is ax
     assert not ax.spines["top"].get_visible()
+    assert ax.spines["bottom"].get_position() == ("outward", 5)
     fig.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == tuple(ax.xaxis.get_data_interval())
     plt.close(fig)
