@@ -1,6 +1,13 @@
 # vanzelfsprekend
 
-A matplotlib plot arrives framed in a box: four spines at the view limits, none of them saying anything about the data inside. A range frame makes those lines work. The top and right spines go, and the two that remain are trimmed to the data, so each spine reports its variable's minimum and maximum. Ticks land on nice numbers strictly inside the data range, and the axis labels sit at the spine ends instead of the middle. Range frames come from Tufte's *The Visual Display of Quantitative Information*; the tick placement is Talbot, Lin and Hanrahan's extended Wilkinson algorithm (mizani's `breaks_extended`). The name is Dutch for self-evident, literally "self-speaking": the plot speaks for itself.
+Let the plot speak for itself: matplotlib extensions inspired by Edward Tufte and Jean-luc Doumont. The name is Dutch for self-evident, literally "self-speaking".
+
+What it adds today:
+
+- Range frames: the top and right spines go, the remaining two are trimmed to the data, so each spine shows its variable's minimum and maximum (Tufte, *The Visual Display of Quantitative Information*).
+- Ticks on nice numbers strictly inside the data range, computed from the data rather than the view limits (Talbot, Lin and Hanrahan's extended Wilkinson algorithm, via mizani's `breaks_extended`).
+- Axis labels at the spine ends instead of centered along them.
+- A draw hook that keeps all of this glued to the data through autoscaling and tick changes, and `restore` to undo it exactly.
 
 ![A scatter of measured cycling speeds against gradient, with a backsolved model curve in orange inside a range frame](docs/quickstart.png)
 
@@ -63,8 +70,6 @@ vfs.xlabel(ax, "gradient (%)")
 vfs.ylabel(ax, "speed (km/h)", flush=True)
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
-
-`apply` trims the spines on every draw, so the frame keeps hugging the data through later autoscales and tick changes. `restore` puts the axes back exactly as they were.
 
 ## Usage
 
