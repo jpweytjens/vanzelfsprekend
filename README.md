@@ -70,7 +70,7 @@ vfs.line_labels(ax)              # label every line at its right end
 vfs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
-Only plain linear axes are handled. A log-scaled axis, or one with a units converter (dates, categories), is left untouched with a warning.
+Only plain linear axes are handled. A log-scaled axis, or one with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
 
 ## API
 
