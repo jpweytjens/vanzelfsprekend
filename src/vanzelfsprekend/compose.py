@@ -96,12 +96,16 @@ def restore(ax: Axes) -> None:
                     labelcolor=prior["ticklabel"],
                 )
             else:
+                rc_color = mpl.rcParams[f"{key}tick.color"]
+                rc_labelcolor = mpl.rcParams[f"{key}tick.labelcolor"]
+                if rc_labelcolor == "inherit":
+                    rc_labelcolor = rc_color
                 ax.tick_params(
                     axis=key,
                     which="both",
-                    color=mpl.rcParams[f"{key}tick.color"],
+                    color=rc_color,
                     width=mpl.rcParams[f"{key}tick.major.width"],
-                    labelcolor=mpl.rcParams[f"{key}tick.labelcolor"],
+                    labelcolor=rc_labelcolor,
                 )
             axis.label.set_color(prior["label"])
 
