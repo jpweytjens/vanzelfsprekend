@@ -2,6 +2,7 @@
 
 import warnings
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -56,7 +57,7 @@ def range_frame(
         offset = 8 if frame == "loose" else 0
 
     state = ensure_state(ax)
-    frame_state = state.get("frame")
+    frame_state: dict[str, Any] | None = state.get("frame")
     if frame_state is None:
         frame_state = {
             "active": set(),

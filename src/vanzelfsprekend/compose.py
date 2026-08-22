@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 
 from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import range_frame
-from vanzelfsprekend.hook import clear_state, disconnect, get_state
+from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.mute import mute
 
 
@@ -37,7 +37,7 @@ def apply(
         ax, frame=frame, n=n, offset=offset, nice_numbers=nice_numbers, weights=weights
     )
     mute(ax)
-    state = get_state(ax)
+    state = ensure_state(ax)
     if "cycle" not in state:
         state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
     ax.set_prop_cycle(color=palettes.CYCLE)
