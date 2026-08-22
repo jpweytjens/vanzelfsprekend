@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 
 
 @pytest.fixture
@@ -10,9 +10,9 @@ def labeled_ax():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    vfs.range_frame(ax)
-    vfs.xlabel(ax, "time (s)")
-    vfs.ylabel(ax, "voltage")
+    vzs.range_frame(ax)
+    vzs.xlabel(ax, "time (s)")
+    vzs.ylabel(ax, "voltage")
     fig.canvas.draw()
     yield ax
     plt.close(fig)
@@ -69,8 +69,8 @@ def test_flush_ylabel_top_aligns_with_top_tick_label():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    vfs.range_frame(ax)
-    vfs.ylabel(ax, "voltage", flush=True)
+    vzs.range_frame(ax)
+    vzs.ylabel(ax, "voltage", flush=True)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)
@@ -85,9 +85,9 @@ def _make_labeled_ax(*, xlabelpad=None, ylabelpad=None):
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    vfs.range_frame(ax)
-    vfs.xlabel(ax, "time (s)", labelpad=xlabelpad)
-    vfs.ylabel(ax, "voltage", labelpad=ylabelpad)
+    vzs.range_frame(ax)
+    vzs.xlabel(ax, "time (s)", labelpad=xlabelpad)
+    vzs.ylabel(ax, "voltage", labelpad=ylabelpad)
     fig.canvas.draw()
     return fig, ax
 
@@ -122,8 +122,8 @@ def test_flush_ylabel_with_loose_frame_no_overlap():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    vfs.range_frame(ax, frame="loose")
-    vfs.ylabel(ax, "voltage", flush=True)
+    vzs.range_frame(ax, frame="loose")
+    vzs.ylabel(ax, "voltage", flush=True)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)

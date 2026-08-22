@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 from vanzelfsprekend import palettes
 
 
@@ -9,7 +9,7 @@ def test_mute_greys_axis_furniture():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
     ax.set_xlabel("x")
-    vfs.mute(ax)
+    vzs.mute(ax)
     line_ink = to_rgba(palettes.LINE_INK)
     text_ink = to_rgba(palettes.TEXT_INK)
     assert ax.spines["left"].get_edgecolor() == line_ink
@@ -25,7 +25,7 @@ def test_mute_greys_axis_furniture():
 def test_mute_leaves_data_artists_alone():
     fig, ax = plt.subplots()
     (line,) = ax.plot([0, 1], [0, 1], color="#0077BB")
-    vfs.mute(ax)
+    vzs.mute(ax)
     assert line.get_color() == "#0077BB"
     plt.close(fig)
 
@@ -38,8 +38,8 @@ def test_restore_reverts_mute():
     before_width = ax.spines["left"].get_linewidth()
     before_label = to_rgba(ax.xaxis.label.get_color())
     before_tick = to_rgba(ax.xaxis.get_major_ticks()[0].tick1line.get_color())
-    vfs.mute(ax)
-    vfs.restore(ax)
+    vzs.mute(ax)
+    vzs.restore(ax)
     assert ax.spines["left"].get_edgecolor() == before_spine
     assert ax.spines["left"].get_linewidth() == before_width
     assert to_rgba(ax.xaxis.label.get_color()) == before_label
@@ -53,8 +53,8 @@ def test_restore_resets_tick_ink_on_tickless_axes():
     ax.plot([0, 1], [0, 1])
     ax.set_xticks([])
     ax.set_yticks([])
-    vfs.mute(ax)
-    vfs.restore(ax)
+    vzs.mute(ax)
+    vzs.restore(ax)
     ax.set_xticks([0.5])
     tick = ax.xaxis.get_major_ticks()[0]
     assert to_rgba(tick.tick1line.get_color()) == to_rgba(plt.rcParams["xtick.color"])

@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 
 DOCS = Path(__file__).parents[1] / "docs"
 
@@ -65,7 +65,7 @@ def main() -> None:
     grid = np.linspace(-0.10, 0.10, 300)
 
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vfs.apply(ax, frame="loose")
+    vzs.apply(ax, frame="loose")
     ax.scatter(100 * gradient, speed, s=12, zorder=3)
     ax.plot(
         100 * grid,
@@ -81,10 +81,10 @@ def main() -> None:
         linewidth=1.8,
         label="backsolved",
     )
-    ax.text(0.5, 34, "measured", color=vfs.palettes.DATA_INK)
-    vfs.line_labels(ax)
-    vfs.xlabel(ax, "gradient (%)")
-    vfs.ylabel(ax, "speed (km/h)", flush=True)
+    ax.text(0.5, 34, "measured", color=vzs.palettes.DATA_INK)
+    vzs.line_labels(ax)
+    vzs.xlabel(ax, "gradient (%)")
+    vzs.ylabel(ax, "speed (km/h)", flush=True)
     fig.savefig(DOCS / "backsolved_speed.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

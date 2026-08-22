@@ -2,7 +2,7 @@
 
 Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number ticks inside the data range (mizani `breaks_extended`), axis labels at the spine ends.
 
-Import idiom: `import vanzelfsprekend as vfs`.
+Import idiom: `import vanzelfsprekend as vzs`.
 
 ## Repository rules
 

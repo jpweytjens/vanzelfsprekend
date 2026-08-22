@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 from vanzelfsprekend.lines import _stack
 
 
@@ -63,8 +63,8 @@ def converging_lines(ax):
 def converging_ax():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vfs.range_frame(ax)
-    texts = vfs.line_labels(ax)
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax)
     fig.canvas.draw()
     yield ax, texts
     plt.close(fig)
@@ -100,8 +100,8 @@ def test_separated_labels_stay_at_their_lines():
     x = np.linspace(0.0, 10.0, 200)
     for asymptote, name in [(1.0, "alpha"), (3.0, "beta"), (5.0, "gamma")]:
         ax.plot(x, asymptote - np.exp(-x), label=name)
-    vfs.range_frame(ax)
-    texts = vfs.line_labels(ax)
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     for line, text in zip(ax.get_lines(), texts, strict=True):
@@ -117,8 +117,8 @@ def test_unlabeled_and_all_nan_lines_are_skipped():
     ax.plot(x, x, label="keep")
     ax.plot(x, x + 1)
     ax.plot(x, np.full_like(x, np.nan), label="empty")
-    vfs.range_frame(ax)
-    texts = vfs.line_labels(ax)
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax)
     fig.canvas.draw()
     assert [t.get_text() for t in texts] == ["keep"]
     plt.close(fig)
@@ -130,8 +130,8 @@ def test_anchor_skips_trailing_nan():
     y = x.copy()
     y[45:] = np.nan
     ax.plot(x, y, label="cut")
-    vfs.range_frame(ax)
-    (text,) = vfs.line_labels(ax)
+    vzs.range_frame(ax)
+    (text,) = vzs.line_labels(ax)
     fig.canvas.draw()
     assert text.xy == (x[44], y[44])
     plt.close(fig)
@@ -148,10 +148,10 @@ def test_labels_stay_disjoint_after_resize(converging_ax):
 def test_labelcolor_single_and_list():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vfs.range_frame(ax)
-    texts = vfs.line_labels(ax, labelcolor="black")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, labelcolor="black")
     assert [t.get_color() for t in texts] == ["black"] * 3
-    texts = vfs.line_labels(ax, labelcolor=["red", "green"])
+    texts = vzs.line_labels(ax, labelcolor=["red", "green"])
     assert [t.get_color() for t in texts] == ["red", "green", "red"]
     plt.close(fig)
 
@@ -159,9 +159,9 @@ def test_labelcolor_single_and_list():
 def test_recall_replaces_instead_of_stacking_duplicates():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vfs.range_frame(ax)
-    vfs.line_labels(ax)
-    texts = vfs.line_labels(ax)
+    vzs.range_frame(ax)
+    vzs.line_labels(ax)
+    texts = vzs.line_labels(ax)
     fig.canvas.draw()
     assert len(ax.texts) == len(texts) == 3
     plt.close(fig)
@@ -170,7 +170,7 @@ def test_recall_replaces_instead_of_stacking_duplicates():
 def test_invalid_at_raises():
     fig, ax = plt.subplots()
     with pytest.raises(ValueError, match="start"):
-        vfs.line_labels(ax, at="middle")
+        vzs.line_labels(ax, at="middle")
     plt.close(fig)
 
 
@@ -179,8 +179,8 @@ def test_start_labels_right_align_and_separate():
     x = np.linspace(0.0, 10.0, 200)
     for slope, name in [(1.0, "alpha"), (1.01, "beta")]:
         ax.plot(x, slope * x, label=name)
-    vfs.range_frame(ax, frame="loose")
-    texts = vfs.line_labels(ax, at="start")
+    vzs.range_frame(ax, frame="loose")
+    texts = vzs.line_labels(ax, at="start")
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     pad_px = 4.0 * fig.dpi / 72
@@ -194,7 +194,7 @@ def test_start_labels_right_align_and_separate():
 
 def test_both_sides_coexist(converging_ax):
     ax, end_texts = converging_ax
-    start_texts = vfs.line_labels(ax, at="start")
+    start_texts = vzs.line_labels(ax, at="start")
     ax.figure.canvas.draw()
     assert len(start_texts) == 3
     assert set(end_texts) <= set(ax.texts)
@@ -206,7 +206,7 @@ def test_labels_anchor_correctly_on_date_axes():
     days = [datetime.date(2026, 1, d) for d in range(1, 31)]
     values = np.linspace(3.0, 7.0, 30)
     ax.plot(days, values, label="series")
-    (text,) = vfs.line_labels(ax)
+    (text,) = vzs.line_labels(ax)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     anchor_display = ax.transData.transform(
@@ -221,10 +221,10 @@ def test_labels_anchor_correctly_on_date_axes():
 def test_restore_removes_line_labels():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vfs.apply(ax)
-    vfs.line_labels(ax)
-    vfs.line_labels(ax, at="start")
+    vzs.apply(ax)
+    vzs.line_labels(ax)
+    vzs.line_labels(ax, at="start")
     fig.canvas.draw()
-    vfs.restore(ax)
+    vzs.restore(ax)
     assert not ax.texts
     plt.close(fig)

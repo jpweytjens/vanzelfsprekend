@@ -175,14 +175,14 @@ def test_explicit_offset_overrides_default(scatter_ax):
 
 
 def test_one_hook_shared_by_frame_and_labels():
-    import vanzelfsprekend as vfs
+    import vanzelfsprekend as vzs
 
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    vfs.range_frame(ax)
-    vfs.xlabel(ax, "t")
-    vfs.ylabel(ax, "v")
+    vzs.range_frame(ax)
+    vzs.xlabel(ax, "t")
+    vzs.ylabel(ax, "v")
     state = ax._vanzelfsprekend_state
     assert set(state["appliers"]) == {"frame", "labels"}
     assert isinstance(state["cid"], int)
@@ -190,12 +190,12 @@ def test_one_hook_shared_by_frame_and_labels():
 
 
 def test_draw_hook_swallows_applier_errors():
-    import vanzelfsprekend as vfs
+    import vanzelfsprekend as vzs
     from vanzelfsprekend import hook
 
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
-    vfs.range_frame(ax)
+    vzs.range_frame(ax)
 
     def boom(_ax):
         raise RuntimeError("applier blew up")

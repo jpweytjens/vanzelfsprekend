@@ -9,7 +9,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 
 OUTPUT = Path(__file__).parent / "output"
 
@@ -17,11 +17,11 @@ OUTPUT = Path(__file__).parent / "output"
 def scatter(frame: str) -> None:
     """Render a scatter plot with the given frame mode."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vfs.apply(ax, frame=frame)
+    vzs.apply(ax, frame=frame)
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12)
-    vfs.xlabel(ax, "time (s)")
-    vfs.ylabel(ax, "voltage", flush=True)
+    vzs.xlabel(ax, "time (s)")
+    vzs.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / f"scatter_{frame}.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -29,10 +29,10 @@ def scatter(frame: str) -> None:
 def histogram() -> None:
     """Render a histogram with a range frame."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vfs.apply(ax)
+    vzs.apply(ax)
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25)
-    vfs.xlabel(ax, "value")
-    vfs.ylabel(ax, "count", flush=True, labelpad=10)
+    vzs.xlabel(ax, "value")
+    vzs.ylabel(ax, "count", flush=True, labelpad=10)
     fig.savefig(OUTPUT / "histogram.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -40,12 +40,12 @@ def histogram() -> None:
 def custom_ticks() -> None:
     """Render a scatter plot with user-set ticks."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vfs.apply(ax, frame="nice")
+    vzs.apply(ax, frame="nice")
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12)
     ax.set_xticks([1, 3, 5, 7, 9])
-    vfs.xlabel(ax, "time (s)")
-    vfs.ylabel(ax, "voltage", flush=True)
+    vzs.xlabel(ax, "time (s)")
+    vzs.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / "custom_ticks.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -53,13 +53,13 @@ def custom_ticks() -> None:
 def minimal() -> None:
     """Render a scatter plot with a data frame and no ticks."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vfs.apply(ax, frame="data")
+    vzs.apply(ax, frame="data")
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12)
     ax.set_xticks([])
     ax.set_yticks([])
-    vfs.xlabel(ax, "time (s)")
-    vfs.ylabel(ax, "voltage", flush=True)
+    vzs.xlabel(ax, "time (s)")
+    vzs.ylabel(ax, "voltage", flush=True)
     fig.savefig(OUTPUT / "minimal.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

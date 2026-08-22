@@ -35,14 +35,14 @@ The smallest complete example, in the default `nice` mode:
 import matplotlib.pyplot as plt
 import numpy as np
 
-import vanzelfsprekend as vfs
+import vanzelfsprekend as vzs
 
 rng = np.random.default_rng(0)
 fig, ax = plt.subplots(figsize=(5, 3.5))
 ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-vfs.apply(ax)
-vfs.xlabel(ax, "time (s)")
-vfs.ylabel(ax, "voltage", flush=True)
+vzs.apply(ax)
+vzs.xlabel(ax, "time (s)")
+vzs.ylabel(ax, "voltage", flush=True)
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
@@ -51,14 +51,14 @@ fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 `apply(ax)` ends the spines at the outermost ticks. Two other modes:
 
 ```python
-vfs.apply(ax, frame="data")   # spines end at the exact data min and max
-vfs.apply(ax, frame="loose")  # spines end at nice numbers bounding the data
+vzs.apply(ax, frame="data")   # spines end at the exact data min and max
+vzs.apply(ax, frame="loose")  # spines end at nice numbers bounding the data
 ```
 
 `xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `flush=True` anchors the y-label at the topmost tick label; `labelpad` widens the gap to the tick labels:
 
 ```python
-vfs.ylabel(ax, "count", flush=True, labelpad=10)
+vzs.ylabel(ax, "count", flush=True, labelpad=10)
 ```
 
 `register()` adds the entry points as Axes methods, so `ax.apply()` and `ax.restore()` work anywhere; `unregister()` removes them again.
@@ -66,8 +66,8 @@ vfs.ylabel(ax, "count", flush=True, labelpad=10)
 `line_labels` replaces a legend: delete `ax.legend()` and each line gets its `label=` text at its right end, in its line's colour. Where lines converge, the labels shift apart just enough to stay readable, keeping their order (the placement is the exact least-squares optimum, re-solved on every draw). `at="start"` labels the left ends instead, slopegraph-style, which pairs well with `frame="loose"` since the offset spine leaves room for the text:
 
 ```python
-vfs.line_labels(ax)              # label every line at its right end
-vfs.line_labels(ax, at="start")  # and/or at its left end
+vzs.line_labels(ax)              # label every line at its right end
+vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
 Only plain linear axes are handled. A log-scaled axis, or one with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
