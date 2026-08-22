@@ -1,13 +1,17 @@
 # vanzelfsprekend
 
-Let the plot speak for itself: a matplotlib treatment inspired by Edward Tufte and Jean-luc Doumont. The name is Dutch for self-evident, literally "self-speaking".
+Let the plot speak for itself: a matplotlib treatment inspired by [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
 
 What it adds today:
 
-- Range frames: the top and right spines go, the remaining two are trimmed to the data, so each spine shows its variable's minimum and maximum (Tufte, *The Visual Display of Quantitative Information*).
-- Ticks on nice numbers strictly inside the data range, computed from the data rather than the view limits (Talbot, Lin and Hanrahan's extended Wilkinson algorithm, via mizani's `breaks_extended`).
+- Range frames: the top and right spines go, the remaining two are trimmed to the data, so each spine shows its variable's minimum and maximum ([Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/), *The Visual Display of Quantitative Information*).
+- Ticks on nice numbers strictly inside the data range, computed from the data rather than the view limits ([Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), via [mizani](https://mizani.readthedocs.io/en/stable/)'s `breaks_extended`).
 - Axis labels at the spine ends instead of centered along them.
 - A draw hook that keeps all of this glued to the data through autoscaling and tick changes, and `restore` to undo it exactly.
+- Greyed axis furniture and an ink-first colour cycle built on
+  [Paul Tol's colour schemes](https://sronpersonalpages.nl/~pault/):
+  single-series plots stay near-black, colour enters at series two,
+  and `color="tol:orange"` works anywhere matplotlib takes a colour.
 
 ![A scatter of measured cycling speeds against gradient, with a backsolved model curve in orange inside a range frame](docs/backsolved_speed.png)
 
@@ -69,5 +73,7 @@ Only plain linear axes are handled. A log-scaled axis, or one with a units conve
 | `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
 | `register()`, `unregister()` | add or remove the `ax.apply` and `ax.restore` methods |
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
+| `mute(ax, ink)` | grey the axis furniture, leaving the data ink alone |
+| `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
 
 Parameters and behavior are documented in the docstrings.
