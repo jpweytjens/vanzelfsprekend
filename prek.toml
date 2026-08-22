@@ -37,5 +37,6 @@ hooks = [{ id = "committed", stages = ["commit-msg"] }]
 [[repos]]
 repo = "local"
 hooks = [
+  { id = "ty-check", name = "ty check src", language = "system", entry = "uv run ty check src", pass_filenames = false, files = "^src/" },
   { id = "reference-dir-guard", name = "archive/ and docs/superpowers/ stay uncommitted", language = "system", entry = "bash -c 'changed=$(git diff --cached --name-only -- archive/ docs/superpowers/); if [ -n \"$changed\" ]; then printf \"%s\\n\" \"$changed\" >&2; echo \"archive/ is reference-only and docs/superpowers/ is local-only\" >&2; exit 1; fi'", pass_filenames = false, always_run = true },
 ]
