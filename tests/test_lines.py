@@ -1,5 +1,10 @@
-import numpy as np
+import itertools
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+
+import vanzelfsprekend as vfs
 from vanzelfsprekend.lines import _stack
 
 
@@ -44,3 +49,124 @@ def test_stack_preserves_index_order_of_unsorted_input():
 def test_stack_empty_and_single():
     assert _stack(np.array([]), np.array([]), 2.0).size == 0
     np.testing.assert_allclose(_stack(np.array([7.0]), np.array([10.0]), 2.0), [7.0])
+
+
+def converging_lines(ax):
+    x = np.linspace(0.0, 10.0, 200)
+    for asymptote, name in [(1.00, "alpha"), (1.02, "beta"), (1.04, "gamma")]:
+        ax.plot(x, asymptote - np.exp(-x), label=name)
+
+
+@pytest.fixture
+def converging_ax():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    vfs.range_frame(ax)
+    texts = vfs.line_labels(ax)
+    fig.canvas.draw()
+    yield ax, texts
+    plt.close(fig)
+
+
+def label_bboxes(ax, texts):
+    renderer = ax.figure.canvas.get_renderer()
+    return [t.get_window_extent(renderer) for t in texts]
+
+
+def test_end_labels_do_not_overlap(converging_ax):
+    ax, texts = converging_ax
+    boxes = label_bboxes(ax, texts)
+    assert len(boxes) == 3
+    assert all(not a.overlaps(b) for a, b in itertools.combinations(boxes, 2))
+
+
+def test_end_labels_keep_end_value_order(converging_ax):
+    ax, texts = converging_ax
+    ends = [line.get_ydata()[-1] for line in ax.get_lines()]
+    centers = [(b.y0 + b.y1) / 2 for b in label_bboxes(ax, texts)]
+    assert np.argsort(ends).tolist() == np.argsort(centers).tolist()
+
+
+def test_labels_take_line_colors(converging_ax):
+    ax, texts = converging_ax
+    for line, text in zip(ax.get_lines(), texts, strict=True):
+        assert text.get_color() == line.get_color()
+
+
+def test_separated_labels_stay_at_their_lines():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 200)
+    for asymptote, name in [(1.0, "alpha"), (3.0, "beta"), (5.0, "gamma")]:
+        ax.plot(x, asymptote - np.exp(-x), label=name)
+    vfs.range_frame(ax)
+    texts = vfs.line_labels(ax)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    for line, text in zip(ax.get_lines(), texts, strict=True):
+        anchor_y = ax.transData.transform((10.0, line.get_ydata()[-1]))[1]
+        box = text.get_window_extent(renderer)
+        assert abs((box.y0 + box.y1) / 2 - anchor_y) < 2
+    plt.close(fig)
+
+
+def test_unlabeled_and_all_nan_lines_are_skipped():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="keep")
+    ax.plot(x, x + 1)
+    ax.plot(x, np.full_like(x, np.nan), label="empty")
+    vfs.range_frame(ax)
+    texts = vfs.line_labels(ax)
+    fig.canvas.draw()
+    assert [t.get_text() for t in texts] == ["keep"]
+    plt.close(fig)
+
+
+def test_anchor_skips_trailing_nan():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    y = x.copy()
+    y[45:] = np.nan
+    ax.plot(x, y, label="cut")
+    vfs.range_frame(ax)
+    (text,) = vfs.line_labels(ax)
+    fig.canvas.draw()
+    assert text.xy == (x[44], y[44])
+    plt.close(fig)
+
+
+def test_labels_stay_disjoint_after_resize(converging_ax):
+    ax, texts = converging_ax
+    ax.figure.set_size_inches(4, 3)
+    ax.figure.canvas.draw()
+    boxes = label_bboxes(ax, texts)
+    assert all(not a.overlaps(b) for a, b in itertools.combinations(boxes, 2))
+
+
+def test_labelcolor_single_and_list():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    vfs.range_frame(ax)
+    texts = vfs.line_labels(ax, labelcolor="black")
+    assert [t.get_color() for t in texts] == ["black"] * 3
+    texts = vfs.line_labels(ax, labelcolor=["red", "green"])
+    assert [t.get_color() for t in texts] == ["red", "green", "red"]
+    plt.close(fig)
+
+
+def test_recall_replaces_instead_of_stacking_duplicates():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    vfs.range_frame(ax)
+    vfs.line_labels(ax)
+    texts = vfs.line_labels(ax)
+    fig.canvas.draw()
+    assert len(ax.texts) == len(texts) == 3
+    plt.close(fig)
+
+
+def test_invalid_at_raises():
+    fig, ax = plt.subplots()
+    with pytest.raises(ValueError, match="start"):
+        vfs.line_labels(ax, at="middle")
+    plt.close(fig)

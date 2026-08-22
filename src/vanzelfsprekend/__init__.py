@@ -4,6 +4,7 @@ from vanzelfsprekend import palettes
 from vanzelfsprekend.compose import apply, register, restore, unregister
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.labels import xlabel, ylabel
+from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.locator import TalbotLocator
 from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticks import tick_direction
@@ -11,6 +12,7 @@ from vanzelfsprekend.ticks import tick_direction
 __all__ = [
     "TalbotLocator",
     "apply",
+    "line_labels",
     "mute",
     "palettes",
     "range_frame",
