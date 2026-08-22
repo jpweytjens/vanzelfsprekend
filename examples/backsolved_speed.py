@@ -1,4 +1,4 @@
-"""Render the README figure: measured speeds against modelled and backsolved curves.
+"""Render the README figure: the same plot with matplotlib defaults and treated.
 
 A rider is three scalars (flat cruising speed, critical climbing rate,
 a descent comfort cap); a force-balance cubic backsolves the speed they
@@ -6,7 +6,8 @@ imply at any gradient. The modelled curve holds flat cruising power at
 every gradient, so it undershoots climbs and overshoots descents; the
 backsolved curve prices the effort per gradient, uncapped. Measured
 speeds scatter around the backsolved curve, held at the comfort cap on
-descents.
+descents. Both panels run the same plotting calls; the right one adds
+the treatment, with `line_labels` in place of the legend.
 """
 
 from pathlib import Path
@@ -55,18 +56,15 @@ def modelled_speed(gradient: np.ndarray) -> np.ndarray:
     return 3.6 * solve_speed(np.full_like(gradient, P_FLAT), gradient)
 
 
-def main() -> None:
-    """Render the figure into `docs/backsolved_speed.png`."""
+def draw_data(ax: plt.Axes) -> None:
+    """Draw the measured points and both model curves on `ax`."""
     rng = np.random.default_rng(7)
     gradient = rng.uniform(-0.099, 0.099, 45)
     speed = np.minimum(backsolved_speed(gradient), 3.6 * V_CAP) + rng.normal(
         0, 1.5, gradient.size
     )
     grid = np.linspace(-0.10, 0.10, 300)
-
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.apply(ax, frame="loose")
-    ax.scatter(100 * gradient, speed, s=12, zorder=3)
+    ax.scatter(100 * gradient, speed, s=12, zorder=3, color="0.2", label="measured")
     ax.plot(
         100 * grid,
         modelled_speed(grid),
@@ -81,10 +79,27 @@ def main() -> None:
         linewidth=1.8,
         label="backsolved",
     )
-    ax.text(0.5, 34, "measured", color=vzs.palettes.DATA_INK)
-    vzs.line_labels(ax)
-    vzs.xlabel(ax, "gradient (%)")
-    vzs.ylabel(ax, "speed (km/h)", flush=True)
+
+
+def main() -> None:
+    """Render the figure into `docs/backsolved_speed.png`."""
+    fig, (plain, treated) = plt.subplots(1, 2, figsize=(10, 3.5))
+    fig.subplots_adjust(wspace=0.3)
+
+    draw_data(plain)
+    plain.set_xlabel("gradient (%)")
+    plain.set_ylabel("speed (km/h)")
+    plain.legend()
+    plain.set_title("matplotlib")
+
+    vzs.apply(treated, frame="loose")
+    draw_data(treated)
+    treated.text(0.5, 34, "measured", color=vzs.palettes.DATA_INK)
+    vzs.line_labels(treated)
+    vzs.xlabel(treated, "gradient (%)")
+    vzs.ylabel(treated, "speed (km/h)", flush=True)
+    treated.set_title("vanzelfsprekend")
+
     fig.savefig(DOCS / "backsolved_speed.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

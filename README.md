@@ -15,9 +15,9 @@ What it adds today:
   the same kind, and `color="tol:orange"` works anywhere matplotlib
   takes a colour.
 
-![A scatter of measured cycling speeds against gradient, with modelled and backsolved speed curves labelled at their right ends inside a range frame](docs/backsolved_speed.png)
+![The same speed-gradient plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with direct line labels on the right](docs/backsolved_speed.png)
 
-The figure comes from [`examples/backsolved_speed.py`](examples/backsolved_speed.py): the treatment with `frame="loose"` around modelled and backsolved speed curves, their converging end labels kept apart by `line_labels`.
+The figure comes from [`examples/backsolved_speed.py`](examples/backsolved_speed.py): the same plotting calls on both axes; the right one adds the treatment with `frame="loose"` and `line_labels` in place of the legend.
 
 ## Install
 
