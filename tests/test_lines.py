@@ -1,5 +1,7 @@
+import datetime
 import itertools
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -197,6 +199,23 @@ def test_both_sides_coexist(converging_ax):
     assert len(start_texts) == 3
     assert set(end_texts) <= set(ax.texts)
     assert set(start_texts) <= set(ax.texts)
+
+
+def test_labels_anchor_correctly_on_date_axes():
+    fig, ax = plt.subplots()
+    days = [datetime.date(2026, 1, d) for d in range(1, 31)]
+    values = np.linspace(3.0, 7.0, 30)
+    ax.plot(days, values, label="series")
+    (text,) = vfs.line_labels(ax)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    anchor_display = ax.transData.transform(
+        (matplotlib.dates.date2num(days[-1]), values[-1])
+    )
+    box = text.get_window_extent(renderer)
+    assert abs((box.y0 + box.y1) / 2 - anchor_display[1]) < 2
+    assert abs(box.x0 - (anchor_display[0] + 4.0 * fig.dpi / 72)) < 1
+    plt.close(fig)
 
 
 def test_restore_removes_line_labels():

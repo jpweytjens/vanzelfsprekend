@@ -94,8 +94,8 @@ def line_labels(
 
 
 def _anchor(line: Line2D, at: str) -> tuple[float, float] | None:
-    x = np.asarray(line.get_xdata(), dtype=float)
-    y = np.asarray(line.get_ydata(), dtype=float)
+    x = np.asarray(line.get_xdata(orig=False), dtype=float)
+    y = np.asarray(line.get_ydata(orig=False), dtype=float)
     finite = np.flatnonzero(np.isfinite(x) & np.isfinite(y))
     if not len(finite):
         return None
