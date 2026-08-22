@@ -10,7 +10,7 @@ def test_register_adds_working_method_and_is_reentrant():
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
     nice = [1, 2.5, 5]
-    result = ax.klaar(frame="data", offset=5, nice_numbers=nice)
+    result = ax.apply(frame="data", offset=5, nice_numbers=nice)
     assert result is ax
     assert not ax.spines["top"].get_visible()
     assert ax.spines["bottom"].get_position() == ("outward", 5)
@@ -23,12 +23,12 @@ def test_register_adds_working_method_and_is_reentrant():
     plt.close(fig)
 
 
-def test_klaar_matches_range_frame_bounds():
+def test_apply_matches_range_frame_bounds():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     x, y = rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50)
     ax.scatter(x, y)
-    vanzelfsprekend.klaar(ax)
+    vanzelfsprekend.apply(ax)
     fig.canvas.draw()
     bottom = ax.spines["bottom"].get_bounds()
 
@@ -54,7 +54,7 @@ def _snapshot(ax):
     }
 
 
-def test_ontklaar_restores_prior_state():
+def test_restore_reverts_to_prior_state():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
@@ -65,7 +65,7 @@ def test_ontklaar_restores_prior_state():
     vanzelfsprekend.ylabel(ax, "v", flush=True)
     fig.canvas.draw()
 
-    vanzelfsprekend.ontklaar(ax)
+    vanzelfsprekend.restore(ax)
     after = _snapshot(ax)
 
     assert after["xloc"] is before["xloc"]
@@ -80,13 +80,13 @@ def test_ontklaar_restores_prior_state():
     plt.close(fig)
 
 
-def test_ontklaar_disconnects_hook():
+def test_restore_disconnects_hook():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     vanzelfsprekend.range_frame(ax)
     fig.canvas.draw()
-    vanzelfsprekend.ontklaar(ax)
+    vanzelfsprekend.restore(ax)
     # With the hook gone, the left spine is no longer re-trimmed to the data.
     ax.spines["left"].set_bounds(0.0, 1.0)
     ax.set_ylim(-20, 20)
@@ -95,10 +95,10 @@ def test_ontklaar_disconnects_hook():
     plt.close(fig)
 
 
-def test_ontklaar_on_untouched_axes_is_noop():
+def test_restore_on_untouched_axes_is_noop():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
-    vanzelfsprekend.ontklaar(ax)  # must not raise
+    vanzelfsprekend.restore(ax)  # must not raise
     plt.close(fig)
 
 
@@ -106,27 +106,27 @@ def test_unregister_removes_methods_and_is_reentrant():
     vanzelfsprekend.register()
     from matplotlib.axes import Axes
 
-    assert hasattr(Axes, "klaar")
-    assert hasattr(Axes, "ontklaar")
+    assert hasattr(Axes, "apply")
+    assert hasattr(Axes, "restore")
     vanzelfsprekend.unregister()
     vanzelfsprekend.unregister()
-    assert not hasattr(Axes, "klaar")
-    assert not hasattr(Axes, "ontklaar")
+    assert not hasattr(Axes, "apply")
+    assert not hasattr(Axes, "restore")
 
 
-def test_ontklaar_method_via_register():
+def test_restore_method_via_register():
     vanzelfsprekend.register()
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
-    ax.klaar()
+    ax.apply()
     fig.canvas.draw()
-    ax.ontklaar()
+    ax.restore()
     assert not hasattr(ax, "_vanzelfsprekend_state")
     vanzelfsprekend.unregister()
     plt.close(fig)
 
 
-def test_ontklaar_after_repeated_range_frame_restores_original_locator():
+def test_restore_after_repeated_range_frame_restores_original_locator():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
@@ -134,6 +134,6 @@ def test_ontklaar_after_repeated_range_frame_restores_original_locator():
     vanzelfsprekend.range_frame(ax)
     vanzelfsprekend.range_frame(ax, frame="data")
     fig.canvas.draw()
-    vanzelfsprekend.ontklaar(ax)
+    vanzelfsprekend.restore(ax)
     assert ax.xaxis.get_major_locator() is original
     plt.close(fig)

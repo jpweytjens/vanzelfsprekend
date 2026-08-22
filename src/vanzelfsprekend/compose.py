@@ -1,4 +1,4 @@
-"""The klaar composer, teardown, and axes-method registration."""
+"""The apply composer, teardown, and axes-method registration."""
 
 from collections.abc import Sequence
 
@@ -8,7 +8,7 @@ from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 
 
-def klaar(
+def apply(
     ax: Axes,
     frame: str = "nice",
     n: int = 5,
@@ -32,7 +32,7 @@ def klaar(
     )
 
 
-def ontklaar(ax: Axes) -> None:
+def restore(ax: Axes) -> None:
     """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
 
     Disconnects the draw hook and restores exactly the properties vanzelfsprekend
@@ -71,17 +71,17 @@ def ontklaar(ax: Axes) -> None:
 
 
 def register() -> None:
-    """Add `klaar` and `ontklaar` methods to `matplotlib.axes.Axes`.
+    """Add `apply` and `restore` methods to `matplotlib.axes.Axes`.
 
-    Opt-in monkeypatching: after calling this once, `ax.klaar(...)` and
-    `ax.ontklaar()` delegate to the functions. Calling it again is a no-op.
+    Opt-in monkeypatching: after calling this once, `ax.apply(...)` and
+    `ax.restore()` delegate to the functions. Calling it again is a no-op.
     """
     from matplotlib.axes import Axes
 
-    if getattr(Axes, "klaar", None) is not None:
+    if getattr(Axes, "apply", None) is not None:
         return
 
-    def _klaar_method(
+    def _apply_method(
         self: Axes,
         frame: str = "nice",
         n: int = 5,
@@ -89,7 +89,7 @@ def register() -> None:
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
-        return klaar(
+        return apply(
             self,
             frame=frame,
             n=n,
@@ -98,20 +98,20 @@ def register() -> None:
             weights=weights,
         )
 
-    def _ontklaar_method(self: Axes) -> None:
-        return ontklaar(self)
+    def _restore_method(self: Axes) -> None:
+        return restore(self)
 
-    Axes.klaar = _klaar_method
-    Axes.ontklaar = _ontklaar_method
+    Axes.apply = _apply_method
+    Axes.restore = _restore_method
 
 
 def unregister() -> None:
-    """Remove the `klaar` and `ontklaar` methods if present.
+    """Remove the `apply` and `restore` methods if present.
 
     Re-entrant: a no-op when they were never registered.
     """
     from matplotlib.axes import Axes
 
-    for name in ("klaar", "ontklaar"):
+    for name in ("apply", "restore"):
         if getattr(Axes, name, None) is not None:
             delattr(Axes, name)
