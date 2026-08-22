@@ -2,6 +2,8 @@
 
 Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number ticks inside the data range (mizani `breaks_extended`), axis labels at the spine ends.
 
+Import idiom: `import vanzelfsprekend as vfs`.
+
 ## Repository rules
 
 - `docs/superpowers/` (specs, plans, other superpowers artifacts) is local working material and is gitignored. Never commit it, and never use `git add -f` on it.

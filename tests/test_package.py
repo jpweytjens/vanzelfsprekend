@@ -1,5 +1,5 @@
-import vanzelfsprekend
+import vanzelfsprekend as vfs
 
 
 def test_package_imports():
-    assert vanzelfsprekend is not None
+    assert vfs is not None
