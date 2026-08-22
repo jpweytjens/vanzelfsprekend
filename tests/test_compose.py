@@ -105,6 +105,7 @@ def test_ontklaar_on_untouched_axes_is_noop():
 def test_unregister_removes_methods_and_is_reentrant():
     vanzelfsprekend.register()
     from matplotlib.axes import Axes
+
     assert hasattr(Axes, "klaar")
     assert hasattr(Axes, "ontklaar")
     vanzelfsprekend.unregister()

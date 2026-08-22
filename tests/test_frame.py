@@ -176,6 +176,7 @@ def test_explicit_offset_overrides_default(scatter_ax):
 
 def test_one_hook_shared_by_frame_and_labels():
     import vanzelfsprekend
+
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
@@ -191,6 +192,7 @@ def test_one_hook_shared_by_frame_and_labels():
 def test_draw_hook_swallows_applier_errors():
     import vanzelfsprekend
     from vanzelfsprekend import hook
+
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
     vanzelfsprekend.range_frame(ax)
