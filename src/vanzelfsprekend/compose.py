@@ -2,10 +2,13 @@
 
 from collections.abc import Sequence
 
+import matplotlib as mpl
 from matplotlib.axes import Axes
 
+from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
+from vanzelfsprekend.mute import mute
 
 
 def apply(
@@ -20,16 +23,25 @@ def apply(
 
     The top-level entry point. Today it applies `range_frame` with good
     defaults; it is the seam where later styling and mark helpers will be
-    bundled. Takes the same arguments as `range_frame`.
+    bundled. Takes the same arguments as `range_frame`. It also greys the
+    axis furniture and installs the ink-first Tol colour cycle. A custom
+    per-axes cycle set before `apply` is restored to the rc default, not
+    recovered.
 
     Returns
     -------
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    return range_frame(
+    range_frame(
         ax, frame=frame, n=n, offset=offset, nice_numbers=nice_numbers, weights=weights
     )
+    mute(ax)
+    state = get_state(ax)
+    if "cycle" not in state:
+        state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
+    ax.set_prop_cycle(color=palettes.CYCLE)
+    return ax
 
 
 def restore(ax: Axes) -> None:
@@ -81,6 +93,10 @@ def restore(ax: Axes) -> None:
                     labelcolor=prior["ticklabel"],
                 )
             axis.label.set_color(prior["label"])
+
+    cycle_state = state.get("cycle")
+    if cycle_state is not None:
+        ax.set_prop_cycle(cycle_state["snapshot"])
 
     clear_state(ax)
     ax.figure.canvas.draw_idle()

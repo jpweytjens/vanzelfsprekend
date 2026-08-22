@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import to_rgba
 
 import vanzelfsprekend as vfs
 
@@ -136,4 +137,33 @@ def test_restore_after_repeated_range_frame_restores_original_locator():
     fig.canvas.draw()
     vfs.restore(ax)
     assert ax.xaxis.get_major_locator() is original
+    plt.close(fig)
+
+
+def test_apply_mutes_and_installs_ink_first_cycle():
+    fig, ax = plt.subplots()
+    vfs.apply(ax)
+    (first,) = ax.plot([0, 1], [0, 1])
+    (second,) = ax.plot([0, 1], [1, 0])
+    assert first.get_color() == vfs.palettes.DATA_INK
+    assert second.get_color() == vfs.palettes.VIBRANT["orange"]
+    assert ax.spines["left"].get_edgecolor() == to_rgba(vfs.palettes.AXIS_INK)
+    plt.close(fig)
+
+
+def test_restore_reinstates_prior_cycle():
+    fig, ax = plt.subplots()
+    vfs.apply(ax)
+    vfs.restore(ax)
+    (line,) = ax.plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba("#1f77b4")  # matplotlib's default C0
+    plt.close(fig)
+
+
+def test_apply_before_plotting_frames_the_data_on_draw():
+    fig, ax = plt.subplots()
+    vfs.apply(ax)
+    ax.plot([1, 2, 3], [3, 1, 2])
+    fig.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == (1.0, 3.0)
     plt.close(fig)
