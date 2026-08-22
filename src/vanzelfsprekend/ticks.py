@@ -1,5 +1,7 @@
 """Tick-mark direction: in, out, or gone."""
 
+from typing import Any
+
 import matplotlib as mpl
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
@@ -51,12 +53,17 @@ def tick_direction(ax: Axes, direction: str = "out") -> Axes:
     return ax
 
 
+def _rc(key: str) -> Any:
+    """Look up `mpl.rcParams` under a computed key the stubs type as literal-only."""
+    return mpl.rcParams[key]  # ty: ignore[invalid-argument-type]
+
+
 def _tick_geometry(axis: Axis) -> dict:
-    key = axis.axis_name
+    key = axis.axis_name  # ty: ignore[unresolved-attribute]
     major = axis.get_tick_params(which="major")
     minor = axis.get_tick_params(which="minor")
     return {
-        "direction": major.get("direction", mpl.rcParams[f"{key}tick.direction"]),
-        "major_length": major.get("length", mpl.rcParams[f"{key}tick.major.size"]),
-        "minor_length": minor.get("length", mpl.rcParams[f"{key}tick.minor.size"]),
+        "direction": major.get("direction", _rc(f"{key}tick.direction")),
+        "major_length": major.get("length", _rc(f"{key}tick.major.size")),
+        "minor_length": minor.get("length", _rc(f"{key}tick.minor.size")),
     }

@@ -9,6 +9,7 @@ from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.mute import mute
+from vanzelfsprekend.ticks import _rc
 
 
 def apply(
@@ -96,15 +97,15 @@ def restore(ax: Axes) -> None:
                     labelcolor=prior["ticklabel"],
                 )
             else:
-                rc_color = mpl.rcParams[f"{key}tick.color"]
-                rc_labelcolor = mpl.rcParams[f"{key}tick.labelcolor"]
+                rc_color = _rc(f"{key}tick.color")
+                rc_labelcolor = _rc(f"{key}tick.labelcolor")
                 if rc_labelcolor == "inherit":
                     rc_labelcolor = rc_color
                 ax.tick_params(
                     axis=key,
                     which="both",
                     color=rc_color,
-                    width=mpl.rcParams[f"{key}tick.major.width"],
+                    width=_rc(f"{key}tick.major.width"),
                     labelcolor=rc_labelcolor,
                 )
             axis.label.set_color(prior["label"])
@@ -171,8 +172,8 @@ def register() -> None:
     def _restore_method(self: Axes) -> None:
         return restore(self)
 
-    Axes.apply = _apply_method
-    Axes.restore = _restore_method
+    Axes.apply = _apply_method  # ty: ignore[unresolved-attribute]
+    Axes.restore = _restore_method  # ty: ignore[unresolved-attribute]
 
 
 def unregister() -> None:

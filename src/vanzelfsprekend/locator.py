@@ -83,14 +83,15 @@ class TalbotLocator(Locator):
             self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
         )
 
-    def __call__(self) -> np.ndarray:
+    def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis data interval."""
-        dmin, dmax = self.axis.get_data_interval()
+        dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
         if not np.isfinite([dmin, dmax]).all():
-            return np.asarray(AutoLocator().tick_values(*self.axis.get_view_interval()))
+            view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
+            return np.asarray(AutoLocator().tick_values(*view))
         return self.tick_values(dmin, dmax)
 
-    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:
+    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
         """Return tick locations inside `[vmin, vmax]`.
 
         Parameters
