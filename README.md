@@ -91,7 +91,7 @@ Parameters and behavior are documented in the docstrings.
 
 ## Credits and prior art
 
-vanzelfsprekend joins a long line of Tufte-in-matplotlib work, and two neighbours deserve direct credit:
+vanzelfsprekend joins a long line of Tufte-in-matplotlib work, and its neighbours deserve direct credit:
 
 - [dufte](https://github.com/nschloe/dufte), since merged into [matplotx](https://github.com/nschloe/matplotx), is the closest kin: the same minimal-ink instinct, and its `line_labels` first framed label placement as a least-squares problem under minimum-distance constraints. vanzelfsprekend solves that same problem, exactly, with the pool-adjacent-violators algorithm.
 - [adjustText](https://github.com/Phlya/adjustText), following R's [ggrepel](https://ggrepel.slowkow.com/), tackles the harder general problem of untangling arbitrary 2-D annotations, which takes iterative approximation. Restricting labels to line ends is what lets vanzelfsprekend place them exactly instead.
