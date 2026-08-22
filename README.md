@@ -2,7 +2,7 @@
 
 A matplotlib plot arrives framed in a box: four spines at the view limits, none of them saying anything about the data inside. A range frame makes those lines work. The top and right spines go, and the two that remain are trimmed to the data, so each spine reports its variable's minimum and maximum. Ticks land on nice numbers strictly inside the data range, and the axis labels sit at the spine ends instead of the middle. Range frames come from Tufte's *The Visual Display of Quantitative Information*; the tick placement is Talbot, Lin and Hanrahan's extended Wilkinson algorithm (mizani's `breaks_extended`). The name is Dutch for self-evident, literally "self-speaking": the plot speaks for itself.
 
-![A scatter plot with a range frame: spines trimmed to the data, ticks on nice numbers inside it, labels at the spine ends](docs/quickstart.png)
+![A scatter of measured cycling speeds against gradient, with a backsolved model curve in orange inside a range frame](docs/quickstart.png)
 
 ## Install
 
@@ -14,7 +14,7 @@ uv add /path/to/vanzelfsprekend
 
 ## Quickstart
 
-The figure above, in full:
+The figure above, in full. A rider is three scalars (flat cruising speed, critical climbing rate, a descent comfort cap); a force-balance cubic backsolves the speed they imply at any gradient, and measured speeds scatter around that curve:
 
 ```python
 import matplotlib.pyplot as plt
@@ -22,12 +22,45 @@ import numpy as np
 
 import vanzelfsprekend as vfs
 
-rng = np.random.default_rng(0)
+G0, MASS, CDA, CRR, RHO, WIND = 9.81, 78.0, 0.35, 0.005, 1.225, 2.22
+V_FLAT, VAM_CP, V_CAP = 29 / 3.6, 1150.0, 52 / 3.6  # the three rider scalars
+K_A = 0.5 * RHO * CDA
+
+
+def solve_speed(power, gradient):
+    """Largest real root of the force-balance cubic, per gradient."""
+    theta = np.arctan(gradient)
+    speeds = []
+    for p, th in zip(*np.broadcast_arrays(power, theta)):
+        drag = K_A * WIND**2 + MASS * G0 * (CRR * np.cos(th) + np.sin(th))
+        roots = np.roots([K_A, 2 * K_A * WIND, drag, -p])
+        speeds.append(roots[np.isreal(roots)].real.max())
+    return np.array(speeds)
+
+
+def backsolved_speed(gradient):
+    """Speed at any gradient from the three scalars."""
+    p_flat = K_A * (V_FLAT + WIND) ** 2 * V_FLAT + CRR * MASS * G0 * V_FLAT
+    cp = MASS * G0 * VAM_CP / 3600
+    climb = p_flat + (cp - p_flat) * np.clip(gradient / 0.03, 0, 1)
+    descent = p_flat * np.exp(-25 * np.abs(gradient))
+    power = np.where(gradient >= 0, climb, descent)
+    return 3.6 * np.minimum(solve_speed(power, gradient), V_CAP)
+
+
+rng = np.random.default_rng(7)
+gradient = rng.uniform(-0.099, 0.099, 45)
+speed = backsolved_speed(gradient) + rng.normal(0, 1.5, gradient.size)
+grid = np.linspace(-0.10, 0.10, 300)
+
 fig, ax = plt.subplots(figsize=(5, 3.5))
-ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-vfs.apply(ax)
-vfs.xlabel(ax, "time (s)")
-vfs.ylabel(ax, "voltage", flush=True)
+ax.scatter(100 * gradient, speed, s=12, color="#333333", zorder=3)
+ax.plot(100 * grid, backsolved_speed(grid), color="#EE7733", linewidth=1.8)
+ax.text(-6.0, 50, "measured", color="#333333")
+ax.text(4.0, 28, "backsolved", color="#EE7733")
+vfs.apply(ax, frame="loose")
+vfs.xlabel(ax, "gradient (%)")
+vfs.ylabel(ax, "speed (km/h)", flush=True)
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
