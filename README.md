@@ -10,8 +10,9 @@ What it adds today:
 - A draw hook that keeps all of this glued to the data through autoscaling and tick changes, and `restore` to undo it exactly.
 - Greyed axis furniture and an ink-first colour cycle built on
   [Paul Tol's colour schemes](https://sronpersonalpages.nl/~pault/):
-  single-series plots stay near-black, colour enters at series two,
-  and `color="tol:orange"` works anywhere matplotlib takes a colour.
+  single-series plots stay near-black, colour enters at series two of
+  the same kind, and `color="tol:orange"` works anywhere matplotlib
+  takes a colour.
 
 ![A scatter of measured cycling speeds against gradient, with a backsolved model curve in orange inside a range frame](docs/backsolved_speed.png)
 
