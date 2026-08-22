@@ -95,6 +95,14 @@ def restore(ax: Axes) -> None:
                     width=prior["tick_width"],
                     labelcolor=prior["ticklabel"],
                 )
+            else:
+                ax.tick_params(
+                    axis=key,
+                    which="both",
+                    color=mpl.rcParams[f"{key}tick.color"],
+                    width=mpl.rcParams[f"{key}tick.major.width"],
+                    labelcolor=mpl.rcParams[f"{key}tick.labelcolor"],
+                )
             axis.label.set_color(prior["label"])
 
     cycle_state = state.get("cycle")

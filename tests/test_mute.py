@@ -46,3 +46,16 @@ def test_restore_reverts_mute():
     after_tick = to_rgba(ax.xaxis.get_major_ticks()[0].tick1line.get_color())
     assert after_tick == before_tick
     plt.close(fig)
+
+
+def test_restore_resets_tick_ink_on_tickless_axes():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    ax.set_xticks([])
+    ax.set_yticks([])
+    vfs.mute(ax)
+    vfs.restore(ax)
+    ax.set_xticks([0.5])
+    tick = ax.xaxis.get_major_ticks()[0]
+    assert to_rgba(tick.tick1line.get_color()) == to_rgba(plt.rcParams["xtick.color"])
+    plt.close(fig)
