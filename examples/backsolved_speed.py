@@ -84,7 +84,7 @@ def draw_data(ax: plt.Axes) -> None:
 def main() -> None:
     """Render the figure into `docs/backsolved_speed.png`."""
     fig, (plain, treated) = plt.subplots(1, 2, figsize=(10, 3.5))
-    fig.subplots_adjust(wspace=0.3)
+    fig.subplots_adjust(wspace=0.45)
 
     draw_data(plain)
     plain.set_xlabel("gradient (%)")
