@@ -228,3 +228,15 @@ def test_restore_removes_line_labels():
     vzs.restore(ax)
     assert not ax.texts
     plt.close(fig)
+
+
+def test_non_string_label_is_skipped():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="keep")
+    ax.plot(x, x + 1)
+    ax.get_lines()[1].set_label(None)
+    texts = vzs.line_labels(ax)
+    fig.canvas.draw()
+    assert [t.get_text() for t in texts] == ["keep"]
+    plt.close(fig)

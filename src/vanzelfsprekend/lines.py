@@ -65,16 +65,16 @@ def line_labels(
         for text in prior["texts"]:
             text.remove()
     anchored = [
-        (line, anchor)
+        (line, label, anchor)
         for line in ax.get_lines()
-        if not line.get_label().startswith("_")
+        if (label := _labeled(line)) is not None
         and (anchor := _anchor(line, at)) is not None
     ]
-    lines = [line for line, _ in anchored]
+    lines = [line for line, _, _ in anchored]
     sign = 1.0 if at == "end" else -1.0
     texts = [
         ax.annotate(
-            line.get_label(),
+            label,
             xy=anchor,
             xytext=(sign * pad, 0.0),
             textcoords="offset points",
@@ -83,7 +83,7 @@ def line_labels(
             color=color,
             annotation_clip=False,
         )
-        for (line, anchor), color in zip(
+        for (_, label, anchor), color in zip(
             anchored, _resolve_colors(labelcolor, lines), strict=True
         )
     ]
@@ -91,6 +91,14 @@ def line_labels(
     add_applier(ax, f"line_labels.{at}", partial(_apply_line_labels, at=at))
     run_appliers(ax)
     return texts
+
+
+def _labeled(line: Line2D) -> str | None:
+    """Return `line`'s legend text, or None for auto-generated or non-string labels."""
+    label = line.get_label()
+    if not isinstance(label, str) or label.startswith("_"):
+        return None
+    return label
 
 
 def _anchor(line: Line2D, at: str) -> tuple[float, float] | None:
