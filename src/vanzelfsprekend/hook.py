@@ -8,16 +8,16 @@ redraw when anything changed. This module knows nothing about frames or
 labels.
 """
 
-_STATE_ATTR = "_klaarte_state"
+_STATE_ATTR = "_vanzelfsprekend_state"
 
 
 def get_state(ax):
-    """Return the klaarte state dict for `ax`, or `None`."""
+    """Return the vanzelfsprekend state dict for `ax`, or `None`."""
     return getattr(ax, _STATE_ATTR, None)
 
 
 def ensure_state(ax):
-    """Return `ax`'s klaarte state, creating it and the draw hook once."""
+    """Return `ax`'s vanzelfsprekend state, creating it and the draw hook once."""
     state = getattr(ax, _STATE_ATTR, None)
     if state is None:
         cid = ax.figure.canvas.mpl_connect("draw_event", _make_on_draw(ax))
@@ -66,6 +66,6 @@ def disconnect(ax):
 
 
 def clear_state(ax):
-    """Delete `ax`'s klaarte state attribute if present."""
+    """Delete `ax`'s vanzelfsprekend state attribute if present."""
     if hasattr(ax, _STATE_ATTR):
         delattr(ax, _STATE_ATTR)

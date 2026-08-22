@@ -1,5 +1,5 @@
-import klaarte
+import vanzelfsprekend
 
 
 def test_package_imports():
-    assert klaarte is not None
+    assert vanzelfsprekend is not None

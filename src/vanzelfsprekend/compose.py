@@ -1,11 +1,11 @@
 """The klaar composer, teardown, and axes-method registration."""
 
-from klaarte.frame import range_frame
-from klaarte.hook import clear_state, disconnect, get_state
+from vanzelfsprekend.frame import range_frame
+from vanzelfsprekend.hook import clear_state, disconnect, get_state
 
 
 def klaar(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
-    """Apply klaarte's default treatment to `ax`.
+    """Apply vanzelfsprekend's default treatment to `ax`.
 
     The top-level entry point. Today it applies `range_frame` with good
     defaults; it is the seam where later styling and mark helpers will be
@@ -22,12 +22,12 @@ def klaar(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
 
 
 def ontklaar(ax):
-    """Remove klaarte's treatment from `ax`, restoring its prior state.
+    """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
 
-    Disconnects the draw hook and restores exactly the properties klaarte
+    Disconnects the draw hook and restores exactly the properties vanzelfsprekend
     changed — the original locators, spine visibility and positions, and
     label alignment — from the snapshot taken at first application. A no-op
-    on an axes klaarte never touched.
+    on an axes vanzelfsprekend never touched.
     """
     state = get_state(ax)
     if state is None:

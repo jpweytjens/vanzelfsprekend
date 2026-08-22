@@ -1,4 +1,4 @@
-# klaarte
+# vanzelfsprekend
 
 Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number ticks inside the data range (mizani `breaks_extended`), axis labels at the spine ends.
 
@@ -9,5 +9,5 @@ Tufte-style range frames for matplotlib: spines trimmed to the data, nice-number
 
 ## Working docs (local only)
 
-- Spec: `docs/superpowers/specs/2026-07-07-klaarte-foundation-design.md`
-- Plan: `docs/superpowers/plans/2026-07-07-klaarte-foundation.md`
+- Spec: `docs/superpowers/specs/2026-07-07-vanzelfsprekend-foundation-design.md`
+- Plan: `docs/superpowers/plans/2026-07-07-vanzelfsprekend-foundation.md`

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-import klaarte
+import vanzelfsprekend
 
 
 @pytest.fixture
@@ -10,9 +10,9 @@ def labeled_ax():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.range_frame(ax)
-    klaarte.xlabel(ax, "time (s)")
-    klaarte.ylabel(ax, "voltage")
+    vanzelfsprekend.range_frame(ax)
+    vanzelfsprekend.xlabel(ax, "time (s)")
+    vanzelfsprekend.ylabel(ax, "voltage")
     fig.canvas.draw()
     yield ax
     plt.close(fig)
@@ -69,8 +69,8 @@ def test_flush_ylabel_top_aligns_with_top_tick_label():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.range_frame(ax)
-    klaarte.ylabel(ax, "voltage", flush=True)
+    vanzelfsprekend.range_frame(ax)
+    vanzelfsprekend.ylabel(ax, "voltage", flush=True)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)
@@ -85,9 +85,9 @@ def _make_labeled_ax(*, xlabelpad=None, ylabelpad=None):
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.range_frame(ax)
-    klaarte.xlabel(ax, "time (s)", labelpad=xlabelpad)
-    klaarte.ylabel(ax, "voltage", labelpad=ylabelpad)
+    vanzelfsprekend.range_frame(ax)
+    vanzelfsprekend.xlabel(ax, "time (s)", labelpad=xlabelpad)
+    vanzelfsprekend.ylabel(ax, "voltage", labelpad=ylabelpad)
     fig.canvas.draw()
     return fig, ax
 
@@ -122,8 +122,8 @@ def test_flush_ylabel_with_loose_frame_no_overlap():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.range_frame(ax, frame="loose")
-    klaarte.ylabel(ax, "voltage", flush=True)
+    vanzelfsprekend.range_frame(ax, frame="loose")
+    vanzelfsprekend.ylabel(ax, "voltage", flush=True)
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)

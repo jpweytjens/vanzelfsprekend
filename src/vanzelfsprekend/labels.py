@@ -1,7 +1,7 @@
 """End-of-spine axis labels for a range frame."""
 
-from klaarte.frame import _frame_span
-from klaarte.hook import add_applier, ensure_state, get_state, run_appliers
+from vanzelfsprekend.frame import _frame_span
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
 def xlabel(ax, text, labelpad=None):

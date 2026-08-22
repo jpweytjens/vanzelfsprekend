@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from klaarte import TalbotLocator, range_frame
+from vanzelfsprekend import TalbotLocator, range_frame
 
 
 def test_matches_mizani_directly():

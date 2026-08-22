@@ -4,8 +4,8 @@ import warnings
 
 import numpy as np
 
-from klaarte.hook import add_applier, ensure_state, get_state, run_appliers
-from klaarte.locator import TalbotLocator
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
+from vanzelfsprekend.locator import TalbotLocator
 
 
 def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
@@ -68,14 +68,14 @@ def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=N
     for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
         if axis.get_scale() != "linear":
             warnings.warn(
-                f"klaarte: {name}-axis has scale {axis.get_scale()!r}; "
+                f"vanzelfsprekend: {name}-axis has scale {axis.get_scale()!r}; "
                 "only linear axes are supported, leaving it untouched",
                 stacklevel=2,
             )
             continue
         if axis.get_converter() is not None:
             warnings.warn(
-                f"klaarte: {name}-axis has a units converter; "
+                f"vanzelfsprekend: {name}-axis has a units converter; "
                 "only plain linear axes are supported, leaving it untouched",
                 stacklevel=2,
             )

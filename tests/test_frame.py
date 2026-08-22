@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from klaarte import range_frame
+from vanzelfsprekend import range_frame
 
 
 @pytest.fixture
@@ -80,10 +80,10 @@ def test_histogram():
 
 def test_repeated_calls_keep_one_hook(scatter_ax):
     ax = range_frame(scatter_ax)
-    first_cid = ax._klaarte_state["cid"]
+    first_cid = ax._vanzelfsprekend_state["cid"]
     range_frame(ax, frame="data")
-    assert ax._klaarte_state["cid"] == first_cid
-    assert ax._klaarte_state["frame"]["mode"] == "data"
+    assert ax._vanzelfsprekend_state["cid"] == first_cid
+    assert ax._vanzelfsprekend_state["frame"]["mode"] == "data"
 
 
 def test_invalid_frame_raises(scatter_ax):
@@ -175,25 +175,25 @@ def test_explicit_offset_overrides_default(scatter_ax):
 
 
 def test_one_hook_shared_by_frame_and_labels():
-    import klaarte
+    import vanzelfsprekend
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
-    klaarte.range_frame(ax)
-    klaarte.xlabel(ax, "t")
-    klaarte.ylabel(ax, "v")
-    state = ax._klaarte_state
+    vanzelfsprekend.range_frame(ax)
+    vanzelfsprekend.xlabel(ax, "t")
+    vanzelfsprekend.ylabel(ax, "v")
+    state = ax._vanzelfsprekend_state
     assert set(state["appliers"]) == {"frame", "labels"}
     assert isinstance(state["cid"], int)
     plt.close(fig)
 
 
 def test_draw_hook_swallows_applier_errors():
-    import klaarte
-    from klaarte import hook
+    import vanzelfsprekend
+    from vanzelfsprekend import hook
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
-    klaarte.range_frame(ax)
+    vanzelfsprekend.range_frame(ax)
 
     def boom(_ax):
         raise RuntimeError("applier blew up")
