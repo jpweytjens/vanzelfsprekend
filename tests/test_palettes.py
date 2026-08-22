@@ -1,3 +1,6 @@
+import matplotlib.colors as mcolors
+import pytest
+
 from vanzelfsprekend import palettes
 
 
@@ -21,3 +24,20 @@ def test_inks_and_cycle():
     assert palettes.AXIS_INK == palettes.DARK["dark_grey"] == "#555555"
     assert palettes.CYCLE[0] == palettes.DATA_INK
     assert palettes.CYCLE[1:] == tuple(palettes.VIBRANT.values())
+
+
+def test_bare_tol_names_resolve_to_vibrant():
+    assert mcolors.to_hex("tol:orange").upper() == "#EE7733"
+    assert mcolors.to_hex("tol:grey").upper() == "#BBBBBB"
+
+
+def test_qualified_names_resolve_for_every_scheme():
+    for scheme_name, scheme in palettes.SCHEMES.items():
+        for name, hex_colour in scheme.items():
+            resolved = mcolors.to_hex(f"tol:{scheme_name}.{name}")
+            assert resolved.upper() == hex_colour
+
+
+def test_unregistered_tol_name_still_raises():
+    with pytest.raises(ValueError, match="tol:mauve"):
+        mcolors.to_rgba("tol:mauve")

@@ -7,6 +7,8 @@ sequence; `list(SCHEME.values())` is the colour-cycle form. `PALE` and
 `DARK` are meant for text backgrounds and text, not for lines or maps.
 """
 
+from matplotlib.colors import get_named_colors_mapping
+
 BRIGHT = {
     "blue": "#4477AA",
     "red": "#EE6677",
@@ -92,3 +94,21 @@ SCHEMES = {
 DATA_INK = "#333333"
 AXIS_INK = DARK["dark_grey"]
 CYCLE = (DATA_INK, *VIBRANT.values())
+
+
+def _register_named_colors() -> None:
+    """Add `tol:` names to matplotlib's named-colour registry.
+
+    Bare names (`tol:orange`) resolve to the vibrant scheme; qualified
+    names (`tol:muted.rose`) reach every scheme. Same mechanism as
+    matplotlib's own `tab:` and `xkcd:` namespaces.
+    """
+    mapping = get_named_colors_mapping()
+    for scheme_name, scheme in SCHEMES.items():
+        for name, hex_colour in scheme.items():
+            mapping[f"tol:{scheme_name}.{name}"] = hex_colour
+    for name, hex_colour in VIBRANT.items():
+        mapping[f"tol:{name}"] = hex_colour
+
+
+_register_named_colors()
