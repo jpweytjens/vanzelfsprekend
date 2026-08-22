@@ -10,12 +10,15 @@ def test_mute_greys_axis_furniture():
     ax.plot([0, 1], [0, 1])
     ax.set_xlabel("x")
     vfs.mute(ax)
-    ink = to_rgba(palettes.AXIS_INK)
-    assert ax.spines["left"].get_edgecolor() == ink
+    line_ink = to_rgba(palettes.LINE_INK)
+    text_ink = to_rgba(palettes.TEXT_INK)
+    assert ax.spines["left"].get_edgecolor() == line_ink
+    assert ax.spines["left"].get_linewidth() == 0.7
     tick = ax.xaxis.get_major_ticks()[0]
-    assert to_rgba(tick.tick1line.get_color()) == ink
-    assert to_rgba(tick.label1.get_color()) == ink
-    assert to_rgba(ax.xaxis.label.get_color()) == ink
+    assert to_rgba(tick.tick1line.get_color()) == line_ink
+    assert tick.tick1line.get_markeredgewidth() == 0.7
+    assert to_rgba(tick.label1.get_color()) == text_ink
+    assert to_rgba(ax.xaxis.label.get_color()) == text_ink
     plt.close(fig)
 
 
@@ -32,11 +35,13 @@ def test_restore_reverts_mute():
     ax.plot([0, 1], [0, 1])
     ax.set_xlabel("x")
     before_spine = ax.spines["left"].get_edgecolor()
+    before_width = ax.spines["left"].get_linewidth()
     before_label = to_rgba(ax.xaxis.label.get_color())
     before_tick = to_rgba(ax.xaxis.get_major_ticks()[0].tick1line.get_color())
     vfs.mute(ax)
     vfs.restore(ax)
     assert ax.spines["left"].get_edgecolor() == before_spine
+    assert ax.spines["left"].get_linewidth() == before_width
     assert to_rgba(ax.xaxis.label.get_color()) == before_label
     after_tick = to_rgba(ax.xaxis.get_major_ticks()[0].tick1line.get_color())
     assert after_tick == before_tick

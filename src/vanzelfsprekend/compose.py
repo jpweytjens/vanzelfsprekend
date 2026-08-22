@@ -82,8 +82,9 @@ def restore(ax: Axes) -> None:
     mute_state = state.get("mute")
     if mute_state is not None:
         snap = mute_state["snapshot"]
-        for name, colour in snap["spines"].items():
-            ax.spines[name].set_edgecolor(colour)
+        for name, prior in snap["spines"].items():
+            ax.spines[name].set_edgecolor(prior["color"])
+            ax.spines[name].set_linewidth(prior["width"])
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             prior = snap[key]
             if prior["tick"] is not None:
@@ -91,6 +92,7 @@ def restore(ax: Axes) -> None:
                     axis=key,
                     which="both",
                     color=prior["tick"],
+                    width=prior["tick_width"],
                     labelcolor=prior["ticklabel"],
                 )
             axis.label.set_color(prior["label"])

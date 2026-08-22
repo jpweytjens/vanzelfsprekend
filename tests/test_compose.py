@@ -145,9 +145,9 @@ def test_apply_mutes_and_installs_ink_first_cycle():
     vfs.apply(ax)
     (first,) = ax.plot([0, 1], [0, 1])
     (second,) = ax.plot([0, 1], [1, 0])
-    assert first.get_color() == vfs.palettes.DATA_INK
-    assert second.get_color() == vfs.palettes.VIBRANT["orange"]
-    assert ax.spines["left"].get_edgecolor() == to_rgba(vfs.palettes.AXIS_INK)
+    assert to_rgba(first.get_color()) == to_rgba(vfs.palettes.DATA_INK)
+    assert to_rgba(second.get_color()) == to_rgba(vfs.palettes.VIBRANT["orange"])
+    assert ax.spines["left"].get_edgecolor() == to_rgba(vfs.palettes.LINE_INK)
     plt.close(fig)
 
 

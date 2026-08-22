@@ -92,7 +92,8 @@ SCHEMES = {
 }
 
 DATA_INK = "#333333"
-AXIS_INK = DARK["dark_grey"]
+TEXT_INK = DARK["dark_grey"]
+LINE_INK = "#999999"
 CYCLE = (DATA_INK, *VIBRANT.values())
 
 
