@@ -15,6 +15,7 @@ OUTPUT = Path(__file__).parent / "output"
 
 
 def scatter(frame: str) -> None:
+    """Render a scatter plot with the given frame mode."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -26,6 +27,7 @@ def scatter(frame: str) -> None:
 
 
 def histogram() -> None:
+    """Render a histogram with a range frame."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25, color="0.4")
     vanzelfsprekend.range_frame(ax)
@@ -36,6 +38,7 @@ def histogram() -> None:
 
 
 def custom_ticks() -> None:
+    """Render a scatter plot with user-set ticks."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -48,6 +51,7 @@ def custom_ticks() -> None:
 
 
 def minimal() -> None:
+    """Render a scatter plot with a data frame and no ticks."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -61,6 +65,7 @@ def minimal() -> None:
 
 
 def main() -> None:
+    """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
     scatter("nice")
     scatter("data")

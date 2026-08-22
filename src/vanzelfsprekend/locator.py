@@ -8,7 +8,12 @@ from matplotlib.ticker import AutoLocator, Locator
 from mizani.breaks import breaks_extended
 
 _DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
-_DEFAULT_WEIGHTS = {"simplicity": 0.25, "coverage": 0.2, "density": 0.5, "legibility": 0.05}
+_DEFAULT_WEIGHTS = {
+    "simplicity": 0.25,
+    "coverage": 0.2,
+    "density": 0.5,
+    "legibility": 0.05,
+}
 
 
 class TalbotLocator(Locator):
@@ -74,7 +79,9 @@ class TalbotLocator(Locator):
 
         self._loose = loose
         self._breaks = breaks_extended(n=n, Q=q, only_inside=not loose, w=w)
-        self._cover = self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
+        self._cover = (
+            self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
+        )
 
     def __call__(self) -> np.ndarray:
         """Return tick locations computed from the axis data interval."""

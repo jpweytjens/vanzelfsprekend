@@ -25,7 +25,7 @@ def test_respects_n():
 
 
 @pytest.mark.parametrize(
-    "vmin, vmax",
+    ("vmin", "vmax"),
     [(np.nan, 1.0), (-np.inf, np.inf), (2.0, 2.0), (5.0, 1.0)],
 )
 def test_degenerate_inputs_do_not_raise(vmin, vmax):
@@ -114,7 +114,9 @@ def test_nice_numbers_forwarded_to_mizani():
 
 
 def test_weights_merged_over_defaults_in_slot_order():
-    expected = breaks_extended(n=5, only_inside=True, w=(0.25, 0.4, 0.5, 0.05))((0.3, 9.7))
+    expected = breaks_extended(n=5, only_inside=True, w=(0.25, 0.4, 0.5, 0.05))(
+        (0.3, 9.7)
+    )
     result = TalbotLocator(weights={"coverage": 0.4}).tick_values(0.3, 9.7)
     np.testing.assert_allclose(result, expected)
 
