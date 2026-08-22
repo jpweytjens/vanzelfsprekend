@@ -2,7 +2,7 @@
 
 from functools import partial
 from itertools import cycle
-from typing import Literal
+from typing import Literal, cast
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -117,11 +117,12 @@ def _resolve_colors(
     if isinstance(labelcolor, str) and labelcolor == "linecolor":
         return [line.get_color() for line in lines]
     if is_color_like(labelcolor):
-        return [labelcolor] * len(lines)
-    colors = [c for c, _ in zip(cycle(labelcolor), lines, strict=False)]
-    if len(colors) != len(lines):
+        return [cast("ColorType", labelcolor)] * len(lines)
+    if not isinstance(labelcolor, list | tuple) or not labelcolor:
         raise ValueError(f"labelcolor {labelcolor!r} is not a colour or colour list")
-    return colors
+    return [
+        cast("ColorType", c) for c, _ in zip(cycle(labelcolor), lines, strict=False)
+    ]
 
 
 def _apply_line_labels(ax: Axes, at: str) -> bool:

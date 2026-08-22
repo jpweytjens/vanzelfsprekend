@@ -240,3 +240,13 @@ def test_non_string_label_is_skipped():
     fig.canvas.draw()
     assert [t.get_text() for t in texts] == ["keep"]
     plt.close(fig)
+
+
+def test_invalid_labelcolor_raises():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    with pytest.raises(ValueError, match="colour"):
+        vzs.line_labels(ax, labelcolor=5)
+    with pytest.raises(ValueError, match="colour"):
+        vzs.line_labels(ax, labelcolor=[])
+    plt.close(fig)
