@@ -197,3 +197,15 @@ def test_both_sides_coexist(converging_ax):
     assert len(start_texts) == 3
     assert set(end_texts) <= set(ax.texts)
     assert set(start_texts) <= set(ax.texts)
+
+
+def test_restore_removes_line_labels():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    vfs.apply(ax)
+    vfs.line_labels(ax)
+    vfs.line_labels(ax, at="start")
+    fig.canvas.draw()
+    vfs.restore(ax)
+    assert not ax.texts
+    plt.close(fig)

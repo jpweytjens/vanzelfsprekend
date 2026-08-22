@@ -109,6 +109,12 @@ def restore(ax: Axes) -> None:
                 )
             axis.label.set_color(prior["label"])
 
+    line_labels_state = state.get("line_labels")
+    if line_labels_state is not None:
+        for side in line_labels_state.values():
+            for text in side["texts"]:
+                text.remove()
+
     ticks_state = state.get("ticks")
     if ticks_state is not None:
         for key in ("x", "y"):
