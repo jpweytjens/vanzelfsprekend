@@ -170,3 +170,30 @@ def test_invalid_at_raises():
     with pytest.raises(ValueError, match="start"):
         vfs.line_labels(ax, at="middle")
     plt.close(fig)
+
+
+def test_start_labels_right_align_and_separate():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 200)
+    for slope, name in [(1.0, "alpha"), (1.01, "beta")]:
+        ax.plot(x, slope * x, label=name)
+    vfs.range_frame(ax, frame="loose")
+    texts = vfs.line_labels(ax, at="start")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    pad_px = 4.0 * fig.dpi / 72
+    boxes = [t.get_window_extent(renderer) for t in texts]
+    assert not boxes[0].overlaps(boxes[1])
+    anchor_x = ax.transData.transform((0.0, 0.0))[0]
+    for box in boxes:
+        assert abs(box.x1 - (anchor_x - pad_px)) < 1
+    plt.close(fig)
+
+
+def test_both_sides_coexist(converging_ax):
+    ax, end_texts = converging_ax
+    start_texts = vfs.line_labels(ax, at="start")
+    ax.figure.canvas.draw()
+    assert len(start_texts) == 3
+    assert set(end_texts) <= set(ax.texts)
+    assert set(start_texts) <= set(ax.texts)
