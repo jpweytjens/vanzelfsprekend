@@ -74,7 +74,8 @@ Only plain linear axes are handled. A log-scaled axis, or one with a units conve
 | `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
 | `register()`, `unregister()` | add or remove the `ax.apply` and `ax.restore` methods |
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
-| `mute(ax, ink)` | grey the axis furniture, leaving the data ink alone |
+| `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
+| `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
 
 Parameters and behavior are documented in the docstrings.

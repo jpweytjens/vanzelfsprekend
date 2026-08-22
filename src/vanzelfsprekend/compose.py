@@ -109,6 +109,23 @@ def restore(ax: Axes) -> None:
                 )
             axis.label.set_color(prior["label"])
 
+    ticks_state = state.get("ticks")
+    if ticks_state is not None:
+        for key in ("x", "y"):
+            prior = ticks_state["snapshot"][key]
+            ax.tick_params(
+                axis=key,
+                which="major",
+                direction=prior["direction"],
+                length=prior["major_length"],
+            )
+            ax.tick_params(
+                axis=key,
+                which="minor",
+                direction=prior["direction"],
+                length=prior["minor_length"],
+            )
+
     cycle_state = state.get("cycle")
     if cycle_state is not None:
         ax.set_prop_cycle(cycle_state["snapshot"])

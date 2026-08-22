@@ -6,6 +6,7 @@ from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.locator import TalbotLocator
 from vanzelfsprekend.mute import mute
+from vanzelfsprekend.ticks import tick_direction
 
 __all__ = [
     "TalbotLocator",
@@ -15,6 +16,7 @@ __all__ = [
     "range_frame",
     "register",
     "restore",
+    "tick_direction",
     "unregister",
     "xlabel",
     "ylabel",
