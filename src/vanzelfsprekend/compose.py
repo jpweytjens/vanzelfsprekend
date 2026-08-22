@@ -66,6 +66,22 @@ def restore(ax: Axes) -> None:
             axis.label.set_rotation(props["rotation"])
             axis.label.set_position(props["position"])
 
+    mute_state = state.get("mute")
+    if mute_state is not None:
+        snap = mute_state["snapshot"]
+        for name, colour in snap["spines"].items():
+            ax.spines[name].set_edgecolor(colour)
+        for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
+            prior = snap[key]
+            if prior["tick"] is not None:
+                ax.tick_params(
+                    axis=key,
+                    which="both",
+                    color=prior["tick"],
+                    labelcolor=prior["ticklabel"],
+                )
+            axis.label.set_color(prior["label"])
+
     clear_state(ax)
     ax.figure.canvas.draw_idle()
 
