@@ -50,3 +50,8 @@ ignore = [
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ty.environment]
+# Pin the venv so the ty language server resolves third-party imports
+# even when a stale VIRTUAL_ENV is exported in the parent shell.
+python = "./.venv"
