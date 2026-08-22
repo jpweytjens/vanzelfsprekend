@@ -48,9 +48,10 @@ def restore(ax: Axes) -> None:
     """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
 
     Disconnects the draw hook and restores exactly the properties vanzelfsprekend
-    changed — the original locators, spine visibility and positions, and
-    label alignment — from the snapshot taken at first application. A no-op
-    on an axes vanzelfsprekend never touched.
+    changed — the original locators, spine visibility and positions,
+    label alignment, furniture colours, and the colour cycle — from the
+    snapshot taken at first application. A no-op on an axes vanzelfsprekend
+    never touched.
     """
     state = get_state(ax)
     if state is None:
