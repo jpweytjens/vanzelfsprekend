@@ -8,15 +8,20 @@ redraw when anything changed. This module knows nothing about frames or
 labels.
 """
 
+from collections.abc import Callable
+
+from matplotlib.axes import Axes
+from matplotlib.backend_bases import DrawEvent
+
 _STATE_ATTR = "_vanzelfsprekend_state"
 
 
-def get_state(ax):
+def get_state(ax: Axes) -> dict | None:
     """Return the vanzelfsprekend state dict for `ax`, or `None`."""
     return getattr(ax, _STATE_ATTR, None)
 
 
-def ensure_state(ax):
+def ensure_state(ax: Axes) -> dict:
     """Return `ax`'s vanzelfsprekend state, creating it and the draw hook once."""
     state = getattr(ax, _STATE_ATTR, None)
     if state is None:
@@ -26,12 +31,12 @@ def ensure_state(ax):
     return state
 
 
-def add_applier(ax, name, fn):
+def add_applier(ax: Axes, name: str, fn: Callable[[Axes], bool]) -> None:
     """Register (or replace) the applier stored under `name`."""
     ensure_state(ax)["appliers"][name] = fn
 
 
-def run_appliers(ax):
+def run_appliers(ax: Axes) -> bool:
     """Run every registered applier once now.
 
     Returns whether any applier reported a change. Does not swallow
@@ -46,8 +51,8 @@ def run_appliers(ax):
     return changed
 
 
-def _make_on_draw(ax):
-    def _on_draw(event):
+def _make_on_draw(ax: Axes) -> Callable[[DrawEvent], None]:
+    def _on_draw(event: DrawEvent) -> None:
         try:
             changed = run_appliers(ax)
         except Exception:
@@ -58,14 +63,14 @@ def _make_on_draw(ax):
     return _on_draw
 
 
-def disconnect(ax):
+def disconnect(ax: Axes) -> None:
     """Disconnect `ax`'s draw hook."""
     state = get_state(ax)
     if state is not None:
         ax.figure.canvas.mpl_disconnect(state["cid"])
 
 
-def clear_state(ax):
+def clear_state(ax: Axes) -> None:
     """Delete `ax`'s vanzelfsprekend state attribute if present."""
     if hasattr(ax, _STATE_ATTR):
         delattr(ax, _STATE_ATTR)

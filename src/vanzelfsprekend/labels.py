@@ -1,10 +1,13 @@
 """End-of-spine axis labels for a range frame."""
 
+from matplotlib.axes import Axes
+from matplotlib.text import Text
+
 from vanzelfsprekend.frame import _frame_span
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
-def xlabel(ax, text, labelpad=None):
+def xlabel(ax: Axes, text: str, labelpad: float | None = None) -> Text:
     """Set an x-label that sits below the right end of the bottom spine.
 
     Call after `range_frame`.
@@ -34,7 +37,9 @@ def xlabel(ax, text, labelpad=None):
     return ax.xaxis.label
 
 
-def ylabel(ax, text, flush=False, labelpad=None):
+def ylabel(
+    ax: Axes, text: str, flush: bool = False, labelpad: float | None = None
+) -> Text:
     """Set a horizontal y-label at the top of the left spine.
 
     Call after `range_frame`.
@@ -68,7 +73,7 @@ def ylabel(ax, text, flush=False, labelpad=None):
     return ax.yaxis.label
 
 
-def _labels_state(ax):
+def _labels_state(ax: Axes) -> dict:
     state = ensure_state(ax)
     ls = state.get("labels")
     if ls is None:
@@ -83,7 +88,7 @@ def _labels_state(ax):
     return ls
 
 
-def _label_props(label):
+def _label_props(label: Text) -> dict:
     return {
         "ha": label.get_horizontalalignment(),
         "va": label.get_verticalalignment(),
@@ -92,7 +97,7 @@ def _label_props(label):
     }
 
 
-def _apply_labels(ax):
+def _apply_labels(ax: Axes) -> bool:
     state = get_state(ax)
     if state is None or "frame" not in state:
         return False

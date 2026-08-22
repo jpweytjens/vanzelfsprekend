@@ -14,7 +14,7 @@ import vanzelfsprekend
 OUTPUT = Path(__file__).parent / "output"
 
 
-def scatter(frame):
+def scatter(frame: str) -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -25,7 +25,7 @@ def scatter(frame):
     plt.close(fig)
 
 
-def histogram():
+def histogram() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.hist(np.random.default_rng(1).normal(size=300), bins=25, color="0.4")
     vanzelfsprekend.range_frame(ax)
@@ -35,7 +35,7 @@ def histogram():
     plt.close(fig)
 
 
-def custom_ticks():
+def custom_ticks() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -47,7 +47,7 @@ def custom_ticks():
     plt.close(fig)
 
 
-def minimal():
+def minimal() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
@@ -60,7 +60,7 @@ def minimal():
     plt.close(fig)
 
 
-def main():
+def main() -> None:
     OUTPUT.mkdir(exist_ok=True)
     scatter("nice")
     scatter("data")

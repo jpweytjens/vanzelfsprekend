@@ -1,5 +1,7 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
+from collections.abc import Sequence
+
 import matplotlib as mpl
 import numpy as np
 from matplotlib.ticker import AutoLocator, Locator
@@ -46,7 +48,13 @@ class TalbotLocator(Locator):
         "density", "legibility"}`.
     """
 
-    def __init__(self, n: int = 5, loose: bool = False, nice_numbers=None, weights=None):
+    def __init__(
+        self,
+        n: int = 5,
+        loose: bool = False,
+        nice_numbers: Sequence[float] | None = None,
+        weights: dict[str, float] | None = None,
+    ) -> None:
         valid_keys = set(_DEFAULT_WEIGHTS)
         if weights is not None:
             bad_keys = set(weights) - valid_keys
@@ -68,14 +76,14 @@ class TalbotLocator(Locator):
         self._breaks = breaks_extended(n=n, Q=q, only_inside=not loose, w=w)
         self._cover = self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
 
-    def __call__(self):
+    def __call__(self) -> np.ndarray:
         """Return tick locations computed from the axis data interval."""
         dmin, dmax = self.axis.get_data_interval()
         if not np.isfinite([dmin, dmax]).all():
-            return AutoLocator().tick_values(*self.axis.get_view_interval())
+            return np.asarray(AutoLocator().tick_values(*self.axis.get_view_interval()))
         return self.tick_values(dmin, dmax)
 
-    def tick_values(self, vmin, vmax):
+    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:
         """Return tick locations inside `[vmin, vmax]`.
 
         Parameters
@@ -92,18 +100,18 @@ class TalbotLocator(Locator):
         if vmin > vmax:
             vmin, vmax = vmax, vmin
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
-            return AutoLocator().tick_values(*self.nonsingular(vmin, vmax))
+            return np.asarray(AutoLocator().tick_values(*self.nonsingular(vmin, vmax)))
         try:
             ticks = self._breaks((vmin, vmax))
             if self._loose and ticks.size >= 2:
                 ticks = _extend_to_cover(ticks, vmin, vmax)
         except (OverflowError, ValueError, FloatingPointError):
-            return AutoLocator().tick_values(vmin, vmax)
+            return np.asarray(AutoLocator().tick_values(vmin, vmax))
         if ticks.size == 0:
-            return AutoLocator().tick_values(vmin, vmax)
+            return np.asarray(AutoLocator().tick_values(vmin, vmax))
         return ticks
 
-    def view_limits(self, vmin, vmax):
+    def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
         """Return view limits for `vmin`..`vmax`.
 
         matplotlib calls this on every autoscale, not only when
@@ -164,7 +172,7 @@ class TalbotLocator(Locator):
         return super().view_limits(vmin, vmax)
 
 
-def _extend_to_cover(ticks, vmin, vmax):
+def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
     if ticks.size < 2:
         return ticks
     step = ticks[1] - ticks[0]

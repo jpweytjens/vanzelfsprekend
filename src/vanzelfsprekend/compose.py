@@ -1,10 +1,21 @@
 """The klaar composer, teardown, and axes-method registration."""
 
+from collections.abc import Sequence
+
+from matplotlib.axes import Axes
+
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 
 
-def klaar(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
+def klaar(
+    ax: Axes,
+    frame: str = "nice",
+    n: int = 5,
+    offset: float | None = None,
+    nice_numbers: Sequence[float] | None = None,
+    weights: dict[str, float] | None = None,
+) -> Axes:
     """Apply vanzelfsprekend's default treatment to `ax`.
 
     The top-level entry point. Today it applies `range_frame` with good
@@ -21,7 +32,7 @@ def klaar(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
     )
 
 
-def ontklaar(ax):
+def ontklaar(ax: Axes) -> None:
     """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
 
     Disconnects the draw hook and restores exactly the properties vanzelfsprekend
@@ -59,7 +70,7 @@ def ontklaar(ax):
     ax.figure.canvas.draw_idle()
 
 
-def register():
+def register() -> None:
     """Add `klaar` and `ontklaar` methods to `matplotlib.axes.Axes`.
 
     Opt-in monkeypatching: after calling this once, `ax.klaar(...)` and
@@ -70,19 +81,31 @@ def register():
     if getattr(Axes, "klaar", None) is not None:
         return
 
-    def _klaar_method(self, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
+    def _klaar_method(
+        self: Axes,
+        frame: str = "nice",
+        n: int = 5,
+        offset: float | None = None,
+        nice_numbers: Sequence[float] | None = None,
+        weights: dict[str, float] | None = None,
+    ) -> Axes:
         return klaar(
-            self, frame=frame, n=n, offset=offset, nice_numbers=nice_numbers, weights=weights
+            self,
+            frame=frame,
+            n=n,
+            offset=offset,
+            nice_numbers=nice_numbers,
+            weights=weights,
         )
 
-    def _ontklaar_method(self):
+    def _ontklaar_method(self: Axes) -> None:
         return ontklaar(self)
 
     Axes.klaar = _klaar_method
     Axes.ontklaar = _ontklaar_method
 
 
-def unregister():
+def unregister() -> None:
     """Remove the `klaar` and `ontklaar` methods if present.
 
     Re-entrant: a no-op when they were never registered.

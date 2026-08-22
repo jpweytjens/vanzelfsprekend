@@ -1,14 +1,24 @@
 """The range frame: trimmed spines and data-range ticks."""
 
 import warnings
+from collections.abc import Sequence
 
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.axis import Axis
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 from vanzelfsprekend.locator import TalbotLocator
 
 
-def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=None):
+def range_frame(
+    ax: Axes,
+    frame: str = "nice",
+    n: int = 5,
+    offset: float | None = None,
+    nice_numbers: Sequence[float] | None = None,
+    weights: dict[str, float] | None = None,
+) -> Axes:
     """Turn `ax` into a range frame.
 
     Installs `TalbotLocator` on both axes, hides the top and right
@@ -98,7 +108,7 @@ def range_frame(ax, frame="nice", n=5, offset=None, nice_numbers=None, weights=N
     return ax
 
 
-def _apply_frame(ax):
+def _apply_frame(ax: Axes) -> bool:
     state = get_state(ax)
     if state is None or "frame" not in state:
         return False
@@ -120,7 +130,7 @@ def _apply_frame(ax):
     return changed
 
 
-def _frame_span(axis, frame):
+def _frame_span(axis: Axis, frame: str) -> tuple[float, float] | None:
     dmin, dmax = axis.get_data_interval()
     if not np.isfinite([dmin, dmax]).all() or dmin == dmax:
         return None
