@@ -4,8 +4,8 @@ from collections.abc import Sequence
 
 import matplotlib as mpl
 import numpy as np
-from matplotlib.ticker import AutoLocator, FixedLocator, Locator
-from mizani.breaks import breaks_extended
+from matplotlib.ticker import AutoLocator, FixedLocator, Locator, LogLocator
+from mizani.breaks import breaks_extended, breaks_log
 from numpy.typing import ArrayLike
 
 _DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
@@ -181,6 +181,132 @@ class TalbotLocator(Locator):
         return super().view_limits(vmin, vmax)
 
 
+class LogBreaksLocator(Locator):
+    """Place ticks on integer powers inside the data range of a log axis.
+
+    Delegates to `mizani.breaks.breaks_log`, which returns breaks at
+    integer powers of `base` (with a sub-decade fallback for narrow
+    ranges) that may overflow the interval; the overflow is filtered
+    away so every tick lies within the interval. When used on an axis,
+    ticks are computed from the data interval, not the view interval,
+    which is what lets a range frame hug the data.
+
+    With `loose=True`, keeps the covering breaks and extends the grid
+    outward by whole multiplicative steps so the outermost ticks bound
+    the interval.
+
+    Parameters
+    ----------
+    n : int
+        Desired number of ticks.
+    loose : bool
+        If True, extend the tick grid outward by whole multiplicative
+        steps so the outermost ticks bound the data interval. Default
+        is False.
+    base : float
+        Base of the logarithm, matching the axis scale's base.
+    """
+
+    def __init__(self, n: int = 5, loose: bool = False, base: float = 10) -> None:
+        self._loose = loose
+        self._base = base
+        self._breaks = breaks_log(n=n, base=base)
+
+    def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
+        """Return tick locations computed from the axis data interval."""
+        dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
+        if dmin <= 0:
+            dmin = self.axis.get_minpos()  # ty: ignore[unresolved-attribute]
+        if not np.isfinite([dmin, dmax]).all():
+            view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
+            return _log_fallback(view[0], view[1], self._base)
+        return self.tick_values(dmin, dmax)
+
+    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
+        """Return tick locations inside `[vmin, vmax]`.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            Interval bounds. Swapped if given in reverse order;
+            degenerate or nonpositive values fall back to decade ticks
+            from `LogLocator` on a sanitized interval.
+
+        Returns
+        -------
+        ndarray
+            Tick locations.
+        """
+        if vmin > vmax:
+            vmin, vmax = vmax, vmin
+        if not np.isfinite([vmin, vmax]).all() or vmin <= 0 or vmin == vmax:
+            return _log_fallback(vmin, vmax, self._base)
+        try:
+            ticks = np.asarray(self._breaks((vmin, vmax)), dtype=float)
+            if self._loose:
+                ticks = _extend_to_cover_log(ticks, vmin, vmax)
+            else:
+                ticks = ticks[
+                    (ticks >= vmin * (1 - 1e-9)) & (ticks <= vmax * (1 + 1e-9))
+                ]
+        except (OverflowError, ValueError, FloatingPointError):
+            return _log_fallback(vmin, vmax, self._base)
+        if ticks.size == 0:
+            return _log_fallback(vmin, vmax, self._base)
+        return ticks
+
+    def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
+        """Return view limits for `vmin`..`vmax`.
+
+        Mirrors `TalbotLocator.view_limits`: a loose locator attached
+        to an axis derives the view from the data interval's covering
+        breaks so the view comes out edge-to-edge with the loose range
+        frame; otherwise the input passes through unless
+        `matplotlib.rcParams["axes.autolimit_mode"]` is
+        `'round_numbers'`, in which case it is widened to the covering
+        breaks.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            The proposed view limits.
+
+        Returns
+        -------
+        tuple of float
+            Lower and upper view limits.
+        """
+        if vmin > vmax:
+            vmin, vmax = vmax, vmin
+
+        if self._loose and self.axis is not None:
+            dmin, dmax = self.axis.get_data_interval()
+            if dmin <= 0:
+                dmin = self.axis.get_minpos()
+            if np.isfinite([dmin, dmax]).all() and 0 < dmin < dmax:
+                try:
+                    ticks = np.asarray(self._breaks((dmin, dmax)), dtype=float)
+                    if ticks.size >= 2:
+                        ticks = _extend_to_cover_log(ticks, dmin, dmax)
+                        return float(ticks[0]), float(ticks[-1])
+                except (OverflowError, ValueError, FloatingPointError):
+                    pass
+            return super().view_limits(vmin, vmax)
+
+        if mpl.rcParams["axes.autolimit_mode"] != "round_numbers":
+            return super().view_limits(vmin, vmax)
+        if not np.isfinite([vmin, vmax]).all() or vmin <= 0 or vmin == vmax:
+            return super().view_limits(vmin, vmax)
+        try:
+            ticks = np.asarray(self._breaks((vmin, vmax)), dtype=float)
+            if ticks.size >= 2:
+                ticks = _extend_to_cover_log(ticks, vmin, vmax)
+                return float(ticks[0]), float(ticks[-1])
+        except (OverflowError, ValueError, FloatingPointError):
+            pass
+        return super().view_limits(vmin, vmax)
+
+
 class QuartileLocator(FixedLocator):
     """Place ticks at the five-number summary of `data`.
 
@@ -219,3 +345,26 @@ def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
     if down == 0 and up == 0:
         return ticks
     return ticks[0] + step * np.arange(-down, ticks.size + up)
+
+
+def _extend_to_cover_log(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
+    if ticks.size < 2:
+        return ticks
+    out = list(ticks)
+    while out[0] > vmin * (1 + 1e-9):
+        out.insert(0, out[0] * out[0] / out[1])
+    while out[-1] < vmax * (1 - 1e-9):
+        out.append(out[-1] * out[-1] / out[-2])
+    return np.asarray(out)
+
+
+def _log_fallback(vmin: float, vmax: float, base: float) -> np.ndarray:
+    if vmin > vmax:
+        vmin, vmax = vmax, vmin
+    if not np.isfinite([vmin, vmax]).all() or vmax <= 0:
+        vmin, vmax = 1.0, base
+    elif vmin <= 0:
+        vmin = vmax / base**2
+    if vmin == vmax:
+        vmin, vmax = vmin / base, vmax * base
+    return np.asarray(LogLocator(base=base).tick_values(vmin, vmax))

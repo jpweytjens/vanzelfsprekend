@@ -3,7 +3,12 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from vanzelfsprekend import QuartileLocator, TalbotLocator, range_frame
+from vanzelfsprekend import (
+    LogBreaksLocator,
+    QuartileLocator,
+    TalbotLocator,
+    range_frame,
+)
 
 
 def test_matches_mizani_directly():
@@ -169,4 +174,69 @@ def test_range_frame_nice_numbers_forwarded_to_both_axes():
         np.testing.assert_allclose(
             axis.get_majorticklocs(), expected(tuple(axis.get_data_interval()))
         )
+    plt.close(fig)
+
+
+def test_log_ticks_are_mizani_breaks_inside_the_range():
+    ticks = LogBreaksLocator().tick_values(30, 4000)
+    np.testing.assert_allclose(ticks, [30, 100, 300, 1000, 3000])
+
+
+def test_log_ticks_stay_inside_data_range():
+    ticks = LogBreaksLocator().tick_values(1.3, 8.4)
+    assert ticks.min() >= 1.3
+    assert ticks.max() <= 8.4
+
+
+def test_log_base_two():
+    ticks = LogBreaksLocator(base=2).tick_values(3, 700)
+    np.testing.assert_allclose(ticks, [8, 32, 128, 512])
+
+
+def test_log_loose_ticks_bound_the_range():
+    ticks = LogBreaksLocator(loose=True).tick_values(30, 4000)
+    assert ticks.min() <= 30
+    assert ticks.max() >= 4000
+
+
+def test_log_loose_extends_an_under_covering_grid():
+    ticks = LogBreaksLocator(base=2, loose=True).tick_values(3, 700)
+    assert ticks.min() <= 3
+    assert ticks.max() >= 700
+    np.testing.assert_allclose(ticks, [2, 8, 32, 128, 512, 2048])
+
+
+@pytest.mark.parametrize(
+    ("vmin", "vmax"),
+    [
+        (np.nan, 1.0),
+        (-np.inf, np.inf),
+        (2.0, 2.0),
+        (5.0, 1.0),
+        (-1.0, 100.0),
+        (0.0, 0.0),
+    ],
+)
+def test_log_degenerate_inputs_do_not_raise(vmin, vmax):
+    ticks = LogBreaksLocator().tick_values(vmin, vmax)
+    assert len(ticks) > 0
+
+
+def test_log_view_limits_loose_uses_data_interval():
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [30, 400, 4000])
+    ax.yaxis.set_major_locator(LogBreaksLocator(loose=True))
+    fig.canvas.draw()
+    lo, hi = ax.get_ylim()
+    assert lo <= 30
+    assert hi >= 4000
+    plt.close(fig)
+
+
+def test_log_empty_axes_draw_does_not_raise():
+    fig, ax = plt.subplots()
+    ax.set_xscale("log")
+    ax.xaxis.set_major_locator(LogBreaksLocator())
+    fig.canvas.draw()
     plt.close(fig)
