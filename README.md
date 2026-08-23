@@ -83,6 +83,7 @@ Only plain linear axes are handled. A log-scaled axis, or one with a units conve
 | `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
 | `register()`, `unregister()` | add or remove the `ax.apply` and `ax.restore` methods |
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
+| `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
