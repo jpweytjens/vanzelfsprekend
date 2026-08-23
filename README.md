@@ -1,5 +1,7 @@
 # vanzelfsprekend
 
+<img align="right" width="160" src="icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
+
 Let the plot speak for itself: a matplotlib treatment inspired by [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
 
 What it adds today:
