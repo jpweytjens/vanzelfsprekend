@@ -9,6 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.colors import is_color_like
 from matplotlib.lines import Line2D
 from matplotlib.text import Annotation
+from matplotlib.textpath import TextPath
 from matplotlib.typing import ColorType
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
@@ -25,7 +26,9 @@ def line_labels(
 
     Text comes from each line's `label=`; lines with matplotlib's
     auto-generated `_`-prefixed labels or without a finite point are
-    skipped. Labels sit just outside their line's end and are pushed
+    skipped. Labels sit just outside their line's end, each label's ink
+    centred on the line end (measured from the glyph outlines, so the
+    font's em-box metrics cannot skew it), and are pushed
     apart vertically only as far as needed to clear each other, keeping
     the end-value order (an exact least-squares stack, re-solved on
     every draw). Calling again with the same `at` rebuilds that side
@@ -79,7 +82,7 @@ def line_labels(
             xytext=(sign * pad, 0.0),
             textcoords="offset points",
             ha="left" if at == "end" else "right",
-            va="center",
+            va="baseline",
             color=color,
             annotation_clip=False,
         )
@@ -87,6 +90,8 @@ def line_labels(
             anchored, _resolve_colors(labelcolor, lines), strict=True
         )
     ]
+    for text in texts:
+        text.set_position((sign * pad, -_ink_rise(text)))
     sides[at] = {"lines": lines, "texts": texts, "pad": pad, "gap": gap}
     add_applier(ax, f"line_labels.{at}", partial(_apply_line_labels, at=at))
     run_appliers(ax)
@@ -125,6 +130,26 @@ def _resolve_colors(
     ]
 
 
+def _ink_rise(text: Annotation) -> float:
+    """Return the centre of `text`'s glyph ink above the baseline, in points.
+
+    Placing the baseline this far below an anchor centres the drawn
+    glyphs on it. Measured from the glyph outlines via `TextPath`,
+    which sidesteps fonts whose em-box metrics misplace their ink
+    (macOS Helvetica Neue shifts everything ~0.13 em down).
+    """
+    path = TextPath(
+        (0.0, 0.0),
+        text.get_text(),
+        size=float(text.get_fontsize()),
+        prop=text.get_fontproperties(),
+    )
+    bounds = path.get_extents()
+    if not np.isfinite([bounds.y0, bounds.y1]).all():
+        return 0.0
+    return float(bounds.y0 + bounds.y1) / 2
+
+
 def _apply_line_labels(ax: Axes, at: str) -> bool:
     state = get_state(ax)
     side = (state or {}).get("line_labels", {}).get(at)
@@ -145,7 +170,7 @@ def _apply_line_labels(ax: Axes, at: str) -> bool:
     placed = _stack(desired, heights, side["gap"] * px_per_pt)
     sign = 1.0 if at == "end" else -1.0
     for text, dy in zip(side["texts"], (placed - desired) / px_per_pt, strict=True):
-        position = (sign * side["pad"], dy)
+        position = (sign * side["pad"], dy - _ink_rise(text))
         if text.get_position() != position:
             text.set_position(position)
             changed = True

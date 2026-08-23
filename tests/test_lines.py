@@ -111,6 +111,29 @@ def test_separated_labels_stay_at_their_lines():
     plt.close(fig)
 
 
+@pytest.mark.parametrize("label", ["lll", "ggg"])
+def test_label_ink_centers_on_line_end(label):
+    fig, ax = plt.subplots(figsize=(5, 5))
+    x = np.linspace(0.0, 6.0, 50)
+    ax.plot(x, x, label=label, color="black")
+    ax.set_xlim(0.0, 10.0)
+    ax.set_ylim(0.0, 10.0)
+    (text,) = vzs.line_labels(ax, labelcolor="red")
+    text.set_fontsize(40)
+    fig.canvas.draw()
+    buf = np.asarray(fig.canvas.buffer_rgba()).astype(int)
+    h = buf.shape[0]
+    anchor_x, anchor_y = ax.transData.transform(text.xy)
+    region = buf[:, int(anchor_x) + 8 :, :]
+    red = (region[..., 0] - region[..., 1] > 80) & (
+        region[..., 0] - region[..., 2] > 80
+    )
+    rows = np.flatnonzero(red.any(axis=1))
+    ink_center_row = (rows.min() + rows.max()) / 2
+    anchor_row = h - 1 - anchor_y
+    assert abs(ink_center_row - anchor_row) <= 2.5
+
+
 def test_unlabeled_and_all_nan_lines_are_skipped():
     fig, ax = plt.subplots()
     x = np.linspace(0.0, 10.0, 50)
