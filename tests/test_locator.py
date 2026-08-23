@@ -240,3 +240,44 @@ def test_log_empty_axes_draw_does_not_raise():
     ax.xaxis.set_major_locator(LogBreaksLocator())
     fig.canvas.draw()
     plt.close(fig)
+
+
+def test_log_constant_data_still_shows_ticks():
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [5, 5, 5])
+    ax.yaxis.set_major_locator(LogBreaksLocator())
+    fig.canvas.draw()
+    lo, hi = ax.get_ylim()
+    ticks = ax.yaxis.get_majorticklocs()
+    assert np.any((ticks >= lo) & (ticks <= hi))
+    plt.close(fig)
+
+
+def test_extend_to_cover_log_equal_grid_does_not_hang():
+    from vanzelfsprekend.locator import _extend_to_cover_log
+
+    ticks = _extend_to_cover_log(np.array([5.0, 5.0]), 1.0, 10.0)
+    np.testing.assert_allclose(ticks, [5.0, 5.0])
+
+
+def test_log_huge_constant_value_does_not_raise():
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [1e308, 1e308, 1e308])
+    ax.yaxis.set_major_locator(LogBreaksLocator())
+    fig.canvas.draw()
+    plt.close(fig)
+
+
+def test_log_base_below_one_loose_ticks_are_positive():
+    ticks = LogBreaksLocator(base=0.5, loose=True).tick_values(1, 100)
+    assert ticks.size > 0
+    assert np.all(ticks > 0)
+
+
+def test_log_view_limits_round_numbers():
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = LogBreaksLocator().view_limits(30, 4000)
+    assert lo <= 30
+    assert hi >= 4000

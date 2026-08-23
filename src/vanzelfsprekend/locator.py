@@ -212,6 +212,12 @@ class LogBreaksLocator(Locator):
         self._base = base
         self._breaks = breaks_log(n=n, base=base)
 
+    def nonsingular(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float
+    ) -> tuple[float, float]:
+        """Expand a degenerate interval multiplicatively, as a log scale needs."""
+        return _sanitize_log_interval(vmin, vmax, self._base)
+
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis data interval."""
         dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
@@ -243,6 +249,7 @@ class LogBreaksLocator(Locator):
             return _log_fallback(vmin, vmax, self._base)
         try:
             ticks = np.asarray(self._breaks((vmin, vmax)), dtype=float)
+            ticks = ticks[ticks > 0]
             if self._loose:
                 ticks = _extend_to_cover_log(ticks, vmin, vmax)
             else:
@@ -351,14 +358,20 @@ def _extend_to_cover_log(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndar
     if ticks.size < 2:
         return ticks
     out = list(ticks)
-    while out[0] > vmin * (1 + 1e-9):
-        out.insert(0, out[0] * out[0] / out[1])
-    while out[-1] < vmax * (1 - 1e-9):
-        out.append(out[-1] * out[-1] / out[-2])
+    lo_ratio = out[1] / out[0]
+    if np.isfinite(lo_ratio) and lo_ratio > 1:
+        while out[0] > vmin * (1 + 1e-9):
+            out.insert(0, out[0] * out[0] / out[1])
+    hi_ratio = out[-1] / out[-2]
+    if np.isfinite(hi_ratio) and hi_ratio > 1:
+        while out[-1] < vmax * (1 - 1e-9):
+            out.append(out[-1] * out[-1] / out[-2])
     return np.asarray(out)
 
 
-def _log_fallback(vmin: float, vmax: float, base: float) -> np.ndarray:
+def _sanitize_log_interval(
+    vmin: float, vmax: float, base: float
+) -> tuple[float, float]:
     if vmin > vmax:
         vmin, vmax = vmax, vmin
     if not np.isfinite([vmin, vmax]).all() or vmax <= 0:
@@ -366,5 +379,14 @@ def _log_fallback(vmin: float, vmax: float, base: float) -> np.ndarray:
     elif vmin <= 0:
         vmin = vmax / base**2
     if vmin == vmax:
-        vmin, vmax = vmin / base, vmax * base
-    return np.asarray(LogLocator(base=base).tick_values(vmin, vmax))
+        with np.errstate(over="ignore"):
+            expanded = vmin / base, vmax * base
+        vmin, vmax = expanded if np.isfinite(expanded[1]) else (1.0, base)
+    return vmin, vmax
+
+
+def _log_fallback(vmin: float, vmax: float, base: float) -> np.ndarray:
+    vmin, vmax = _sanitize_log_interval(vmin, vmax, base)
+    with np.errstate(over="ignore"):
+        ticks = np.asarray(LogLocator(base=base).tick_values(vmin, vmax))
+    return ticks[np.isfinite(ticks)]
