@@ -96,9 +96,9 @@ The range frame on a histogram:
 
 ![Histogram with trimmed spines and ticks inside the data range](docs/histogram.png)
 
-A power law on log-log axes; ticks at powers of ten inside the data, minor ticks gone:
+A power law on log-log axes with `frame="loose"`: offset spines end at the powers of ten bounding the data, minor ticks gone:
 
-![Log-log scatter plot of a power law with trimmed spines and decade ticks inside the data range](docs/scatter_loglog.png)
+![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](docs/scatter_loglog.png)
 
 ## API
 

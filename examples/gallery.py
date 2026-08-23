@@ -68,7 +68,7 @@ def scatter_loglog() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.set_xscale("log")
     ax.set_yscale("log")
-    vzs.apply(ax)
+    vzs.apply(ax, frame="loose")
     rng = np.random.default_rng(0)
     x = 10 ** rng.uniform(0.5, 3.5, 60)
     y = 3 * x**0.8 * 10 ** rng.normal(0, 0.15, 60)
