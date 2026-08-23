@@ -7,9 +7,10 @@ from typing import Any
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
+from matplotlib.ticker import NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-from vanzelfsprekend.locator import TalbotLocator
+from vanzelfsprekend.locator import LogBreaksLocator, TalbotLocator
 
 
 def range_frame(
@@ -22,10 +23,11 @@ def range_frame(
 ) -> Axes:
     """Turn `ax` into a range frame.
 
-    Installs `TalbotLocator` on both axes, hides the top and right
-    spines, and keeps the left and bottom spine bounds glued to the
-    data on every draw. Safe to call repeatedly; later calls update
-    the settings instead of stacking hooks.
+    Installs `TalbotLocator` (linear axes) or `LogBreaksLocator` (log
+    axes) on both axes, hiding minor ticks on log axes, hides the top
+    and right spines, and keeps the left and bottom spine bounds glued
+    to the data on every draw. Safe to call repeatedly; later calls
+    update the settings instead of stacking hooks.
 
     Parameters
     ----------
@@ -43,8 +45,10 @@ def range_frame(
         `None` resolves to 8 for `frame='loose'` and 0 otherwise.
     nice_numbers : sequence of float, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
+        Applies to linear axes only; ignored on log axes.
     weights : dict, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
+        Applies to linear axes only; ignored on log axes.
 
     Returns
     -------
@@ -66,6 +70,10 @@ def range_frame(
                     "x": ax.xaxis.get_major_locator(),
                     "y": ax.yaxis.get_major_locator(),
                 },
+                "minor_locators": {
+                    "x": ax.xaxis.get_minor_locator(),
+                    "y": ax.yaxis.get_minor_locator(),
+                },
                 "top_visible": ax.spines["top"].get_visible(),
                 "right_visible": ax.spines["right"].get_visible(),
                 "left_position": ax.spines["left"].get_position(),
@@ -77,25 +85,39 @@ def range_frame(
 
     active = set()
     for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
-        if axis.get_scale() != "linear":
+        scale = axis.get_scale()
+        if scale not in ("linear", "log"):
             warnings.warn(
-                f"vanzelfsprekend: {name}-axis has scale {axis.get_scale()!r}; "
-                "only linear axes are supported, leaving it untouched",
+                f"vanzelfsprekend: {name}-axis has scale {scale!r}; "
+                "only linear and log axes are supported, leaving it untouched",
                 stacklevel=2,
             )
             continue
         if axis.get_converter() is not None:
             warnings.warn(
                 f"vanzelfsprekend: {name}-axis has a units converter; "
-                "only plain linear axes are supported, leaving it untouched",
+                "only plain axes are supported, leaving it untouched",
                 stacklevel=2,
             )
             continue
-        axis.set_major_locator(
-            TalbotLocator(
-                n=n, loose=frame == "loose", nice_numbers=nice_numbers, weights=weights
+        if scale == "log":
+            axis.set_major_locator(
+                LogBreaksLocator(
+                    n=n,
+                    loose=frame == "loose",
+                    base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
+                )
             )
-        )
+            axis.set_minor_locator(NullLocator())
+        else:
+            axis.set_major_locator(
+                TalbotLocator(
+                    n=n,
+                    loose=frame == "loose",
+                    nice_numbers=nice_numbers,
+                    weights=weights,
+                )
+            )
         active.add(name)
     frame_state["active"] = active
 

@@ -64,6 +64,8 @@ def restore(ax: Axes) -> None:
         snap = frame_state["snapshot"]
         ax.xaxis.set_major_locator(snap["locators"]["x"])
         ax.yaxis.set_major_locator(snap["locators"]["y"])
+        ax.xaxis.set_minor_locator(snap["minor_locators"]["x"])
+        ax.yaxis.set_minor_locator(snap["minor_locators"]["y"])
         ax.spines["top"].set_visible(snap["top_visible"])
         ax.spines["right"].set_visible(snap["right_visible"])
         ax.spines["left"].set_position(snap["left_position"])

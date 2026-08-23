@@ -91,14 +91,87 @@ def test_invalid_frame_raises(scatter_ax):
         range_frame(scatter_ax, frame="tight")
 
 
-def test_log_axis_warns_and_is_skipped():
+@pytest.fixture
+def log_scatter_ax():
     fig, ax = plt.subplots()
-    ax.plot([1, 2, 3], [1, 10, 100])
+    ax.set_xscale("log")
     ax.set_yscale("log")
+    rng = np.random.default_rng(0)
+    x = 10 ** rng.uniform(0.5, 3.5, 50)
+    ax.scatter(x, 3 * x**0.8)
+    yield ax
+    plt.close(fig)
+
+
+def test_log_axis_gets_log_locator_without_warning(log_scatter_ax):
+    import warnings
+
+    from vanzelfsprekend import LogBreaksLocator
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        range_frame(log_scatter_ax)
+    assert isinstance(log_scatter_ax.xaxis.get_major_locator(), LogBreaksLocator)
+    assert isinstance(log_scatter_ax.yaxis.get_major_locator(), LogBreaksLocator)
+
+
+def test_log_axis_minor_ticks_hidden(log_scatter_ax):
+    from matplotlib.ticker import NullLocator
+
+    range_frame(log_scatter_ax)
+    assert isinstance(log_scatter_ax.xaxis.get_minor_locator(), NullLocator)
+    assert isinstance(log_scatter_ax.yaxis.get_minor_locator(), NullLocator)
+
+
+def test_linear_axis_minor_locator_untouched(scatter_ax):
+    before = scatter_ax.xaxis.get_minor_locator()
+    range_frame(scatter_ax)
+    assert scatter_ax.xaxis.get_minor_locator() is before
+
+
+def test_log_nice_frame_bounds_equal_outermost_ticks(log_scatter_ax):
+    ax = range_frame(log_scatter_ax)
+    ax.figure.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
+    assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
+
+
+def test_log_loose_frame_bounds_contain_data(log_scatter_ax):
+    ax = range_frame(log_scatter_ax, frame="loose")
+    ax.figure.canvas.draw()
+    for axis, spine_name in ((ax.xaxis, "bottom"), (ax.yaxis, "left")):
+        lo, hi = ax.spines[spine_name].get_bounds()
+        dmin, dmax = axis.get_data_interval()
+        assert lo <= dmin
+        assert hi >= dmax
+
+
+def test_log_base_two_axis_uses_base_two_breaks(log_scatter_ax):
+    log_scatter_ax.set_xscale("log", base=2)
+    range_frame(log_scatter_ax)
+    log_scatter_ax.figure.canvas.draw()
+    ticks = log_scatter_ax.xaxis.get_majorticklocs()
+    assert len(ticks) > 0
+    assert np.allclose(np.log2(ticks), np.round(np.log2(ticks)))
+
+
+def test_symlog_axis_warns_and_is_skipped():
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [-50, 0, 2000])
+    ax.set_yscale("symlog")
     locator_before = ax.yaxis.get_major_locator()
     with pytest.warns(UserWarning, match="y-axis"):
         range_frame(ax)
     assert ax.yaxis.get_major_locator() is locator_before
+    fig.canvas.draw()
+    plt.close(fig)
+
+
+def test_log_axis_with_nonpositive_data_does_not_raise():
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [-1, 10, 100])
+    ax.set_yscale("log")
+    range_frame(ax)
     fig.canvas.draw()
     plt.close(fig)
 

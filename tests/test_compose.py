@@ -167,3 +167,14 @@ def test_apply_before_plotting_frames_the_data_on_draw():
     fig.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == (1.0, 3.0)
     plt.close(fig)
+
+
+def test_restore_reinstates_minor_locators():
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [3, 40, 700])
+    minor_before = ax.yaxis.get_minor_locator()
+    vzs.apply(ax)
+    vzs.restore(ax)
+    assert ax.yaxis.get_minor_locator() is minor_before
+    plt.close(fig)
