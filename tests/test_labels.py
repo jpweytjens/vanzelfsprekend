@@ -133,3 +133,32 @@ def test_flush_ylabel_with_loose_frame_no_overlap():
     top = max(ticks, key=lambda b: b.y1)
     assert abs(label.y1 - top.y1) < 1
     plt.close(fig)
+
+
+def test_log_axes_labels_anchor_in_log_space():
+    fig, ax = plt.subplots()
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    rng = np.random.default_rng(0)
+    x = 10 ** rng.uniform(0.5, 3.5, 60)
+    y = 3 * x**0.8 * 10 ** rng.normal(0, 0.15, 60)
+    ax.scatter(x, y)
+    vzs.range_frame(ax)
+    vzs.xlabel(ax, "body mass (g)")
+    vzs.ylabel(ax, "metabolic rate", flush=True)
+    fig.canvas.draw()
+
+    xmin, xmax = ax.get_xlim()
+    top_x_tick = max(ax.xaxis.get_majorticklocs())
+    expected_x = (np.log10(top_x_tick) - np.log10(xmin)) / (
+        np.log10(xmax) - np.log10(xmin)
+    )
+    assert ax.xaxis.label.get_position()[0] == pytest.approx(expected_x)
+
+    ymin, ymax = ax.get_ylim()
+    top_y_tick = max(ax.yaxis.get_majorticklocs())
+    expected_y = (np.log10(top_y_tick) - np.log10(ymin)) / (
+        np.log10(ymax) - np.log10(ymin)
+    )
+    assert ax.yaxis.label.get_position()[1] == pytest.approx(expected_y)
+    plt.close(fig)

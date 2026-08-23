@@ -1,6 +1,8 @@
 """End-of-spine axis labels for a range frame."""
 
+import numpy as np
 from matplotlib.axes import Axes
+from matplotlib.axis import Axis
 from matplotlib.text import Text
 
 from vanzelfsprekend.frame import _frame_span
@@ -110,7 +112,7 @@ def _apply_labels(ax: Axes) -> bool:
         span = _frame_span(ax.xaxis, mode)
         if span is not None:
             vmin, vmax = ax.get_xlim()
-            frac = (span[1] - vmin) / (vmax - vmin)
+            frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
             pos = ax.xaxis.label.get_position()
             if pos[0] != frac:
                 ax.xaxis.label.set_position((frac, pos[1]))
@@ -124,9 +126,21 @@ def _apply_labels(ax: Axes) -> bool:
                 if len(locs):
                     anchor = max(locs)
             vmin, vmax = ax.get_ylim()
-            frac = (anchor - vmin) / (vmax - vmin)
+            frac = _axes_fraction(ax.yaxis, anchor, vmin, vmax)
             pos = ax.yaxis.label.get_position()
             if pos[1] != frac:
                 ax.yaxis.label.set_position((pos[0], frac))
                 changed = True
     return changed
+
+
+def _axes_fraction(axis: Axis, value: float, vmin: float, vmax: float) -> float:
+    transform = axis.get_transform()
+    # A log-scale axis has a 1-D scale transform (e.g. `LogTransform`); a
+    # linear axis's is the 2-D `IdentityTransform`, for which this reduces
+    # to the previous plain arithmetic.
+    if transform.input_dims == 1:
+        value, vmin, vmax = np.ravel(
+            transform.transform(np.array([[value], [vmin], [vmax]]))
+        )
+    return (value - vmin) / (vmax - vmin)
