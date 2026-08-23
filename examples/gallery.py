@@ -14,7 +14,12 @@ import vanzelfsprekend as vzs
 
 OUTPUT = Path(__file__).parent / "output"
 DOCS = Path(__file__).parents[1] / "docs"
-README_FIGURES = ("quartile_ticks.png", "scatter_loose.png", "histogram.png")
+README_FIGURES = (
+    "quartile_ticks.png",
+    "scatter_loose.png",
+    "histogram.png",
+    "scatter_loglog.png",
+)
 
 
 def scatter(frame: str) -> None:
@@ -58,6 +63,22 @@ def quartile_ticks() -> None:
     plt.close(fig)
 
 
+def scatter_loglog() -> None:
+    """Render a log-log scatter of a power law with a range frame."""
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    vzs.apply(ax)
+    rng = np.random.default_rng(0)
+    x = 10 ** rng.uniform(0.5, 3.5, 60)
+    y = 3 * x**0.8 * 10 ** rng.normal(0, 0.15, 60)
+    ax.scatter(x, y, s=12)
+    vzs.xlabel(ax, "body mass (g)")
+    vzs.ylabel(ax, "metabolic rate", flush=True)
+    fig.savefig(OUTPUT / "scatter_loglog.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def minimal() -> None:
     """Render a scatter plot with a data frame and no ticks."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
@@ -80,6 +101,7 @@ def main() -> None:
     scatter("loose")
     histogram()
     quartile_ticks()
+    scatter_loglog()
     minimal()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
