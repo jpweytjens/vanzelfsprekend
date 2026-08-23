@@ -72,7 +72,7 @@ vzs.line_labels(ax)              # label every line at its right end
 vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
-Linear and log axes are handled; set the scale before calling `apply`. On a log axis the ticks come from mizani's `breaks_log` (integer powers of the base) and the minor ticks are hidden — reinstate them with `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` if you want them back. Any other scale (`symlog`, `logit`), or an axis with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
+Linear and log axes are handled; set the scale before calling `apply`. On a log axis the ticks come from mizani's `breaks_log` (integer powers of the base, with a sub-decade fallback for narrow ranges) and the minor ticks are hidden — reinstate them with `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` if you want them back. Any other scale (`symlog`, `logit`), or an axis with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
 
 ## Gallery
 
