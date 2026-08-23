@@ -72,7 +72,7 @@ vzs.line_labels(ax)              # label every line at its right end
 vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
-Only plain linear axes are handled. A log-scaled axis, or one with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
+Linear and log axes are handled; set the scale before calling `apply`. On a log axis the ticks come from mizani's `breaks_log` (integer powers of the base) and the minor ticks are hidden — reinstate them with `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` if you want them back. Any other scale (`symlog`, `logit`), or an axis with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
 
 ## Gallery
 
@@ -96,6 +96,10 @@ The range frame on a histogram:
 
 ![Histogram with trimmed spines and ticks inside the data range](docs/histogram.png)
 
+A power law on log-log axes; ticks at powers of ten inside the data, minor ticks gone:
+
+![Log-log scatter plot of a power law with trimmed spines and decade ticks inside the data range](docs/scatter_loglog.png)
+
 ## API
 
 | Name | Does |
@@ -108,6 +112,7 @@ The range frame on a histogram:
 | `register()`, `unregister()` | add or remove the `ax.apply` and `ax.restore` methods |
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
+| `LogBreaksLocator(n, loose, base)` | the tick locator for log axes, usable on its own |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
