@@ -37,16 +37,21 @@ def histogram() -> None:
     plt.close(fig)
 
 
-def custom_ticks() -> None:
-    """Render a scatter plot with user-set ticks."""
+def quartile_ticks() -> None:
+    """Render a quartile plot: ticks at the five-number summary of the data."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.apply(ax, frame="nice")
+    vzs.apply(ax, frame="data")
     rng = np.random.default_rng(0)
-    ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12)
-    ax.set_xticks([1, 3, 5, 7, 9])
+    x = rng.uniform(0.3, 9.7, 60)
+    y = rng.uniform(-3.2, 4.1, 60)
+    ax.scatter(x, y, s=12)
+    ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
+    ax.yaxis.set_major_locator(vzs.QuartileLocator(y))
+    ax.xaxis.set_major_formatter("{x:.1f}")
+    ax.yaxis.set_major_formatter("{x:.1f}")
     vzs.xlabel(ax, "time (s)")
     vzs.ylabel(ax, "voltage", flush=True)
-    fig.savefig(OUTPUT / "custom_ticks.png", dpi=150, bbox_inches="tight")
+    fig.savefig(OUTPUT / "quartile_ticks.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -71,7 +76,7 @@ def main() -> None:
     scatter("data")
     scatter("loose")
     histogram()
-    custom_ticks()
+    quartile_ticks()
     minimal()
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")
 
