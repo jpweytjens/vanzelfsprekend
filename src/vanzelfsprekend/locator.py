@@ -4,8 +4,9 @@ from collections.abc import Sequence
 
 import matplotlib as mpl
 import numpy as np
-from matplotlib.ticker import AutoLocator, Locator
+from matplotlib.ticker import AutoLocator, FixedLocator, Locator
 from mizani.breaks import breaks_extended
+from numpy.typing import ArrayLike
 
 _DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
 _DEFAULT_WEIGHTS = {
@@ -178,6 +179,34 @@ class TalbotLocator(Locator):
         except (OverflowError, ValueError, FloatingPointError):
             pass
         return super().view_limits(vmin, vmax)
+
+
+class QuartileLocator(FixedLocator):
+    """Place ticks at the five-number summary of `data`.
+
+    Ticks sit at the minimum, first quartile, median, third quartile,
+    and maximum of the data, turning a range frame into Tufte's
+    quartile plot. Non-finite values are ignored. Tick labels follow
+    the axis formatter; pass a format string such as
+    `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
+
+    Parameters
+    ----------
+    data : array-like
+        The plotted values whose summary the ticks mark.
+
+    Raises
+    ------
+    ValueError
+        If `data` contains no finite values.
+    """
+
+    def __init__(self, data: ArrayLike) -> None:
+        values = np.asarray(data, dtype=float).ravel()
+        values = values[np.isfinite(values)]
+        if values.size == 0:
+            raise ValueError("data has no finite values")
+        super().__init__(np.quantile(values, (0, 0.25, 0.5, 0.75, 1)))
 
 
 def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:

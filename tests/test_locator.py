@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
-from vanzelfsprekend import TalbotLocator, range_frame
+from vanzelfsprekend import QuartileLocator, TalbotLocator, range_frame
 
 
 def test_matches_mizani_directly():
@@ -124,6 +124,37 @@ def test_weights_merged_over_defaults_in_slot_order():
 def test_weights_invalid_key_raises_value_error():
     with pytest.raises(ValueError, match="coverge"):
         TalbotLocator(weights={"coverge": 0.4})
+
+
+def test_quartile_ticks_are_the_five_number_summary():
+    ticks = QuartileLocator(np.arange(101.0)).tick_values(0.0, 100.0)
+    np.testing.assert_allclose(ticks, [0.0, 25.0, 50.0, 75.0, 100.0])
+
+
+def test_quartile_ignores_non_finite_values():
+    ticks = QuartileLocator([0.0, np.nan, 1.0, np.inf, 2.0, 3.0, 4.0]).tick_values(
+        0.0, 4.0
+    )
+    np.testing.assert_allclose(ticks, [0.0, 1.0, 2.0, 3.0, 4.0])
+
+
+@pytest.mark.parametrize("data", [[], [np.nan, np.inf]])
+def test_quartile_without_finite_data_raises(data):
+    with pytest.raises(ValueError, match="finite"):
+        QuartileLocator(data)
+
+
+def test_quartile_on_scatter_axes():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    x = rng.uniform(0.3, 9.7, 60)
+    ax.scatter(x, rng.uniform(-3.2, 4.1, 60))
+    ax.xaxis.set_major_locator(QuartileLocator(x))
+    fig.canvas.draw()
+    np.testing.assert_allclose(
+        ax.xaxis.get_majorticklocs(), np.quantile(x, (0, 0.25, 0.5, 0.75, 1))
+    )
+    plt.close(fig)
 
 
 def test_range_frame_nice_numbers_forwarded_to_both_axes():
