@@ -72,6 +72,28 @@ vzs.line_labels(ax, at="start")  # and/or at its left end
 
 Only plain linear axes are handled. A log-scaled axis, or one with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
 
+## Gallery
+
+From [`examples/gallery.py`](examples/gallery.py), which regenerates these figures (`uv run examples/gallery.py`).
+
+Tufte's quartile plot: `frame="data"` ends the spines at the data extremes, and `QuartileLocator` puts the ticks at each variable's minimum, quartiles and maximum:
+
+```python
+vzs.apply(ax, frame="data")
+ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
+ax.xaxis.set_major_formatter("{x:.1f}")
+```
+
+![Scatter plot whose spines end at the data extremes, with ticks marking the minimum, quartiles and maximum of each variable](docs/quartile_ticks.png)
+
+`frame="loose"` on offset spines, ending at nice numbers that bound the data:
+
+![Scatter plot with offset spines ending at nice numbers just beyond the data](docs/scatter_loose.png)
+
+The range frame on a histogram:
+
+![Histogram with trimmed spines and ticks inside the data range](docs/histogram.png)
+
 ## API
 
 | Name | Does |

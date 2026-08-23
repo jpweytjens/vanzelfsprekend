@@ -1,5 +1,6 @@
 """Render sample vanzelfsprekend figures to PNG for eyeballing."""
 
+import shutil
 from pathlib import Path
 
 import matplotlib
@@ -12,6 +13,8 @@ import numpy as np
 import vanzelfsprekend as vzs
 
 OUTPUT = Path(__file__).parent / "output"
+DOCS = Path(__file__).parents[1] / "docs"
+README_FIGURES = ("quartile_ticks.png", "scatter_loose.png", "histogram.png")
 
 
 def scatter(frame: str) -> None:
@@ -78,7 +81,10 @@ def main() -> None:
     histogram()
     quartile_ticks()
     minimal()
+    for name in README_FIGURES:
+        shutil.copyfile(OUTPUT / name, DOCS / name)
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")
+    print(f"copied {len(README_FIGURES)} README figures to {DOCS}")
 
 
 if __name__ == "__main__":
