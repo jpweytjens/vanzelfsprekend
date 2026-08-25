@@ -1,5 +1,6 @@
 """Render sample vanzelfsprekend figures to PNG for eyeballing."""
 
+import datetime as dt
 import shutil
 from pathlib import Path
 
@@ -20,6 +21,49 @@ README_FIGURES = (
     "histogram.png",
     "scatter_loglog.png",
 )
+
+
+# Monthly mean CO2 at Mauna Loa in ppm, August 2016 through July 2026.
+# Source: NOAA Global Monitoring Laboratory, public domain.
+# https://gml.noaa.gov/ccgg/trends/data.html
+CO2_START = dt.date(2016, 8, 1)
+# fmt: off
+CO2_PPM = (
+    402.45, 401.23, 401.79, 403.72, 404.64, 406.36, 406.66, 407.54,
+    409.22, 409.89, 409.08, 407.33, 405.32, 403.57, 403.82, 405.31,
+    407.00, 408.15, 408.52, 409.59, 410.45, 411.44, 410.99, 408.90,
+    407.16, 405.71, 406.19, 408.21, 409.27, 411.03, 411.96, 412.18,
+    413.54, 414.86, 414.15, 411.96, 410.17, 408.76, 408.74, 410.47,
+    411.97, 413.59, 414.32, 414.72, 416.42, 417.28, 416.58, 414.58,
+    412.75, 411.50, 411.49, 413.10, 414.23, 415.49, 416.72, 417.61,
+    419.01, 419.09, 418.93, 416.90, 414.42, 413.26, 413.90, 414.97,
+    416.67, 418.13, 419.24, 418.76, 420.19, 420.97, 420.94, 418.85,
+    417.15, 415.91, 415.74, 417.47, 418.99, 419.47, 420.31, 421.00,
+    423.30, 424.01, 423.68, 421.83, 419.68, 418.50, 418.82, 420.46,
+    421.86, 422.80, 424.55, 425.38, 426.51, 426.90, 426.91, 425.55,
+    422.99, 422.03, 422.38, 423.85, 425.40, 426.65, 427.09, 428.15,
+    429.64, 430.51, 429.61, 427.87, 425.48, 424.37, 424.87, 426.46,
+    427.49, 428.62, 429.35, 430.15, 431.12, 432.34, 431.44, 429.12,
+)
+# fmt: on
+
+
+def timeseries() -> None:
+    """Render the Mauna Loa CO2 record with a date range frame."""
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    vzs.apply(ax)
+    months = [
+        dt.date(
+            CO2_START.year + (CO2_START.month - 1 + i) // 12,
+            (CO2_START.month - 1 + i) % 12 + 1,
+            1,
+        )
+        for i in range(len(CO2_PPM))
+    ]
+    ax.plot(months, CO2_PPM)
+    vzs.ylabel(ax, "CO₂ (ppm)", flush=True)
+    fig.savefig(OUTPUT / "timeseries.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
 
 
 def scatter(frame: str) -> None:
@@ -102,6 +146,7 @@ def main() -> None:
     histogram()
     quartile_ticks()
     scatter_loglog()
+    timeseries()
     minimal()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
