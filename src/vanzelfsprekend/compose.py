@@ -14,7 +14,7 @@ from vanzelfsprekend.ticks import _rc
 
 def apply(
     ax: Axes,
-    frame: str = "nice",
+    frame: str | tuple[str, str] = "nice",
     n: int = 5,
     offset: float | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -159,7 +159,7 @@ def register() -> None:
 
     def _apply_method(
         self: Axes,
-        frame: str = "nice",
+        frame: str | tuple[str, str] = "nice",
         n: int = 5,
         offset: float | None = None,
         nice_numbers: Sequence[float] | None = None,

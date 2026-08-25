@@ -85,12 +85,41 @@ def test_repeated_calls_keep_one_hook(scatter_ax):
     first_cid = ax._vanzelfsprekend_state["cid"]
     range_frame(ax, frame="data")
     assert ax._vanzelfsprekend_state["cid"] == first_cid
-    assert ax._vanzelfsprekend_state["frame"]["mode"] == "data"
+    assert ax._vanzelfsprekend_state["frame"]["mode"] == {"x": "data", "y": "data"}
 
 
 def test_invalid_frame_raises(scatter_ax):
     with pytest.raises(ValueError, match="frame"):
         range_frame(scatter_ax, frame="tight")
+
+
+def test_mixed_frame_modes_per_spine(scatter_ax):
+    ax = range_frame(scatter_ax, frame=("data", "nice"))
+    ax.figure.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == tuple(ax.xaxis.get_data_interval())
+    assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
+
+
+def test_loose_in_tuple_offsets_only_that_spine(scatter_ax):
+    ax = range_frame(scatter_ax, frame=("loose", "nice"))
+    assert ax.spines["bottom"].get_position() == ("outward", 8)
+    assert ax.spines["left"].get_position() == ("outward", 0)
+
+
+def test_loose_in_tuple_bounds_only_that_axis(scatter_ax):
+    ax = range_frame(scatter_ax, frame=("loose", "nice"))
+    ax.figure.canvas.draw()
+    xlo, xhi = ax.spines["bottom"].get_bounds()
+    dmin, dmax = ax.xaxis.get_data_interval()
+    assert xlo <= dmin
+    assert xhi >= dmax
+    assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
+
+
+@pytest.mark.parametrize("frame", [("nice", "tight"), ("nice",), ("nice",) * 3])
+def test_invalid_frame_tuple_raises(scatter_ax, frame):
+    with pytest.raises(ValueError, match="frame"):
+        range_frame(scatter_ax, frame=frame)
 
 
 @pytest.fixture

@@ -16,7 +16,7 @@ from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotL
 
 def range_frame(
     ax: Axes,
-    frame: str = "nice",
+    frame: str | tuple[str, str] = "nice",
     n: int = 5,
     offset: float | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -35,16 +35,18 @@ def range_frame(
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    frame : {'nice', 'data', 'loose'}
+    frame : {'nice', 'data', 'loose'} or tuple of two of them
         `'nice'` ends the spines at the outermost ticks, `'data'` at
         the exact data minimum and maximum. `'loose'` ends the spines
         at nice numbers bounding the data (frame may extend up to one
-        tick step beyond the data).
+        tick step beyond the data). A tuple `(x_mode, y_mode)` sets
+        the bottom and left spine independently.
     n : int
         Desired number of ticks per axis.
     offset : float, optional
         Outward displacement of the left and bottom spines, in points.
-        `None` resolves to 8 for `frame='loose'` and 0 otherwise.
+        `None` resolves per spine to 8 for a `'loose'` mode and 0
+        otherwise.
     nice_numbers : sequence of float, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
         Applies to linear axes only; ignored on log and date axes.
@@ -57,10 +59,17 @@ def range_frame(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    if frame not in ("nice", "data", "loose"):
-        raise ValueError(f"frame must be 'nice', 'data' or 'loose', got {frame!r}")
-    if offset is None:
-        offset = 8 if frame == "loose" else 0
+    modes = (frame, frame) if isinstance(frame, str) else tuple(frame)
+    if len(modes) != 2 or any(m not in ("nice", "data", "loose") for m in modes):
+        raise ValueError(
+            "frame must be 'nice', 'data' or 'loose', or a tuple of two of "
+            f"them, got {frame!r}"
+        )
+    mode = {"x": modes[0], "y": modes[1]}
+    offsets = {
+        name: (8 if mode[name] == "loose" else 0) if offset is None else offset
+        for name in ("x", "y")
+    }
 
     state = ensure_state(ax)
     frame_state: dict[str, Any] | None = state.get("frame")
@@ -84,7 +93,7 @@ def range_frame(
             },
         }
         state["frame"] = frame_state
-    frame_state["mode"] = frame
+    frame_state["mode"] = mode
 
     active = set()
     for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
@@ -105,7 +114,7 @@ def range_frame(
             )
             continue
         if converter is not None:
-            locator = DateBreaksLocator(n=n, loose=frame == "loose")
+            locator = DateBreaksLocator(n=n, loose=mode[name] == "loose")
             axis.set_major_locator(locator)
             formatters = cast(dict[str, Any], frame_state["snapshot"]["formatters"])
             if name not in formatters:
@@ -115,7 +124,7 @@ def range_frame(
             axis.set_major_locator(
                 LogBreaksLocator(
                     n=n,
-                    loose=frame == "loose",
+                    loose=mode[name] == "loose",
                     base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
                 )
             )
@@ -124,7 +133,7 @@ def range_frame(
             axis.set_major_locator(
                 TalbotLocator(
                     n=n,
-                    loose=frame == "loose",
+                    loose=mode[name] == "loose",
                     nice_numbers=nice_numbers,
                     weights=weights,
                 )
@@ -134,8 +143,8 @@ def range_frame(
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_position(("outward", offset))
-    ax.spines["bottom"].set_position(("outward", offset))
+    ax.spines["left"].set_position(("outward", offsets["y"]))
+    ax.spines["bottom"].set_position(("outward", offsets["x"]))
 
     add_applier(ax, "frame", _apply_frame)
     run_appliers(ax)
@@ -165,7 +174,7 @@ def _apply_frame(ax: Axes) -> bool:
     ):
         if name not in frame_state["active"]:
             continue
-        span = _frame_span(axis, frame_state["mode"])
+        span = _frame_span(axis, frame_state["mode"][name])
         if span is None:
             continue
         spine = ax.spines[spine_name]
