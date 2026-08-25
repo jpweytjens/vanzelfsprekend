@@ -7,7 +7,6 @@ Import idiom: `import vanzelfsprekend as vzs`.
 ## Repository rules
 
 - `docs/superpowers/` (specs, plans, other superpowers artifacts) is local working material and is gitignored. Never commit it, and never use `git add -f` on it.
-- `archive/` holds the legacy implementation. Reference only: never modify it or build on it.
 
 ## Working docs (local only)
 

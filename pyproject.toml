@@ -25,7 +25,6 @@ dev = [
 ]
 
 [tool.ruff]
-extend-exclude = ["archive"]
 line-length = 88
 src = ["src"]
 
