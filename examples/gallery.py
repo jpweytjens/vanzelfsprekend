@@ -52,7 +52,7 @@ CO2_PPM = (
 def timeseries() -> None:
     """Render the Mauna Loa CO2 record with a date range frame."""
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.apply(ax)
+    vzs.apply(ax, frame=("data", "loose"))
     months = [
         dt.date(
             CO2_START.year + (CO2_START.month - 1 + i) // 12,

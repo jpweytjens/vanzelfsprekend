@@ -57,6 +57,12 @@ vzs.apply(ax, frame="data")   # spines end at the exact data min and max
 vzs.apply(ax, frame="loose")  # spines end at nice numbers bounding the data
 ```
 
+A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exactly where the data does while the value axis keeps nice bounds:
+
+```python
+vzs.apply(ax, frame=("data", "loose"))
+```
+
 `xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `flush=True` anchors the y-label at the topmost tick label; `labelpad` widens the gap to the tick labels:
 
 ```python
@@ -100,7 +106,7 @@ A power law on log-log axes with `frame="loose"`: offset spines end at the power
 
 ![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](docs/scatter_loglog.png)
 
-The Mauna Loa CO₂ record on a date axis: the spine ends at the outermost year ticks inside the data, with the labels kept short by the `ConciseDateFormatter`:
+The Mauna Loa CO₂ record on a date axis, with per-spine modes `frame=("data", "loose")`: the time spine ends exactly where the record does, the value spine at nice numbers bounding it, and the `ConciseDateFormatter` keeps the date labels short:
 
 ![Line chart of a decade of monthly CO₂ measurements, the bottom spine trimmed to year ticks inside the data range](docs/timeseries.png)
 
