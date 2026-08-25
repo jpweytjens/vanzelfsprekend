@@ -96,6 +96,22 @@ def test_restore_disconnects_hook():
     plt.close(fig)
 
 
+def test_restore_reinstates_date_locator_and_formatter():
+    import datetime as dt
+
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
+    ax.plot(days, range(32))
+    locator_before = ax.xaxis.get_major_locator()
+    formatter_before = ax.xaxis.get_major_formatter()
+    vzs.range_frame(ax)
+    fig.canvas.draw()
+    vzs.restore(ax)
+    assert ax.xaxis.get_major_locator() is locator_before
+    assert ax.xaxis.get_major_formatter() is formatter_before
+    plt.close(fig)
+
+
 def test_restore_on_untouched_axes_is_noop():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])

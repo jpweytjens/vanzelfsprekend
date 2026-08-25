@@ -1,3 +1,5 @@
+import datetime as dt
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -185,6 +187,44 @@ def test_categorical_axis_warns_and_is_skipped():
     assert ax.xaxis.get_major_locator() is locator_before
     fig.canvas.draw()
     plt.close(fig)
+
+
+@pytest.fixture
+def date_plot_ax():
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
+    ax.plot(days, range(32))
+    yield ax
+    plt.close(fig)
+
+
+def test_date_axis_gets_date_locator_and_concise_formatter(date_plot_ax):
+    import warnings
+
+    from matplotlib.dates import ConciseDateFormatter
+
+    from vanzelfsprekend import DateBreaksLocator
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", UserWarning)
+        range_frame(date_plot_ax)
+    assert isinstance(date_plot_ax.xaxis.get_major_locator(), DateBreaksLocator)
+    assert isinstance(date_plot_ax.xaxis.get_major_formatter(), ConciseDateFormatter)
+
+
+def test_date_frame_bounds_equal_outermost_ticks(date_plot_ax):
+    ax = range_frame(date_plot_ax)
+    ax.figure.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
+
+
+def test_date_loose_frame_bounds_contain_data(date_plot_ax):
+    ax = range_frame(date_plot_ax, frame="loose")
+    ax.figure.canvas.draw()
+    lo, hi = ax.spines["bottom"].get_bounds()
+    dmin, dmax = ax.xaxis.get_data_interval()
+    assert lo <= dmin
+    assert hi >= dmax
 
 
 def test_empty_axes_never_raises():

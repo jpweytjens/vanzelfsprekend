@@ -2,15 +2,16 @@
 
 import warnings
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
+import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.ticker import NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-from vanzelfsprekend.locator import LogBreaksLocator, TalbotLocator
+from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
 
 
 def range_frame(
@@ -23,7 +24,8 @@ def range_frame(
 ) -> Axes:
     """Turn `ax` into a range frame.
 
-    Installs `TalbotLocator` (linear axes) or `LogBreaksLocator` (log
+    Installs `TalbotLocator` (linear axes), `LogBreaksLocator` (log
+    axes), or `DateBreaksLocator` plus a `ConciseDateFormatter` (date
     axes) on both axes, hiding minor ticks on log axes, hides the top
     and right spines, and keeps the left and bottom spine bounds glued
     to the data on every draw. Safe to call repeatedly; later calls
@@ -45,10 +47,10 @@ def range_frame(
         `None` resolves to 8 for `frame='loose'` and 0 otherwise.
     nice_numbers : sequence of float, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
-        Applies to linear axes only; ignored on log axes.
+        Applies to linear axes only; ignored on log and date axes.
     weights : dict, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
-        Applies to linear axes only; ignored on log axes.
+        Applies to linear axes only; ignored on log and date axes.
 
     Returns
     -------
@@ -74,6 +76,7 @@ def range_frame(
                     "x": ax.xaxis.get_minor_locator(),
                     "y": ax.yaxis.get_minor_locator(),
                 },
+                "formatters": {},
                 "top_visible": ax.spines["top"].get_visible(),
                 "right_visible": ax.spines["right"].get_visible(),
                 "left_position": ax.spines["left"].get_position(),
@@ -93,14 +96,22 @@ def range_frame(
                 stacklevel=2,
             )
             continue
-        if axis.get_converter() is not None:
+        converter = axis.get_converter()
+        if converter is not None and not _is_date_converter(converter):
             warnings.warn(
                 f"vanzelfsprekend: {name}-axis has a units converter; "
-                "only plain axes are supported, leaving it untouched",
+                "only plain and date axes are supported, leaving it untouched",
                 stacklevel=2,
             )
             continue
-        if scale == "log":
+        if converter is not None:
+            locator = DateBreaksLocator(n=n, loose=frame == "loose")
+            axis.set_major_locator(locator)
+            formatters = cast(dict[str, Any], frame_state["snapshot"]["formatters"])
+            if name not in formatters:
+                formatters[name] = axis.get_major_formatter()
+            axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+        elif scale == "log":
             axis.set_major_locator(
                 LogBreaksLocator(
                     n=n,
@@ -129,6 +140,17 @@ def range_frame(
     add_applier(ax, "frame", _apply_frame)
     run_appliers(ax)
     return ax
+
+
+def _is_date_converter(converter: object) -> bool:
+    date_converters: tuple[type, ...] = (
+        mdates.DateConverter,
+        mdates.ConciseDateConverter,
+    )
+    switchable = getattr(mdates, "_SwitchableDateConverter", None)
+    if switchable is not None:
+        date_converters += (switchable,)
+    return isinstance(converter, date_converters)
 
 
 def _apply_frame(ax: Axes) -> bool:
