@@ -72,7 +72,7 @@ vzs.line_labels(ax)              # label every line at its right end
 vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
-Linear and log axes are handled; set the scale before calling `apply`. On a log axis the ticks come from mizani's `breaks_log` (integer powers of the base, with a sub-decade fallback for narrow ranges) and the minor ticks are hidden — reinstate them with `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` if you want them back. Any other scale (`symlog`, `logit`), or an axis with a units converter (dates, categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
+Linear, log and date axes are handled; set the scale before calling `apply`. On a log axis the ticks come from mizani's `breaks_log` (integer powers of the base, with a sub-decade fallback for narrow ranges) and the minor ticks are hidden — reinstate them with `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` if you want them back. On a date axis the ticks come from mizani's `breaks_date` (calendar-nice dates: year, month, day or hour starts), and the labels from a `ConciseDateFormatter` keyed to them, replacing the formatter matplotlib pairs with the locator it installed; `restore` puts both back. Any other scale (`symlog`, `logit`), or an axis with a units converter other than dates (categories), is left untouched with a warning. That limit applies to the frame and ticks; `line_labels` places its labels on any scale.
 
 ## Gallery
 
@@ -100,6 +100,10 @@ A power law on log-log axes with `frame="loose"`: offset spines end at the power
 
 ![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](docs/scatter_loglog.png)
 
+The Mauna Loa CO₂ record on a date axis: the spine ends at the outermost year ticks inside the data, with the labels kept short by the `ConciseDateFormatter`:
+
+![Line chart of a decade of monthly CO₂ measurements, the bottom spine trimmed to year ticks inside the data range](docs/timeseries.png)
+
 ## API
 
 | Name | Does |
@@ -113,6 +117,7 @@ A power law on log-log axes with `frame="loose"`: offset spines end at the power
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
 | `LogBreaksLocator(n, loose, base)` | the tick locator for log axes, usable on its own |
+| `DateBreaksLocator(n, loose)` | the tick locator for date axes, usable on its own |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |

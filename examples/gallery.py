@@ -20,6 +20,7 @@ README_FIGURES = (
     "scatter_loose.png",
     "histogram.png",
     "scatter_loglog.png",
+    "timeseries.png",
 )
 
 
