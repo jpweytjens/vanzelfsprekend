@@ -24,6 +24,12 @@ dev = [
     "ty>=0.0.74",
 ]
 
+[tool.pytest.ini_options]
+filterwarnings = [
+  # mizani's internal date arithmetic trips a numpy deprecation; not ours to fix
+  "ignore:The 'generic' unit for NumPy timedelta is deprecated:DeprecationWarning:mizani.*",
+]
+
 [tool.ruff]
 line-length = 88
 src = ["src"]

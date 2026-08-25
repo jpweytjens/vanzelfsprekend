@@ -1,9 +1,13 @@
+import datetime as dt
+
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from mizani.breaks import breaks_extended
 
 from vanzelfsprekend import (
+    DateBreaksLocator,
     LogBreaksLocator,
     QuartileLocator,
     TalbotLocator,
@@ -281,3 +285,81 @@ def test_log_view_limits_round_numbers():
         lo, hi = LogBreaksLocator().view_limits(30, 4000)
     assert lo <= 30
     assert hi >= 4000
+
+
+def _date_interval(lo, hi):
+    return mdates.date2num(lo), mdates.date2num(hi)
+
+
+def test_date_ticks_are_month_starts_inside_the_range():
+    vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
+    ticks = DateBreaksLocator().tick_values(vmin, vmax)
+    expected = mdates.date2num(
+        [
+            dt.datetime(2023, 5, 1),
+            dt.datetime(2023, 9, 1),
+            dt.datetime(2024, 1, 1),
+            dt.datetime(2024, 5, 1),
+            dt.datetime(2024, 9, 1),
+        ]
+    )
+    np.testing.assert_allclose(ticks, expected)
+
+
+def test_date_ticks_stay_inside_data_range():
+    vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
+    ticks = DateBreaksLocator().tick_values(vmin, vmax)
+    assert ticks.min() >= vmin
+    assert ticks.max() <= vmax
+
+
+def test_date_intraday_ticks_are_hour_marks():
+    vmin, vmax = _date_interval(
+        dt.datetime(2024, 3, 1, 6, 30), dt.datetime(2024, 3, 1, 18, 45)
+    )
+    ticks = DateBreaksLocator().tick_values(vmin, vmax)
+    expected = mdates.date2num([dt.datetime(2024, 3, 1, h) for h in (9, 12, 15, 18)])
+    np.testing.assert_allclose(ticks, expected)
+
+
+def test_date_loose_ticks_bound_the_range():
+    vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
+    ticks = DateBreaksLocator(loose=True).tick_values(vmin, vmax)
+    assert ticks.min() <= vmin
+    assert ticks.max() >= vmax
+
+
+@pytest.mark.parametrize(
+    ("vmin", "vmax"),
+    [(np.nan, 1.0), (-np.inf, np.inf), (2.0, 2.0), (5.0, 1.0), (-1e300, 1e300)],
+)
+def test_date_degenerate_inputs_do_not_raise(vmin, vmax):
+    ticks = DateBreaksLocator().tick_values(vmin, vmax)
+    assert len(ticks) > 0
+
+
+def test_date_empty_axes_draw_does_not_raise():
+    fig, ax = plt.subplots()
+    ax.xaxis.set_major_locator(DateBreaksLocator())
+    fig.canvas.draw()
+    plt.close(fig)
+
+
+def test_date_view_limits_loose_uses_data_interval():
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
+    ax.plot(days, range(32))
+    ax.xaxis.set_major_locator(DateBreaksLocator(loose=True))
+    fig.canvas.draw()
+    lo, hi = ax.get_xlim()
+    assert lo <= mdates.date2num(days[0])
+    assert hi >= mdates.date2num(days[-1])
+    plt.close(fig)
+
+
+def test_date_view_limits_round_numbers():
+    vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = DateBreaksLocator().view_limits(vmin, vmax)
+    assert lo <= vmin
+    assert hi >= vmax

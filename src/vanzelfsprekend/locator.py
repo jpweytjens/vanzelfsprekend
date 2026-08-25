@@ -1,11 +1,13 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
+import datetime
 from collections.abc import Sequence
 
 import matplotlib as mpl
 import numpy as np
+from matplotlib.dates import date2num, num2date
 from matplotlib.ticker import AutoLocator, FixedLocator, Locator, LogLocator
-from mizani.breaks import breaks_extended, breaks_log
+from mizani.breaks import breaks_date, breaks_extended, breaks_log
 from numpy.typing import ArrayLike
 
 _DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
@@ -314,6 +316,126 @@ class LogBreaksLocator(Locator):
         return super().view_limits(vmin, vmax)
 
 
+class DateBreaksLocator(Locator):
+    """Place ticks on calendar-nice dates inside the data range of a date axis.
+
+    Delegates to `mizani.breaks.breaks_date`, which returns breaks at
+    calendar-nice positions (year, month, day, hour, ... starts) that
+    may overflow the interval; the overflow is filtered away so every
+    tick lies within the interval. When used on an axis, ticks are
+    computed from the data interval, not the view interval, which is
+    what lets a range frame hug the data.
+
+    Tick positions are floats in matplotlib date units; the interval is
+    converted to datetimes at the boundary with `matplotlib.dates`, so
+    any matplotlib epoch setting is respected.
+
+    With `loose=True`, keeps the covering breaks so the outermost ticks
+    bound the interval.
+
+    Parameters
+    ----------
+    n : int
+        Desired number of ticks.
+    loose : bool
+        If True, keep the covering breaks so the outermost ticks bound
+        the data interval. Default is False.
+    """
+
+    def __init__(self, n: int = 5, loose: bool = False) -> None:
+        self._loose = loose
+        self._breaks = breaks_date(n=n)
+
+    def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
+        """Return tick locations computed from the axis data interval."""
+        dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
+        if not np.isfinite([dmin, dmax]).all():
+            view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
+            return _date_fallback(view[0], view[1])
+        return self.tick_values(dmin, dmax)
+
+    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
+        """Return tick locations inside `[vmin, vmax]`.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            Interval bounds in matplotlib date units. Swapped if given
+            in reverse order; degenerate or out-of-calendar values fall
+            back to `AutoDateLocator` on a sanitized interval.
+
+        Returns
+        -------
+        ndarray
+            Tick locations.
+        """
+        if vmin > vmax:
+            vmin, vmax = vmax, vmin
+        if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
+            return _date_fallback(vmin, vmax)
+        try:
+            ticks = self._covering_breaks(vmin, vmax)
+            if not self._loose:
+                tol = 1e-9 * (vmax - vmin)
+                ticks = ticks[(ticks >= vmin - tol) & (ticks <= vmax + tol)]
+        except (OverflowError, ValueError, FloatingPointError):
+            return _date_fallback(vmin, vmax)
+        if ticks.size == 0:
+            return _date_fallback(vmin, vmax)
+        return ticks
+
+    def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
+        """Return view limits for `vmin`..`vmax`.
+
+        Mirrors `TalbotLocator.view_limits`: a loose locator attached
+        to an axis derives the view from the data interval's covering
+        breaks so the view comes out edge-to-edge with the loose range
+        frame; otherwise the input passes through unless
+        `matplotlib.rcParams["axes.autolimit_mode"]` is
+        `'round_numbers'`, in which case it is widened to the covering
+        breaks.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            The proposed view limits, in matplotlib date units.
+
+        Returns
+        -------
+        tuple of float
+            Lower and upper view limits.
+        """
+        if vmin > vmax:
+            vmin, vmax = vmax, vmin
+
+        if self._loose and self.axis is not None:
+            dmin, dmax = self.axis.get_data_interval()
+            if np.isfinite([dmin, dmax]).all() and dmin != dmax:
+                try:
+                    ticks = self._covering_breaks(dmin, dmax)
+                    if ticks.size >= 2:
+                        return float(ticks[0]), float(ticks[-1])
+                except (OverflowError, ValueError, FloatingPointError):
+                    pass
+            return super().view_limits(vmin, vmax)
+
+        if mpl.rcParams["axes.autolimit_mode"] != "round_numbers":
+            return super().view_limits(vmin, vmax)
+        if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
+            return super().view_limits(vmin, vmax)
+        try:
+            ticks = self._covering_breaks(vmin, vmax)
+            if ticks.size >= 2:
+                return float(ticks[0]), float(ticks[-1])
+        except (OverflowError, ValueError, FloatingPointError):
+            pass
+        return super().view_limits(vmin, vmax)
+
+    def _covering_breaks(self, vmin: float, vmax: float) -> np.ndarray:
+        dates = self._breaks((num2date(vmin), num2date(vmax)))
+        return np.asarray(date2num(dates), dtype=float)
+
+
 class QuartileLocator(FixedLocator):
     """Place ticks at the five-number summary of `data`.
 
@@ -383,6 +505,34 @@ def _sanitize_log_interval(
             expanded = vmin / base, vmax * base
         vmin, vmax = expanded if np.isfinite(expanded[1]) else (1.0, base)
     return vmin, vmax
+
+
+def _sanitize_date_interval(vmin: float, vmax: float) -> tuple[float, float]:
+    # mizani's break rounding can step outside years 1-9999, so clip
+    # well inside the calendar rather than to its exact edges.
+    lo = date2num(datetime.datetime(1000, 1, 1))
+    hi = date2num(datetime.datetime(9000, 1, 1))
+    if vmin > vmax:
+        vmin, vmax = vmax, vmin
+    if not np.isfinite([vmin, vmax]).all():
+        vmin, vmax = 0.0, 1.0
+    vmin = float(np.clip(vmin, lo, hi))
+    vmax = float(np.clip(vmax, lo, hi))
+    if vmin == vmax:
+        vmin, vmax = vmin - 0.5, vmax + 0.5
+    return vmin, vmax
+
+
+def _date_fallback(vmin: float, vmax: float) -> np.ndarray:
+    vmin, vmax = _sanitize_date_interval(vmin, vmax)
+    try:
+        dates = breaks_date(n=5)((num2date(vmin), num2date(vmax)))
+        ticks = np.asarray(date2num(dates), dtype=float)
+        if ticks.size:
+            return ticks
+    except (OverflowError, ValueError, FloatingPointError):
+        pass
+    return np.linspace(vmin, vmax, 5)
 
 
 def _log_fallback(vmin: float, vmax: float, base: float) -> np.ndarray:
