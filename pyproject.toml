@@ -1,7 +1,7 @@
 [project]
 name = "vanzelfsprekend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Tufte and Doumont for matplotlib: range frames and direct labels"
 readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
@@ -14,6 +14,32 @@ dependencies = [
     "mizani>=0.14",
     "numpy>=2.2.6",
 ]
+keywords = [
+    "matplotlib",
+    "tufte",
+    "doumont",
+    "range-frame",
+    "direct-labels",
+    "data-visualization",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Matplotlib",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/jpweytjens/vanzelfsprekend"
+Repository = "https://github.com/jpweytjens/vanzelfsprekend"
+Issues = "https://github.com/jpweytjens/vanzelfsprekend/issues"
+Changelog = "https://github.com/jpweytjens/vanzelfsprekend/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["uv_build>=0.11.26,<0.12.0"]
