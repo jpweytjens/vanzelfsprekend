@@ -63,7 +63,7 @@ vzs.apply(ax, frame=("data", "loose"))
 vzs.ylabel(ax, "count", flush=True, labelpad=10)
 ```
 
-`register()` adds the entry points as Axes methods, so `ax.apply()` and `ax.restore()` work anywhere; `unregister()` removes them again.
+`register()` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.apply()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
 
 `line_labels` replaces a legend: delete `ax.legend()` and each line gets its `label=` text at its right end, in its line's colour. Where lines converge, the labels shift apart just enough to stay readable, keeping their order. `at="start"` labels the left ends instead, slopegraph-style, which pairs well with `frame="loose"` since the offset spine leaves room for the text:
 
@@ -129,7 +129,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 | `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
 | `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
 | `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
-| `register()`, `unregister()` | add or remove the `ax.apply` and `ax.restore` methods |
+| `register()`, `unregister()` | add or remove the `ax.vzs` accessor |
 | `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
 | `LogBreaksLocator(n, loose, base)` | the tick locator for log axes, usable on its own |

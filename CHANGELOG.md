@@ -21,4 +21,4 @@ Colour:
 
 Undo:
 - restore(ax) puts the axes back exactly as they were before apply(ax)
-- register() makes both available as methods, ax.apply() and ax.restore(), on every axes
+- register() adds a vzs accessor to every axes, so ax.vzs.apply(), ax.vzs.set_xlabel() and the other entry points work anywhere
