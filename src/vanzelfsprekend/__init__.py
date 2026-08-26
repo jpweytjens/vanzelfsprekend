@@ -1,5 +1,7 @@
 """Clear, minimal-ink axes for matplotlib."""
 
+from importlib.metadata import version
+
 from vanzelfsprekend import palettes
 from vanzelfsprekend.compose import apply, register, restore, unregister
 from vanzelfsprekend.frame import range_frame
@@ -13,6 +15,8 @@ from vanzelfsprekend.locator import (
 )
 from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticks import tick_direction
+
+__version__ = version("vanzelfsprekend")
 
 __all__ = [
     "DateBreaksLocator",
