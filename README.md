@@ -1,6 +1,9 @@
 # vanzelfsprekend
 
-<img align="right" width="160" src="icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
+[![PyPI](https://img.shields.io/pypi/v/vanzelfsprekend.svg)](https://pypi.org/project/vanzelfsprekend/)
+[![CI](https://github.com/jpweytjens/vanzelfsprekend/actions/workflows/ci.yml/badge.svg)](https://github.com/jpweytjens/vanzelfsprekend/actions/workflows/ci.yml)
+
+<img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
 Let the plot speak for itself: a matplotlib treatment inspired by [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
 
@@ -17,17 +20,17 @@ What it adds today:
   the same kind, and `color="tol:orange"` works anywhere matplotlib
   takes a colour.
 
-![The same speed-gradient plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with direct line labels on the right](docs/backsolved_speed.png)
+![The same speed-gradient plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with direct line labels on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/backsolved_speed.png)
 
-The figure comes from [`examples/backsolved_speed.py`](examples/backsolved_speed.py): the same plotting calls on both axes; the right one adds the treatment with `frame="loose"` and `line_labels` in place of the legend.
+The figure comes from [`examples/backsolved_speed.py`](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/backsolved_speed.py): the same plotting calls on both axes; the right one adds the treatment with `frame="loose"` and `line_labels` in place of the legend.
 
 ## Install
 
-Not on PyPI yet. Install from a checkout:
-
 ```sh
-uv add /path/to/vanzelfsprekend
+uv add vanzelfsprekend
 ```
+
+or `pip install vanzelfsprekend`.
 
 ## Quickstart
 
@@ -82,7 +85,7 @@ Linear, log and date axes are handled; set the scale before calling `apply`. On 
 
 ## Gallery
 
-From [`examples/gallery.py`](examples/gallery.py), which regenerates these figures (`uv run examples/gallery.py`).
+From [`examples/gallery.py`](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py), which regenerates these figures (`uv run examples/gallery.py`).
 
 Tufte's quartile plot: `frame="data"` ends the spines at the data extremes, and `QuartileLocator` puts the ticks at each variable's minimum, quartiles and maximum:
 
@@ -92,23 +95,23 @@ ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
 ax.xaxis.set_major_formatter("{x:.1f}")
 ```
 
-![Scatter plot whose spines end at the data extremes, with ticks marking the minimum, quartiles and maximum of each variable](docs/quartile_ticks.png)
+![Scatter plot whose spines end at the data extremes, with ticks marking the minimum, quartiles and maximum of each variable](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/quartile_ticks.png)
 
 `frame="loose"` on offset spines, ending at nice numbers that bound the data:
 
-![Scatter plot with offset spines ending at nice numbers just beyond the data](docs/scatter_loose.png)
+![Scatter plot with offset spines ending at nice numbers just beyond the data](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/scatter_loose.png)
 
 The range frame on a histogram:
 
-![Histogram with trimmed spines and ticks inside the data range](docs/histogram.png)
+![Histogram with trimmed spines and ticks inside the data range](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/histogram.png)
 
 A power law on log-log axes with `frame="loose"`: offset spines end at the powers of ten bounding the data, minor ticks gone:
 
-![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](docs/scatter_loglog.png)
+![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/scatter_loglog.png)
 
 The Mauna Loa CO₂ record on a date axis, with per-spine modes `frame=("data", "loose")`: the time spine ends exactly where the record does, the value spine at nice numbers bounding it, and the `ConciseDateFormatter` keeps the date labels short:
 
-![Line chart of a decade of monthly CO₂ measurements, the bottom spine trimmed to year ticks inside the data range](docs/timeseries.png)
+![Line chart of a decade of monthly CO₂ measurements, the bottom spine trimmed to year ticks inside the data range](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/timeseries.png)
 
 ## API
 
