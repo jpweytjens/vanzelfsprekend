@@ -1,15 +1,21 @@
-"""The apply composer, teardown, and axes-method registration."""
+"""The apply composer, teardown, and the `ax.vzs` accessor registration."""
 
 from collections.abc import Sequence
+from typing import Literal
 
 import matplotlib as mpl
 from matplotlib.axes import Axes
+from matplotlib.text import Annotation, Text
+from matplotlib.typing import ColorType
 
 from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
-from vanzelfsprekend.mute import mute
-from vanzelfsprekend.ticks import _rc
+from vanzelfsprekend.labels import xlabel, ylabel
+from vanzelfsprekend.lines import line_labels
+from vanzelfsprekend.mute import LINE_WIDTH, mute
+from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.ticks import _rc, tick_direction
 
 
 def apply(
@@ -146,27 +152,29 @@ def restore(ax: Axes) -> None:
     ax.figure.canvas.draw_idle()
 
 
-def register() -> None:
-    """Add `apply` and `restore` methods to `matplotlib.axes.Axes`.
+class _Accessor:
+    """The entry points bound to one axes, reached as `ax.vzs` after `register`.
 
-    Opt-in monkeypatching: after calling this once, `ax.apply(...)` and
-    `ax.restore()` delegate to the functions. Calling it again is a no-op.
+    Method names mimic matplotlib's where a matching contract exists
+    (`set_xlabel`, `set_ylabel`); everything else keeps its module name.
+    Each method delegates to the module function with this accessor's axes
+    as the first argument.
     """
-    from matplotlib.axes import Axes
 
-    if getattr(Axes, "apply", None) is not None:
-        return
+    def __init__(self, ax: Axes) -> None:
+        self._ax = ax
 
-    def _apply_method(
-        self: Axes,
+    def apply(
+        self,
         frame: str | tuple[str, str] = "nice",
         n: int = 5,
         offset: float | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
+        """Apply vanzelfsprekend's default treatment; see `vanzelfsprekend.apply`."""
         return apply(
-            self,
+            self._ax,
             frame=frame,
             n=n,
             offset=offset,
@@ -174,20 +182,82 @@ def register() -> None:
             weights=weights,
         )
 
-    def _restore_method(self: Axes) -> None:
-        return restore(self)
+    def restore(self) -> None:
+        """Remove the treatment; see `vanzelfsprekend.restore`."""
+        return restore(self._ax)
 
-    Axes.apply = _apply_method  # ty: ignore[unresolved-attribute]
-    Axes.restore = _restore_method  # ty: ignore[unresolved-attribute]
+    def range_frame(
+        self,
+        frame: str | tuple[str, str] = "nice",
+        n: int = 5,
+        offset: float | None = None,
+        nice_numbers: Sequence[float] | None = None,
+        weights: dict[str, float] | None = None,
+    ) -> Axes:
+        """Draw the range frame with every knob; see `vanzelfsprekend.range_frame`."""
+        return range_frame(
+            self._ax,
+            frame=frame,
+            n=n,
+            offset=offset,
+            nice_numbers=nice_numbers,
+            weights=weights,
+        )
+
+    def set_xlabel(self, text: str, labelpad: float | None = None) -> Text:
+        """End-of-spine x-label; see `vanzelfsprekend.xlabel`."""
+        return xlabel(self._ax, text, labelpad=labelpad)
+
+    def set_ylabel(
+        self, text: str, flush: bool = False, labelpad: float | None = None
+    ) -> Text:
+        """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
+        return ylabel(self._ax, text, flush=flush, labelpad=labelpad)
+
+    def line_labels(
+        self,
+        at: Literal["start", "end"] = "end",
+        labelcolor: str | ColorType | list[ColorType] = "linecolor",
+        pad: float = 4.0,
+        gap: float = 2.0,
+    ) -> list[Annotation]:
+        """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
+        return line_labels(self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap)
+
+    def mute(
+        self,
+        text_ink: str = TEXT_INK,
+        line_ink: str = LINE_INK,
+        line_width: float = LINE_WIDTH,
+    ) -> Axes:
+        """Grey the axis furniture; see `vanzelfsprekend.mute`."""
+        return mute(
+            self._ax, text_ink=text_ink, line_ink=line_ink, line_width=line_width
+        )
+
+    def tick_direction(self, direction: str = "out") -> Axes:
+        """Point the tick marks; see `vanzelfsprekend.tick_direction`."""
+        return tick_direction(self._ax, direction=direction)
+
+
+def register() -> None:
+    """Add the `vzs` accessor to `matplotlib.axes.Axes`.
+
+    Opt-in monkeypatching of a single attribute: after calling this once,
+    `ax.vzs.apply(...)`, `ax.vzs.set_xlabel(...)` and the other entry
+    points delegate to the module functions bound to that axes. Calling
+    it again is a no-op.
+    """
+    if getattr(Axes, "vzs", None) is not None:
+        return
+
+    Axes.vzs = property(_Accessor)  # ty: ignore[unresolved-attribute]
 
 
 def unregister() -> None:
-    """Remove the `apply` and `restore` methods if present.
+    """Remove the `vzs` accessor if present.
 
-    Re-entrant: a no-op when they were never registered.
+    Re-entrant: a no-op when it was never registered.
     """
-    from matplotlib.axes import Axes
-
-    for name in ("apply", "restore"):
-        if getattr(Axes, name, None) is not None:
-            delattr(Axes, name)
+    if getattr(Axes, "vzs", None) is not None:
+        delattr(Axes, "vzs")

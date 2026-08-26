@@ -5,13 +5,13 @@ from matplotlib.colors import to_rgba
 import vanzelfsprekend as vzs
 
 
-def test_register_adds_working_method_and_is_reentrant():
+def test_register_adds_working_accessor_and_is_reentrant():
     vzs.register()
     vzs.register()
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
     nice = [1, 2.5, 5]
-    result = ax.apply(frame="data", offset=5, nice_numbers=nice)
+    result = ax.vzs.apply(frame="data", offset=5, nice_numbers=nice)
     assert result is ax
     assert not ax.spines["top"].get_visible()
     assert ax.spines["bottom"].get_position() == ("outward", 5)
@@ -119,28 +119,62 @@ def test_restore_on_untouched_axes_is_noop():
     plt.close(fig)
 
 
-def test_unregister_removes_methods_and_is_reentrant():
+def test_unregister_removes_accessor_and_is_reentrant():
     vzs.register()
     from matplotlib.axes import Axes
 
-    assert hasattr(Axes, "apply")
-    assert hasattr(Axes, "restore")
+    assert hasattr(Axes, "vzs")
     vzs.unregister()
     vzs.unregister()
-    assert not hasattr(Axes, "apply")
-    assert not hasattr(Axes, "restore")
+    assert not hasattr(Axes, "vzs")
 
 
-def test_restore_method_via_register():
+def test_restore_via_accessor():
     vzs.register()
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
-    ax.apply()
+    ax.vzs.apply()
     fig.canvas.draw()
-    ax.restore()
+    ax.vzs.restore()
     assert not hasattr(ax, "_vanzelfsprekend_state")
     vzs.unregister()
     plt.close(fig)
+
+
+# The accessor mimics matplotlib's method names where a matching contract
+# exists; everything else keeps its module name.
+ACCESSOR_NAMES = {"xlabel": "set_xlabel", "ylabel": "set_ylabel"}
+
+
+def _ax_first_entry_points():
+    import inspect
+
+    for name in vzs.__all__:
+        obj = getattr(vzs, name)
+        if not callable(obj) or inspect.isclass(obj):
+            continue
+        params = list(inspect.signature(obj).parameters)
+        if params and params[0] == "ax":
+            yield name, obj
+
+
+def test_accessor_covers_every_ax_first_entry_point():
+    from vanzelfsprekend.compose import _Accessor
+
+    for name, _func in _ax_first_entry_points():
+        assert hasattr(_Accessor, ACCESSOR_NAMES.get(name, name))
+
+
+def test_accessor_signatures_match_module_functions():
+    import inspect
+
+    from vanzelfsprekend.compose import _Accessor
+
+    for name, func in _ax_first_entry_points():
+        method = getattr(_Accessor, ACCESSOR_NAMES.get(name, name))
+        func_params = list(inspect.signature(func).parameters.values())[1:]
+        method_params = list(inspect.signature(method).parameters.values())[1:]
+        assert method_params == func_params, name
 
 
 def test_restore_after_repeated_range_frame_restores_original_locator():
