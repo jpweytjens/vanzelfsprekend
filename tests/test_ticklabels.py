@@ -153,6 +153,21 @@ def test_grow_past_prior_max_does_not_inherit_shift():
     plt.close(fig_ref)
 
 
+def test_colliding_x_labels_separate_horizontally():
+    fig, ax = plt.subplots(figsize=(4, 3))
+    ax.plot([5.0, 5.05], [0, 1])
+    vzs.apply(ax, frame="data")
+    ax.xaxis.set_major_locator(FixedLocator([5.0, 5.05]))
+    ax.xaxis.set_major_formatter("{x:.4f}")
+    fig.canvas.draw()
+    boxes = [t.get_window_extent() for t in ax.xaxis.get_ticklabels()]
+    order = np.argsort(ax.xaxis.get_majorticklocs())
+    for lower, upper in pairwise(order):
+        assert boxes[upper].x0 - boxes[lower].x1 >= -0.5
+    np.testing.assert_allclose(ax.xaxis.get_majorticklocs(), [5.0, 5.05])
+    plt.close(fig)
+
+
 def test_restore_reverts_tick_label_transforms():
     def boxes(ax: plt.Axes) -> list:
         ax.figure.canvas.draw()
