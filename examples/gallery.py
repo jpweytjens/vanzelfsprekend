@@ -82,7 +82,7 @@ def grand_tours() -> None:
     # arrives, and apply detects date-ness at call time.
     vzs.apply(ax, frame=("data", "loose"))
     vzs.line_labels(ax)
-    vzs.ylabel(ax, "winner's average speed\n(km/h)", flush=True)
+    vzs.ylabel(ax, "winner's\naverage speed (km/h)", flush=True)
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
