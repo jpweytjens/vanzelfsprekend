@@ -11,10 +11,31 @@ from typing import cast
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
+from matplotlib.text import Text
 from matplotlib.transforms import ScaledTranslation, Transform
 
 from vanzelfsprekend.hook import get_state
 from vanzelfsprekend.placement import GAP, stack
+
+_BASE_ATTR = "_vanzelfsprekend_base"
+
+
+def _base_transform(text: Text) -> Transform:
+    """Return the transform `text` had before this applier ever touched it.
+
+    Tick-label `Text` objects are pooled and cloned by matplotlib:
+    `Axis.majorTicks` only ever grows, so a label that drops out when the
+    tick count shrinks comes back carrying whatever transform it had
+    last; and `Axis._copy_tick_props` clones an existing tick's label
+    transform onto newly grown ones via `Artist.update_from`, so a label
+    never seen before can still inherit a sibling's shifted transform.
+    Either way `text.get_transform()` is not trustworthy as "original".
+    Every shifted transform this applier installs is tagged with the
+    base it was built from, so following that tag -- when present --
+    recovers the true, unshifted original instead of compounding on it.
+    """
+    current = text.get_transform()
+    return cast("Transform", getattr(current, _BASE_ATTR, current))
 
 
 def _apply_tick_labels(ax: Axes) -> bool:
@@ -53,15 +74,15 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
     for text, offset in zip(labels, offsets, strict=True):
         entry = applied.get(text)
         if entry is None:
-            entry = applied[text] = [text.get_transform(), 0.0]
+            entry = applied[text] = [_base_transform(text), 0.0]
         if abs(offset - entry[1]) < 0.05:
             continue
         inches = float(offset) / ax.figure.dpi
         shift = (inches, 0.0) if name == "x" else (0.0, inches)
-        text.set_transform(
-            cast("Transform", entry[0])
-            + ScaledTranslation(*shift, ax.figure.dpi_scale_trans)
-        )
+        base = cast("Transform", entry[0])
+        shifted = base + ScaledTranslation(*shift, ax.figure.dpi_scale_trans)
+        setattr(shifted, _BASE_ATTR, base)
+        text.set_transform(shifted)
         entry[1] = float(offset)
         changed = True
     return changed

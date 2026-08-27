@@ -2,6 +2,7 @@ from itertools import pairwise
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import FixedLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend.hook import get_state
@@ -20,6 +21,17 @@ def quartile_axes() -> tuple[plt.Figure, plt.Axes]:
     ax.yaxis.set_major_locator(vzs.QuartileLocator(ANSCOMBE_II_Y))
     ax.yaxis.set_major_formatter("{x:.1f}")
     return fig, ax
+
+
+def _measured_y_offsets(ax: plt.Axes) -> np.ndarray:
+    """Return each y tick label's actual pixel displacement off its tick."""
+    locs = ax.yaxis.get_majorticklocs()
+    boxes = [t.get_window_extent() for t in ax.yaxis.get_ticklabels()]
+    points = np.ones((len(locs), 2))
+    points[:, 1] = locs
+    desired = ax.transData.transform(points)[:, 1]
+    centers = np.array([0.5 * (b.y0 + b.y1) for b in boxes])
+    return centers - desired
 
 
 def test_colliding_quartile_labels_separate():
@@ -60,4 +72,23 @@ def test_second_draw_is_stable():
     from vanzelfsprekend.hook import run_appliers
 
     assert run_appliers(ax) is False
+    plt.close(fig)
+
+
+def test_shrink_then_grow_does_not_compound_displacement():
+    fig, ax = quartile_axes()
+    fig.canvas.draw()
+    first = _measured_y_offsets(ax)
+
+    # Matplotlib pools tick label Text objects (Axis.majorTicks only ever
+    # grows), so dropping to fewer ticks and growing back to five reuses
+    # the same, already-displaced label objects for the colliding pair.
+    ax.yaxis.set_major_locator(FixedLocator(np.quantile(ANSCOMBE_II_Y, (0, 0.5, 1))))
+    fig.canvas.draw()
+
+    ax.yaxis.set_major_locator(vzs.QuartileLocator(ANSCOMBE_II_Y))
+    fig.canvas.draw()
+    second = _measured_y_offsets(ax)
+
+    np.testing.assert_allclose(second, first, atol=0.5)
     plt.close(fig)
