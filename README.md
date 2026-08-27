@@ -117,25 +117,48 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 
 - [dufte](https://github.com/nschloe/dufte), since merged into [matplotx](https://github.com/nschloe/matplotx), is the closest kin: the same minimal-ink instinct, and its `line_labels` first framed label placement as a least-squares problem under minimum-distance constraints. vanzelfsprekend solves that same problem, exactly.
 - [adjustText](https://github.com/Phlya/adjustText), following R's [ggrepel](https://ggrepel.slowkow.com/), tackles the harder general problem of untangling arbitrary 2-D annotations, which takes iterative approximation. Restricting labels to line ends is what lets vanzelfsprekend place them exactly instead.
-- [matplotlib-label-lines](https://github.com/cphyc/matplotlib-label-lines) and [matplotlib-inline-labels](https://pypi.org/project/matplotlib-inline-labels/) set labels on the line itself, rotated or curved along it. vanzelfsprekend labels line ends instead; for inline labels, use those.
-- [etframes](https://github.com/ahupp/etframes) drew range frames in matplotlib first, part of an older generation of Tufte scripts this library hopes to outlive.
+- [etframes](https://github.com/ahupp/etframes) is the original, drawing range frames in matplotlib since 2007.
 
 ## API
+
+### Axes
 
 | Name | Does |
 | --- | --- |
 | `apply(ax, ...)` | the full treatment with defaults |
 | `restore(ax)` | put the axes back as they were |
 | `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
-| `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
-| `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
-| `register()`, `unregister()` | add or remove the `ax.vzs` accessor |
-| `TalbotLocator(n, loose, ...)` | the tick locator, usable on its own |
-| `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
-| `LogBreaksLocator(n, loose, base)` | the tick locator for log axes, usable on its own |
-| `DateBreaksLocator(n, loose)` | the tick locator for date axes, usable on its own |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
+
+### Labels
+
+| Name | Does |
+| --- | --- |
+| `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
+| `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
+
+### Locators
+
+Each works on its own, on any matplotlib axes:
+
+| Name | Does |
+| --- | --- |
+| `TalbotLocator(n, loose, ...)` | nice-number ticks inside the data range |
+| `LogBreaksLocator(n, loose, base)` | the same for log axes |
+| `DateBreaksLocator(n, loose)` | the same for date axes |
+| `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
+
+### Palettes
+
+| Name | Does |
+| --- | --- |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
+
+### Registration
+
+| Name | Does |
+| --- | --- |
+| `register()`, `unregister()` | add or remove the `ax.vzs` accessor |
 
 Parameters and behavior are documented in the docstrings.
