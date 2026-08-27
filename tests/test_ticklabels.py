@@ -140,6 +140,10 @@ def test_restore_reverts_tick_label_transforms():
 
     fig_a, ax_a = plt.subplots(figsize=(4, 3))
     ax_a.scatter(np.arange(ANSCOMBE_II_Y.size), ANSCOMBE_II_Y, s=12)
+    # restore() keeps user-set formatters (only locators revert
+    # unconditionally), so the pristine comparator must wear the same
+    # formatter quartile_axes() sets to be a fair comparison.
+    ax_a.yaxis.set_major_formatter("{x:.1f}")
     pristine = boxes(ax_a)
 
     fig_b, ax_b = quartile_axes()
