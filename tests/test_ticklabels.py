@@ -165,8 +165,11 @@ def test_grow_past_prior_max_does_not_inherit_shift():
 
 
 def test_colliding_x_labels_separate_horizontally():
+    # Data spans [5.0, 6.0] so the two FixedLocator ticks (0.05 apart) sit
+    # close together on the data axis: wide 4-decimal labels there
+    # genuinely overlap without the applier.
     fig, ax = plt.subplots(figsize=(4, 3))
-    ax.plot([5.0, 5.05], [0, 1])
+    ax.plot([5.0, 6.0], [0, 1])
     vzs.apply(ax, frame="data")
     ax.xaxis.set_major_locator(FixedLocator([5.0, 5.05]))
     ax.xaxis.set_major_formatter("{x:.4f}")
