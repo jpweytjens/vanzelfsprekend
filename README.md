@@ -11,7 +11,7 @@ One call, `vzs.apply(ax)`, turns a default matplotlib axes into a quiet one wher
 
 ![The same speed-gradient plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with direct line labels on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/backsolved_speed.png)
 
-The same plotting calls produce both axes; the right one adds `apply(ax, frame="loose")` and `line_labels(ax)` in place of the legend ([`examples/backsolved_speed.py`](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/backsolved_speed.py)).
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/backsolved_speed.py) produces both axes from the same plotting calls; the right one adds `apply(ax, frame="loose")` and `line_labels(ax)` in place of the legend.
 
 ## Install
 
@@ -40,7 +40,7 @@ vzs.ylabel(ax, "voltage", flush=True)
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
-`apply` installs a draw hook that keeps the treatment glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly.
+`apply` installs a draw hook that keeps the treatment glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly. More examples are in the [gallery](#gallery).
 
 ## Usage
 
@@ -76,7 +76,7 @@ Linear, log and date axes are handled; set the scale before calling `apply`. On 
 
 ## Gallery
 
-From [`examples/gallery.py`](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py), which regenerates these figures (`uv run examples/gallery.py`).
+Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run examples/gallery.py`.
 
 Tufte's quartile plot: `frame="data"` ends the spines at the data extremes, and `QuartileLocator` puts the ticks at each variable's minimum, quartiles and maximum:
 
@@ -110,7 +110,7 @@ The treatment compresses a few small books' worth of advice:
 
 - The range frame is Tufte's (*The Visual Display of Quantitative Information*): a frame that shows nothing becomes two spines that show each variable's minimum and maximum.
 - Direct labels are Doumont's (*Trees, maps and theorems*): a legend sends the reader on a round trip between line and key, and a label at the line's end deletes the detour. The label placement is the exact least-squares optimum under no-overlap constraints, re-solved on every draw via the pool-adjacent-violators algorithm.
-- The round-number ticks come from [Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), through [mizani](https://mizani.readthedocs.io/en/stable/)'s breaks, computed from the data rather than the view limits.
+- The round-number ticks come from [Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), through [mizani](https://mizani.readthedocs.io/en/stable/)'s breaks, computed from the data rather than the view limits. The frame modes keep that literature's vocabulary: "nice" numbers (1, 2 or 5 times a power of ten) are [Heckbert's](https://dl.acm.org/doi/10.5555/90767.90783) (*Graphics Gems*, 1990), and "loose" is the paper's word for bounds that enclose the data.
 - The colours are [Paul Tol's](https://sronpersonalpages.nl/~pault/) colour-blind-safe schemes, arranged ink-first: a single series stays near-black, and colour enters at series two of the same kind. `color="tol:orange"` works anywhere matplotlib takes a colour.
 
 vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neighbours deserve direct credit:
