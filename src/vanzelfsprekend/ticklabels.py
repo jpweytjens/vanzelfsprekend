@@ -84,6 +84,16 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
         # via `Tick._apply_params`) -- is an untracked shift that must be
         # reconciled regardless of whether the offset itself changed.
         wears_untracked_shift = text.get_transform() is not entry[2]
+        if wears_untracked_shift:
+            # Re-derive the base rather than trusting the one captured at
+            # first sighting: `_base_transform` still follows the
+            # `_BASE_ATTR` tag when the untracked transform is an
+            # inherited sibling shift (pooled/cloned-tick protection),
+            # but otherwise it *is* the untracked transform -- e.g. one
+            # matplotlib legitimately rebuilt via `tick_params(pad=...)`
+            # -- which must be adopted as the new base so a user's
+            # explicit styling isn't silently discarded.
+            entry[0] = _base_transform(text)
         if not wears_untracked_shift and abs(offset - entry[1]) < 0.05:
             continue
         inches = float(offset) / ax.figure.dpi

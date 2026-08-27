@@ -108,10 +108,21 @@ def test_tick_params_after_draw_reseparates_labels():
     # installed while the state still records it as applied.
     fig, ax = quartile_axes()
     fig.canvas.draw()
+    labels = ax.yaxis.get_ticklabels()
+    before_x1 = np.array([t.get_window_extent().x1 for t in labels])
+
     ax.tick_params(axis="y", pad=15)
     fig.canvas.draw()
     fig.canvas.draw()
-    boxes = [t.get_window_extent() for t in ax.yaxis.get_ticklabels()]
+
+    # The pad change must actually take effect -- reconciling the shift
+    # must adopt matplotlib's rebuilt (pad-moved) transform as the new
+    # base, not silently discard it in favor of the stale first-sighting
+    # base. A bigger left pad pushes the labels' right edges further left.
+    after_x1 = np.array([t.get_window_extent().x1 for t in labels])
+    assert np.all(after_x1 - before_x1 < -10.0)
+
+    boxes = [t.get_window_extent() for t in labels]
     order = np.argsort(ax.yaxis.get_majorticklocs())
     for lower, upper in pairwise(order):
         assert boxes[upper].y0 - boxes[lower].y1 >= -0.5
