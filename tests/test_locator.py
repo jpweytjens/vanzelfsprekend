@@ -363,3 +363,8 @@ def test_date_view_limits_round_numbers():
         lo, hi = DateBreaksLocator().view_limits(vmin, vmax)
     assert lo <= vmin
     assert hi >= vmax
+
+
+def test_quartile_locator_collapses_coincident_quantiles():
+    locator = QuartileLocator([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19])
+    assert list(locator()) == [8.0, 19.0]

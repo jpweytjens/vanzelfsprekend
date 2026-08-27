@@ -441,8 +441,9 @@ class QuartileLocator(FixedLocator):
 
     Ticks sit at the minimum, first quartile, median, third quartile,
     and maximum of the data, turning a range frame into Tufte's
-    quartile plot. Non-finite values are ignored. Tick labels follow
-    the axis formatter; pass a format string such as
+    quartile plot. Non-finite values are ignored. Coincident quantiles
+    collapse to a single tick, since a tick cannot show multiplicity.
+    Tick labels follow the axis formatter; pass a format string such as
     `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
 
     Parameters
@@ -461,7 +462,9 @@ class QuartileLocator(FixedLocator):
         values = values[np.isfinite(values)]
         if values.size == 0:
             raise ValueError("data has no finite values")
-        super().__init__(np.quantile(values, (0, 0.25, 0.5, 0.75, 1)))
+        super().__init__(
+            np.unique(np.quantile(values, (0, 0.25, 0.5, 0.75, 1))).tolist()
+        )
 
 
 def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:
