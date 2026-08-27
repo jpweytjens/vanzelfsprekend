@@ -9,9 +9,9 @@ Let the plot speak for itself: a matplotlib treatment in the tradition of [Edwar
 
 One call, `vzs.apply(ax)`, turns a default matplotlib axes into a quiet one where everything left on the page is information. The box around the plot becomes two spines that end at the data, so each spine shows its variable's span. Ticks land on round numbers strictly inside that span. The legend gives way to labels at the lines' ends, each in its line's colour. The axis furniture fades to grey, and the ink goes to the data.
 
-![The same speed-gradient plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with direct line labels on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/backsolved_speed.png)
+![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.png)
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/backsolved_speed.py) produces both axes from the same plotting calls; the right one adds `apply(ax, frame="loose")` and `line_labels(ax)` in place of the legend.
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "loose"))` and `line_labels(ax)` in place of the legend.
 
 ## Install
 
@@ -76,33 +76,33 @@ Linear, log and date axes are handled; set the scale before calling `apply`. On 
 
 ## Gallery
 
-Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run examples/gallery.py`.
+Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run examples/gallery.py`. The datasets sit in [`examples/data`](https://github.com/jpweytjens/vanzelfsprekend/tree/main/examples/data), each file naming its source and licence; what is not a measurement says so, from Anscombe's hand-built quartet to the modelled power profiles.
 
-Tufte's quartile plot: `frame="data"` ends the spines at the data extremes, and `QuartileLocator` puts the ticks at each variable's minimum, quartiles and maximum:
+Anscombe's quartet, four sets built to share their summary statistics, with `frame="data"` and `QuartileLocator` ticks. The axes refuse to repeat the identity: each panel's spines span that panel's own data, its ticks sit at its minimum, quartiles and maximum, and set IV's bottom axis collapses to two marks because ten of its eleven x values are the same number:
 
 ```python
 vzs.apply(ax, frame="data")
 ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
-ax.xaxis.set_major_formatter("{x:.1f}")
+ax.xaxis.set_major_formatter("{x:.0f}")
 ```
 
-![Scatter plot whose spines end at the data extremes, with ticks marking the minimum, quartiles and maximum of each variable](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/quartile_ticks.png)
+![Four scatter panels of Anscombe's quartet, each with spines trimmed to its own data and ticks at its own quartiles, differing where the shared statistics cannot](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/anscombe.png)
 
-`frame="loose"` on offset spines, ending at nice numbers that bound the data:
+A century of grand tour winners' average speeds, each race in its jersey's colour, labelled at the lines' ends. The Tour and the Vuelta arrive too close together for unaided text, so the labels shift just apart; the time spine ends exactly at the first and last editions, and the world wars stay visible as holes in the record:
 
-![Scatter plot with offset spines ending at nice numbers just beyond the data](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/scatter_loose.png)
+![Line chart of winners' average speeds at the Tour, Giro and Vuelta since 1903, each line labelled at its right end, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
 
-The range frame on a histogram:
+The brain and body masses of 62 mammal species on log-log axes with `frame="loose"`: offset spines end at the powers of ten bounding the data, the minor ticks disappear, and the allometry reads as the straight line it is:
 
-![Histogram with trimmed spines and ticks inside the data range](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/histogram.png)
+![Log-log scatter of mammal brain mass against body mass, offset spines ending at powers of ten bounding the data](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/brain_body.png)
 
-A power law on log-log axes with `frame="loose"`: offset spines end at the powers of ten bounding the data, minor ticks gone:
+Old Faithful's waiting times as a histogram under `frame="data"`, both spines flush with the bars, the geyser's two modes standing clear:
 
-![Log-log scatter plot of a power law with offset spines ending at powers of ten bounding the data](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/scatter_loglog.png)
+![Histogram of waiting times between Old Faithful eruptions, two-peaked, with spines running exactly along the bars' span](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/waiting_times.png)
 
-The Mauna Loa CO₂ record on a date axis, with per-spine modes `frame=("data", "loose")`: the time spine ends exactly where the record does, the value spine at nice numbers bounding it:
+The critical-power model for four rider archetypes on a log time axis. Toward the right the curves flatten to each rider's sustainable power and crowd within a few percent of one another, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
 
-![Line chart of a decade of monthly CO₂ measurements, the bottom spine trimmed to year ticks inside the data range](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/timeseries.png)
+![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
 ## Where the ideas come from
 
