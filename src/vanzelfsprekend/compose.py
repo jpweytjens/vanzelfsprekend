@@ -10,11 +10,18 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import range_frame
-from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
+from vanzelfsprekend.hook import (
+    add_applier,
+    clear_state,
+    disconnect,
+    ensure_state,
+    get_state,
+)
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.ticklabels import _apply_tick_labels
 from vanzelfsprekend.ticks import _rc, tick_direction
 
 
@@ -33,7 +40,9 @@ def apply(
     bundled. Takes the same arguments as `range_frame`. It also greys the
     axis furniture and installs the ink-first Tol colour cycle. A custom
     per-axes cycle set before `apply` is restored to the rc default, not
-    recovered.
+    recovered. Where tick labels crowd, they drift apart just enough to
+    stay readable, keeping their order; the tick marks stay exactly at
+    their values.
 
     Returns
     -------
@@ -48,6 +57,8 @@ def apply(
     if "cycle" not in state:
         state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
     ax.set_prop_cycle(color=palettes.CYCLE)
+    state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
+    add_applier(ax, "tick_labels", _apply_tick_labels)
     return ax
 
 

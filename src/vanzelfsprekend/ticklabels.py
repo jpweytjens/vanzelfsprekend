@@ -1,0 +1,67 @@
+"""Tick-label separation: crowded labels drift apart, marks stay put.
+
+Targets are recomputed each draw from the tick locations, so the
+placement never feeds on its own displacement; the shift is an additive
+`ScaledTranslation` on the label's transform, which matplotlib's tick
+layout does not reset, so a converged axes reports no change.
+"""
+
+from typing import cast
+
+import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.axis import Axis
+from matplotlib.transforms import ScaledTranslation, Transform
+
+from vanzelfsprekend.hook import get_state
+from vanzelfsprekend.placement import GAP, stack
+
+
+def _apply_tick_labels(ax: Axes) -> bool:
+    """Displace colliding tick labels minimally along their axis."""
+    state = get_state(ax)
+    if state is None or "frame" not in state or "tick_labels" not in state:
+        return False
+    active = state["frame"]["active"]
+    applied = state["tick_labels"]["applied"]
+    changed = False
+    for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
+        if name in active:
+            changed = _separate(ax, axis, name, applied[name]) or changed
+    return changed
+
+
+def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
+    locs = np.asarray(axis.get_majorticklocs(), dtype=float)
+    labels = axis.get_ticklabels()
+    if len(locs) < 2 or len(labels) != len(locs):
+        return False
+    try:
+        extents = [text.get_window_extent() for text in labels]
+    except RuntimeError:
+        return False
+    dim = 0 if name == "x" else 1
+    points = np.ones((len(locs), 2))
+    points[:, dim] = locs
+    desired = ax.transData.transform(points)[:, dim]
+    sizes = np.array([e.width if name == "x" else e.height for e in extents])
+    px_per_pt = ax.figure.dpi / 72.0
+    offsets = stack(desired, sizes, GAP * px_per_pt) - desired
+    for stale in set(applied) - set(labels):
+        del applied[stale]
+    changed = False
+    for text, offset in zip(labels, offsets, strict=True):
+        entry = applied.get(text)
+        if entry is None:
+            entry = applied[text] = [text.get_transform(), 0.0]
+        if abs(offset - entry[1]) < 0.05:
+            continue
+        inches = float(offset) / ax.figure.dpi
+        shift = (inches, 0.0) if name == "x" else (0.0, inches)
+        text.set_transform(
+            cast("Transform", entry[0])
+            + ScaledTranslation(*shift, ax.figure.dpi_scale_trans)
+        )
+        entry[1] = float(offset)
+        changed = True
+    return changed
