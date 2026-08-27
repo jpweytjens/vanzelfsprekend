@@ -121,17 +121,32 @@ def _apply_labels(ax: Axes) -> bool:
         span = _frame_span(ax.yaxis, mode)
         if span is not None:
             anchor = span[1]
+            offset_px = 0.0
             if ls.get("ylabel_flush"):
                 locs = ax.yaxis.get_majorticklocs()
                 if len(locs):
                     anchor = max(locs)
+                    offset_px = _top_label_offset(ax, int(np.argmax(locs)))
             vmin, vmax = ax.get_ylim()
             frac = _axes_fraction(ax.yaxis, anchor, vmin, vmax)
+            frac += offset_px / ax.bbox.height
             pos = ax.yaxis.label.get_position()
             if pos[1] != frac:
                 ax.yaxis.label.set_position((pos[0], frac))
                 changed = True
     return changed
+
+
+def _top_label_offset(ax: Axes, top_index: int) -> float:
+    """Return the topmost y tick label's separation offset in pixels."""
+    tick_state = (get_state(ax) or {}).get("tick_labels")
+    if tick_state is None:
+        return 0.0
+    labels = ax.yaxis.get_ticklabels()
+    if top_index >= len(labels):
+        return 0.0
+    entry = tick_state["applied"]["y"].get(labels[top_index])
+    return float(entry[1]) if entry is not None else 0.0
 
 
 def _axes_fraction(axis: Axis, value: float, vmin: float, vmax: float) -> float:
