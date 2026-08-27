@@ -69,13 +69,18 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
     px_per_pt = ax.figure.dpi / 72.0
     offsets = stack(desired, sizes, GAP * px_per_pt) - desired
     for stale in set(applied) - set(labels):
+        stale.set_transform(cast("Transform", applied[stale][0]))
         del applied[stale]
     changed = False
     for text, offset in zip(labels, offsets, strict=True):
         entry = applied.get(text)
         if entry is None:
-            entry = applied[text] = [_base_transform(text), 0.0]
-        if abs(offset - entry[1]) < 0.05:
+            base = _base_transform(text)
+            entry = applied[text] = [base, 0.0]
+            wears_untracked_shift = text.get_transform() is not base
+        else:
+            wears_untracked_shift = False
+        if not wears_untracked_shift and abs(offset - entry[1]) < 0.05:
             continue
         inches = float(offset) / ax.figure.dpi
         shift = (inches, 0.0) if name == "x" else (0.0, inches)

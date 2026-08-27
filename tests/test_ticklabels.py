@@ -92,3 +92,42 @@ def test_shrink_then_grow_does_not_compound_displacement():
 
     np.testing.assert_allclose(second, first, atol=0.5)
     plt.close(fig)
+
+
+def _build_axes() -> tuple[plt.Figure, plt.Axes]:
+    fig, ax = plt.subplots(figsize=(4, 3))
+    ax.plot([0, 1], [0, 10])
+    vzs.apply(ax, frame="data")
+    ax.yaxis.set_major_formatter("{x:.2f}")
+    return fig, ax
+
+
+def test_grow_past_prior_max_does_not_inherit_shift():
+    fig, ax = _build_axes()
+    # `apply` already materialized a tick pool for the default locator;
+    # growing past it is what forces matplotlib to mint brand-new ticks.
+    pool_size = len(ax.yaxis.majorTicks)
+
+    # Two ticks close enough to collide: majorTicks[0]'s label gets shifted.
+    ax.yaxis.set_major_locator(FixedLocator([4.0, 4.05]))
+    fig.canvas.draw()
+    assert abs(_measured_y_offsets(ax)[0]) > 0.5  # sanity: it really moved
+
+    # Grow past the pool matplotlib already materialized: Axis.get_major_ticks
+    # only ever appends, and Axis._copy_tick_props clones each new tick's
+    # label from majorTicks[0] via Artist.update_from, so the new,
+    # well-separated labels can inherit majorTicks[0]'s shifted transform
+    # even though none of them collide with anything.
+    grown = np.linspace(1.0, 9.0, pool_size + 3)
+    ax.yaxis.set_major_locator(FixedLocator(grown))
+    fig.canvas.draw()
+    grown_offsets = _measured_y_offsets(ax)
+
+    fig_ref, ax_ref = _build_axes()
+    ax_ref.yaxis.set_major_locator(FixedLocator(grown))
+    fig_ref.canvas.draw()
+    reference_offsets = _measured_y_offsets(ax_ref)
+
+    np.testing.assert_allclose(grown_offsets, reference_offsets, atol=0.5)
+    plt.close(fig)
+    plt.close(fig_ref)
