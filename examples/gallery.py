@@ -69,7 +69,6 @@ def grand_tours() -> None:
     years = np.arange(first, last + 1)
     dates = [dt.date(year, 7, 1) for year in years]
     fig, ax = plt.subplots(figsize=(7, 3.5))
-    vzs.apply(ax, frame=("data", "loose"))
     jerseys = {
         "tour": ("Tour", "tol:high_contrast.yellow"),
         "giro": ("Giro", "tol:magenta"),
@@ -79,6 +78,9 @@ def grand_tours() -> None:
         speeds = np.full(years.size, np.nan)
         speeds[table["year"].astype(int) - first] = table[column]
         ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
+    # Plot before apply: the axis becomes a date axis when date data
+    # arrives, and apply detects date-ness at call time.
+    vzs.apply(ax, frame=("data", "loose"))
     vzs.line_labels(ax)
     vzs.ylabel(ax, "winner's average speed\n(km/h)", flush=True)
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
