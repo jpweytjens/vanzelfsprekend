@@ -102,6 +102,26 @@ def _build_axes() -> tuple[plt.Figure, plt.Axes]:
     return fig, ax
 
 
+def test_tick_params_after_draw_reseparates_labels():
+    # `ax.tick_params(pad=...)` rebuilds every tick label's transform from
+    # scratch (`Tick._apply_params`), wiping whatever shift the applier
+    # installed while the state still records it as applied.
+    fig, ax = quartile_axes()
+    fig.canvas.draw()
+    ax.tick_params(axis="y", pad=15)
+    fig.canvas.draw()
+    fig.canvas.draw()
+    boxes = [t.get_window_extent() for t in ax.yaxis.get_ticklabels()]
+    order = np.argsort(ax.yaxis.get_majorticklocs())
+    for lower, upper in pairwise(order):
+        assert boxes[upper].y0 - boxes[lower].y1 >= -0.5
+
+    from vanzelfsprekend.hook import run_appliers
+
+    assert run_appliers(ax) is False
+    plt.close(fig)
+
+
 def test_grow_past_prior_max_does_not_inherit_shift():
     fig, ax = _build_axes()
     # `apply` already materialized a tick pool for the default locator;

@@ -76,10 +76,14 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
         entry = applied.get(text)
         if entry is None:
             base = _base_transform(text)
-            entry = applied[text] = [base, 0.0]
-            wears_untracked_shift = text.get_transform() is not base
-        else:
-            wears_untracked_shift = False
+            entry = applied[text] = [base, 0.0, base]
+        # `entry[2]` is the transform this applier last installed (or the
+        # base, if it never needed to shift the label). Anything else --
+        # an inherited sibling shift at first sighting, or a transform
+        # matplotlib rebuilt underneath us (e.g. `tick_params(pad=...)`
+        # via `Tick._apply_params`) -- is an untracked shift that must be
+        # reconciled regardless of whether the offset itself changed.
+        wears_untracked_shift = text.get_transform() is not entry[2]
         if not wears_untracked_shift and abs(offset - entry[1]) < 0.05:
             continue
         inches = float(offset) / ax.figure.dpi
@@ -89,5 +93,6 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
         setattr(shifted, _BASE_ATTR, base)
         text.set_transform(shifted)
         entry[1] = float(offset)
+        entry[2] = shifted
         changed = True
     return changed

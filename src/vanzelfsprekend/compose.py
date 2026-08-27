@@ -135,7 +135,7 @@ def restore(ax: Axes) -> None:
     tick_state = state.get("tick_labels")
     if tick_state is not None:
         for per_axis in tick_state["applied"].values():
-            for text, (original, _offset) in per_axis.items():
+            for text, (original, *_rest) in per_axis.items():
                 text.set_transform(original)
 
     line_labels_state = state.get("line_labels")
