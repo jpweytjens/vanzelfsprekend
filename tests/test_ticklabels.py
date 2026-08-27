@@ -131,3 +131,20 @@ def test_grow_past_prior_max_does_not_inherit_shift():
     np.testing.assert_allclose(grown_offsets, reference_offsets, atol=0.5)
     plt.close(fig)
     plt.close(fig_ref)
+
+
+def test_restore_reverts_tick_label_transforms():
+    def boxes(ax: plt.Axes) -> list:
+        ax.figure.canvas.draw()
+        return [t.get_window_extent().bounds for t in ax.yaxis.get_ticklabels()]
+
+    fig_a, ax_a = plt.subplots(figsize=(4, 3))
+    ax_a.scatter(np.arange(ANSCOMBE_II_Y.size), ANSCOMBE_II_Y, s=12)
+    pristine = boxes(ax_a)
+
+    fig_b, ax_b = quartile_axes()
+    fig_b.canvas.draw()
+    vzs.restore(ax_b)
+    assert boxes(ax_b) == pristine
+    plt.close(fig_a)
+    plt.close(fig_b)

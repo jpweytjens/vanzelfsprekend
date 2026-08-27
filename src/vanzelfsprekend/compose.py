@@ -132,6 +132,12 @@ def restore(ax: Axes) -> None:
                 )
             axis.label.set_color(prior["label"])
 
+    tick_state = state.get("tick_labels")
+    if tick_state is not None:
+        for per_axis in tick_state["applied"].values():
+            for text, (original, _offset) in per_axis.items():
+                text.set_transform(original)
+
     line_labels_state = state.get("line_labels")
     if line_labels_state is not None:
         for side in line_labels_state.values():
