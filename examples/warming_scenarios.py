@@ -62,7 +62,7 @@ def draw_data(ax: plt.Axes) -> None:
 def main() -> None:
     """Render the figure into `docs/warming_scenarios.png`."""
     fig, (plain, treated) = plt.subplots(1, 2, figsize=(10, 3.5))
-    fig.subplots_adjust(wspace=0.6)
+    fig.subplots_adjust(wspace=0.8)
 
     draw_data(plain)
     plain.set_ylabel("warming (°C vs 1850–1900)")  # noqa: RUF001
