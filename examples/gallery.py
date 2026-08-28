@@ -26,9 +26,9 @@ matplotlib.rcParams.update(
         "font.family": "sans-serif",
         "font.sans-serif": ["Lucida Grande", "DejaVu Sans"],
         "font.size": 10,
-        "svg.fonttype": "none",  # keep the end labels as real text in the SVG
-        "figure.facecolor": "none",
-        "axes.facecolor": "none",
+        # "svg.fonttype": "none",  # keep the end labels as real text in the SVG
+        # "figure.facecolor": "none",
+        # "axes.facecolor": "none",
     }
 )
 
