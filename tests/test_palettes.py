@@ -21,7 +21,7 @@ def test_scheme_shapes_pin_the_technote():
 
 def test_inks_and_cycle():
     assert palettes.DATA_INK == "#333333"
-    assert palettes.TEXT_INK == palettes.DARK["dark_grey"] == "#555555"
+    assert palettes.TEXT_INK == palettes.DARK["grey"] == "#555555"
     assert palettes.LINE_INK == "#999999"
     assert palettes.CYCLE[0] == palettes.DATA_INK
     assert palettes.CYCLE[1:] == tuple(palettes.VIBRANT.values())

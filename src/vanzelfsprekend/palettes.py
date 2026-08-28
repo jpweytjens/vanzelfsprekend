@@ -4,7 +4,9 @@ Transcribed from Paul Tol, "Colour Schemes", SRON/EPS/TN/09-002,
 issue 3.2, 18 August 2021 (https://sronpersonalpages.nl/~pault/).
 Each scheme is ordered by the technote's recommended fixed picking
 sequence; `list(SCHEME.values())` is the colour-cycle form. `PALE` and
-`DARK` are meant for text backgrounds and text, not for lines or maps.
+`DARK` are meant for text backgrounds and text, not for lines or maps;
+their colour names drop the technote's redundant scheme prefix, so the
+colour is `blue`, reached as `tol:dark.blue`, not `tol:dark.dark_blue`.
 """
 
 from matplotlib.colors import get_named_colors_mapping
@@ -53,20 +55,20 @@ MEDIUM_CONTRAST = {
     "light_red": "#EE99AA",
 }
 PALE = {
-    "pale_blue": "#BBCCEE",
-    "pale_cyan": "#CCEEFF",
-    "pale_green": "#CCDDAA",
-    "pale_yellow": "#EEEEBB",
-    "pale_red": "#FFCCCC",
-    "pale_grey": "#DDDDDD",
+    "blue": "#BBCCEE",
+    "cyan": "#CCEEFF",
+    "green": "#CCDDAA",
+    "yellow": "#EEEEBB",
+    "red": "#FFCCCC",
+    "grey": "#DDDDDD",
 }
 DARK = {
-    "dark_blue": "#222255",
-    "dark_cyan": "#225555",
-    "dark_green": "#225522",
-    "dark_yellow": "#666633",
-    "dark_red": "#663333",
-    "dark_grey": "#555555",
+    "blue": "#222255",
+    "cyan": "#225555",
+    "green": "#225522",
+    "yellow": "#666633",
+    "red": "#663333",
+    "grey": "#555555",
 }
 LIGHT = {
     "light_blue": "#77AADD",
@@ -92,7 +94,7 @@ SCHEMES = {
 }
 
 DATA_INK = "#333333"
-TEXT_INK = DARK["dark_grey"]
+TEXT_INK = DARK["grey"]
 LINE_INK = "#999999"
 CYCLE = (DATA_INK, *VIBRANT.values())
 
