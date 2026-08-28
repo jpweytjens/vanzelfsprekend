@@ -84,6 +84,10 @@ To place ticks yourself — `QuartileLocator`, `FeatureLocator`, or any matplotl
 
 Linear, log and date axes are handled; set the scale before calling `apply`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 
+Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant — a lone series stays near-black, and colour enters at the second — but any of the eight schemes is one colour string away: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
+
+![Eight rows of Paul Tol's colour schemes — bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light — each swatch labelled with the colour name to type after tol:](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/palettes.png)
+
 ## Gallery
 
 Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run examples/gallery.py`. The datasets sit in [`examples/data`](https://github.com/jpweytjens/vanzelfsprekend/tree/main/examples/data), each file naming its source and licence; what is not a measurement says so, from Anscombe's hand-built quartet to the modelled power profiles.
