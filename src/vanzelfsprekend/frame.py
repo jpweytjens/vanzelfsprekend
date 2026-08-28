@@ -18,7 +18,7 @@ def range_frame(
     ax: Axes,
     frame: str | tuple[str, str] = "nice",
     n: int = 5,
-    offset: float | None = None,
+    offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> Axes:
@@ -43,10 +43,12 @@ def range_frame(
         the bottom and left spine independently.
     n : int
         Desired number of ticks per axis.
-    offset : float, optional
+    offset : float or tuple of (float or None), optional
         Outward displacement of the left and bottom spines, in points.
-        `None` resolves per spine to 8 for a `'loose'` mode and 0
-        otherwise.
+        A single number moves both spines; a tuple `(x_offset,
+        y_offset)` moves the bottom and left spine independently, like
+        `frame`. `None` (the whole argument, or either tuple element)
+        resolves to 8 for a `'loose'` mode and 0 otherwise.
     nice_numbers : sequence of float, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
         Applies to linear axes only; ignored on log and date axes.
@@ -66,10 +68,20 @@ def range_frame(
             f"them, got {frame!r}"
         )
     mode = {"x": modes[0], "y": modes[1]}
-    offsets = {
-        name: (8 if mode[name] == "loose" else 0) if offset is None else offset
-        for name in ("x", "y")
-    }
+    if offset is None or isinstance(offset, (int, float)):
+        per_offset = {"x": offset, "y": offset}
+    else:
+        pair = tuple(offset)
+        if len(pair) != 2:
+            raise ValueError(
+                "offset must be a number, or a tuple of two (each a number or "
+                f"None), got {offset!r}"
+            )
+        per_offset = {"x": pair[0], "y": pair[1]}
+    offsets: dict[str, float] = {}
+    for name in ("x", "y"):
+        value = per_offset[name]
+        offsets[name] = (8 if mode[name] == "loose" else 0) if value is None else value
 
     state = ensure_state(ax)
     frame_state: dict[str, Any] | None = state.get("frame")

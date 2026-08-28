@@ -318,6 +318,23 @@ def test_explicit_offset_overrides_default(scatter_ax):
     assert ax.spines["left"].get_position() == ("outward", 12)
 
 
+def test_offset_tuple_sets_spines_independently(scatter_ax):
+    ax = range_frame(scatter_ax, offset=(0, 12))
+    assert ax.spines["bottom"].get_position() == ("outward", 0)
+    assert ax.spines["left"].get_position() == ("outward", 12)
+
+
+def test_offset_tuple_none_falls_back_to_mode_default(scatter_ax):
+    ax = range_frame(scatter_ax, frame="loose", offset=(3, None))
+    assert ax.spines["bottom"].get_position() == ("outward", 3)
+    assert ax.spines["left"].get_position() == ("outward", 8)
+
+
+def test_offset_tuple_wrong_length_raises(scatter_ax):
+    with pytest.raises(ValueError, match="offset"):
+        range_frame(scatter_ax, offset=(1, 2, 3))
+
+
 def test_one_hook_shared_by_frame_and_labels():
     import vanzelfsprekend as vzs
 

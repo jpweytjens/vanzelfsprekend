@@ -29,7 +29,7 @@ def apply(
     ax: Axes,
     frame: str | tuple[str, str] = "nice",
     n: int = 5,
-    offset: float | None = None,
+    offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> Axes:
@@ -196,7 +196,7 @@ class _Accessor:
         self,
         frame: str | tuple[str, str] = "nice",
         n: int = 5,
-        offset: float | None = None,
+        offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
@@ -218,7 +218,7 @@ class _Accessor:
         self,
         frame: str | tuple[str, str] = "nice",
         n: int = 5,
-        offset: float | None = None,
+        offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
