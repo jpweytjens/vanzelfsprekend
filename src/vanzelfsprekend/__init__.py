@@ -13,6 +13,7 @@ from vanzelfsprekend.locator import (
     QuartileLocator,
     TalbotLocator,
 )
+from vanzelfsprekend.multiples import small_multiples
 from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticks import tick_direction
 
@@ -30,6 +31,7 @@ __all__ = [
     "range_frame",
     "register",
     "restore",
+    "small_multiples",
     "tick_direction",
     "unregister",
     "xlabel",
