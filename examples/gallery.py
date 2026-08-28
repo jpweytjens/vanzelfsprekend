@@ -177,7 +177,7 @@ def resonance_peak() -> None:
         vzs.FeatureLocator(frequency, calculated, [0, lambda x, y: y.max()])
     )
     ax.yaxis.set_minor_locator(
-        vzs.SummaryLocator(calculated, reducers=[lambda y: (y.max() - y.min()) / 2])
+        vzs.SummaryLocator(calculated, reducers=[lambda y: y.max() / 2])
     )
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
