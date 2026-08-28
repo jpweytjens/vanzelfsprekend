@@ -147,35 +147,37 @@ def resonance_peak() -> None:
     """Render a resonance curve with its peak labelled by `FeatureLocator`.
 
     After Doumont's *Trees, maps and theorems*: the x ticks mark the
-    band's minimum and maximum and, between them, the peak's location
-    `x[argmax(y)]`, which is not the mean. The Lorentzian and its
-    sampled points are a construction, not measurements.
+    band edges, 16 and 19 GHz, and between them the peak's location
+    `x[argmax(y)]`, which is not the mean. The calculated curve spills
+    past the frame the way Doumont draws it, so the band edges are fixed
+    constants, not the data's extent. The Lorentzian and its sampled
+    points are a construction, not measurements.
     """
     rng = np.random.default_rng(0)
-    frequency = np.linspace(16, 19, 400)
+    frequency = np.linspace(15.4, 19.6, 500)
     sampled = np.linspace(16, 19, 61)
 
     def lorentzian(f: np.ndarray) -> np.ndarray:
         return 650 / (1 + ((f - 17.2) / 0.35) ** 2)
 
     calculated = lorentzian(frequency)
-    measured = lorentzian(sampled) + rng.normal(0, 6, sampled.size)
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.apply(ax, frame=("data", "loose"))
+    measured = lorentzian(sampled) + rng.normal(0, 10, sampled.size)
+    fig, ax = plt.subplots(figsize=(5, 4))
+    vzs.apply(ax, frame="loose")
     ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
     ax.scatter(sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
+    # Output power has a true zero, so show the axis from the 0 baseline
+    # up past the measured peak that pokes above the calculated curve.
+    ax.set_ylim(0, measured.max() * 1.05)
     ax.xaxis.set_major_locator(
-        vzs.FeatureLocator(
-            sampled,
-            measured,
-            [
-                lambda x, y: x.min(),
-                lambda x, y: x[np.argmax(y)],
-                lambda x, y: x.max(),
-            ],
-        )
+        vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
+    )
+    ax.yaxis.set_major_locator(
+        vzs.FeatureLocator(frequency, calculated, [0, lambda x, y: y.max()])
     )
     ax.xaxis.set_major_formatter("{x:g}")
+    ax.yaxis.set_major_formatter("{x:.0f}")
+    vzs.tick_direction(ax, "in")
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)", flush=True)
     fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")

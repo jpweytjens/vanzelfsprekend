@@ -106,15 +106,11 @@ The critical-power model for four rider archetypes on a log time axis. Toward th
 
 ![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian. `FeatureLocator` marks the band's edges and, between them, the one place the reader came to find. The edges are summaries of the x values, but the peak is a feature of the pair, `x[argmax(y)]`, so its tick lands at 17.2 GHz whether or not that is the mean:
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find. The edges are fixed numbers, but the peak is a feature of the pair, `x[argmax(y)]`, so its tick lands at 17.2 GHz whether or not that is the mean:
 
 ```python
 ax.xaxis.set_major_locator(
-    vzs.FeatureLocator(
-        x,
-        y,
-        [lambda x, y: x.min(), lambda x, y: x[np.argmax(y)], lambda x, y: x.max()],
-    )
+    vzs.FeatureLocator(x, y, [16, lambda x, y: x[np.argmax(y)], 19])
 )
 ```
 
