@@ -233,6 +233,39 @@ def small_multiples_grid() -> None:
     plt.close(fig)
 
 
+def _relative_luminance(rgb: tuple[int, int, int]) -> float:
+    r, g, b = (channel / 255 for channel in rgb)
+    y = 0.2126729 * r**2.4 + 0.7151522 * g**2.4 + 0.0721750 * b**2.4
+    return y + (0.022 - y) ** 1.414 if y < 0.022 else y
+
+
+def _apca_lc(text: tuple[int, int, int], background: tuple[int, int, int]) -> float:
+    """Lightness contrast of `text` on `background`, by the APCA algorithm."""
+    text_y = _relative_luminance(text)
+    background_y = _relative_luminance(background)
+    if abs(background_y - text_y) < 0.0005:
+        return 0.0
+    if background_y > text_y:  # dark text on a light background
+        sapc = (background_y**0.56 - text_y**0.57) * 1.14
+        lc = 0.0 if sapc < 0.1 else sapc - 0.027
+    else:  # light text on a dark background
+        sapc = (background_y**0.65 - text_y**0.62) * 1.14
+        lc = 0.0 if sapc > -0.1 else sapc + 0.027
+    return lc * 100
+
+
+def _label_ink(hex_colour: str) -> str:
+    """White or near-black, whichever has the stronger APCA contrast on `hex_colour`."""
+    background = (
+        int(hex_colour[1:3], 16),
+        int(hex_colour[3:5], 16),
+        int(hex_colour[5:7], 16),
+    )
+    dark_lc = abs(_apca_lc((34, 34, 34), background))
+    light_lc = abs(_apca_lc((255, 255, 255), background))
+    return "#222222" if dark_lc >= light_lc else "#ffffff"
+
+
 def palette_swatches() -> None:
     """Render every Tol scheme as labelled swatches, a colour reference.
 
@@ -272,7 +305,7 @@ def palette_swatches() -> None:
         for i, (name, hex_colour) in enumerate(colours.items()):
             cx = x0 + i * cell
             ax.add_patch(
-                Rectangle((cx, y - 0.15), cell * 0.86, 0.5, facecolor=hex_colour, lw=0)
+                Rectangle((cx, y - 0.25), cell * 0.86, 0.5, facecolor=hex_colour, lw=0)
             )
             ax.text(
                 cx + cell * 0.43,
@@ -281,7 +314,7 @@ def palette_swatches() -> None:
                 ha="center",
                 va="center",
                 fontsize=7,
-                color=vzs.palettes.LINE_INK,
+                color=_label_ink(hex_colour),
             )
     fig.savefig(OUTPUT / "palettes.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
