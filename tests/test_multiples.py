@@ -369,3 +369,36 @@ def test_restore_reinstates_label_text():
         vzs.restore(ax)
     assert axes[0, 0].get_ylabel() == "prior"
     plt.close(fig)
+
+
+def test_log_grid_ticks_are_decades_of_the_union():
+    fig, axes = plt.subplots(1, 2)
+    for ax, (lo, hi) in zip(axes, [(1, 100), (1000, 100000)], strict=True):
+        ax.set_xscale("log")
+        ax.plot([lo, hi], [1, 2])
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    ticks = axes[0].xaxis.get_majorticklocs()
+    exponents = np.log10(ticks)
+    np.testing.assert_allclose(exponents, np.round(exponents))
+    assert ticks.max() >= 1000  # reaches into the sibling's decades
+    plt.close(fig)
+
+
+def test_date_grid_ticks_span_the_union():
+    import datetime as dt
+
+    fig, axes = plt.subplots(1, 2)
+    jan = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(0, 60, 6)]
+    sep = [dt.datetime(2024, 9, 1) + dt.timedelta(days=i) for i in range(0, 90, 9)]
+    axes[0].plot(jan, range(10))
+    axes[1].plot(sep, range(10))
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    from matplotlib.dates import date2num
+
+    ticks = axes[0].xaxis.get_majorticklocs()
+    assert ticks.max() > date2num(dt.datetime(2024, 6, 1))  # beyond own data
+    labels = [t.get_text() for t in axes[0].xaxis.get_ticklabels()]
+    assert any(labels)  # ConciseDateFormatter still renders
+    plt.close(fig)
