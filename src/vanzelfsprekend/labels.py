@@ -69,9 +69,10 @@ def ylabel(
     place : {'beside', 'above'}
         Where the horizontal label sits relative to the top tick.
         `'beside'` (the default) anchors it level with the top tick label
-        (`va='center_baseline'`), to its left. `'above'` stacks it above
-        the top tick label, its left edge aligned with the top tick
-        label's left edge.
+        (`va='center_baseline'`), to its left, on matplotlib's own y-axis
+        label. `'above'` stacks it above the top tick label, its left edge
+        aligned with the top tick label's left edge, as a separate
+        clip-free text artist (see Notes).
     labelpad : float, optional
         Gap in points between the label and the tick-label column, whose
         edge is set by the *widest* tick label. `None` keeps matplotlib's
@@ -81,28 +82,69 @@ def ylabel(
     Returns
     -------
     matplotlib.text.Text
-        The label artist.
+        The label artist: matplotlib's own `ax.yaxis.label` for
+        `'beside'`, or the managed above-label text for `'above'`.
 
     Raises
     ------
     ValueError
         If `place` is not `'beside'` or `'above'`.
+
+    Notes
+    -----
+    `'above'` draws the label as a standalone text child rather than
+    relocating `ax.yaxis.label`, because `Axes.get_tightbbox` collapses an
+    axis label's cross-height (it assumes the label sits centred on the
+    axis) and would clip a label stacked above it. A plain child text is
+    enclosed at full extent, so `savefig(bbox_inches="tight")` keeps the
+    above-label whole with no `bbox_extra_artists`. The real axis label is
+    emptied while `'above'` is active.
     """
     if place not in ("beside", "above"):
         raise ValueError(f"place must be 'beside' or 'above', got {place!r}")
-    _labels_state(ax)["ylabel_place"] = place
-    if place == "beside":
-        # Undo a prior 'above', whose set_label_coords disabled matplotlib's
-        # own perpendicular placement.
+    ls = _labels_state(ax)
+    ls["ylabel_place"] = place
+    if place == "above":
+        result = _set_ylabel_above(ax, text, ls)
+    else:
+        above_text = ls.get("ylabel_above_text")
+        if above_text is not None:
+            above_text.remove()
+            ls["ylabel_above_text"] = None
         ax.yaxis.set_label_position("left")
         ax.yaxis._autolabelpos = True  # ty: ignore[unresolved-attribute]
-    ax.set_ylabel(text, rotation=0, labelpad=labelpad)
-    beside = place == "beside"
-    ax.yaxis.label.set_verticalalignment("center_baseline" if beside else "bottom")
-    ax.yaxis.label.set_horizontalalignment("right" if beside else "left")
+        ax.set_ylabel(text, rotation=0, labelpad=labelpad)
+        ax.yaxis.label.set_verticalalignment("center_baseline")
+        ax.yaxis.label.set_horizontalalignment("right")
+        result = ax.yaxis.label
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
-    return ax.yaxis.label
+    return result
+
+
+def _set_ylabel_above(ax: Axes, text: str, ls: dict) -> Text:
+    """Create or update the managed above-label and empty the axis label.
+
+    The above-label is a clip-free text child styled to match the axis
+    label; the draw hook positions it over the top tick label.
+    """
+    above_text = ls.get("ylabel_above_text")
+    if above_text is None:
+        above_text = ax.text(
+            0.0,
+            0.0,
+            "",
+            transform=ax.transAxes,
+            horizontalalignment="left",
+            verticalalignment="bottom",
+            clip_on=False,
+        )
+        above_text.set_fontproperties(ax.yaxis.label.get_fontproperties())
+        above_text.set_color(ax.yaxis.label.get_color())
+        ls["ylabel_above_text"] = above_text
+    above_text.set_text(text)
+    ax.set_ylabel("")  # only the managed text renders while 'above' is active
+    return above_text
 
 
 def _labels_state(ax: Axes) -> dict:
@@ -126,6 +168,7 @@ def _labels_state(ax: Axes) -> dict:
 
 def _label_props(label: Text) -> dict:
     return {
+        "text": label.get_text(),
         "ha": label.get_horizontalalignment(),
         "va": label.get_verticalalignment(),
         "rotation": label.get_rotation(),
@@ -155,36 +198,36 @@ def _apply_labels(ax: Axes) -> bool:
             if pos[0] != frac:
                 ax.xaxis.label.set_position((frac, pos[1]))
                 changed = True
-    if "y" in active and ax.get_ylabel():
-        if ls.get("ylabel_place", "beside") == "above":
-            changed = _place_ylabel_above(ax) or changed
-        else:
-            span = _frame_span(ax.yaxis, mode["y"])
-            if span is not None:
-                locs = ax.yaxis.get_majorticklocs()
-                if len(locs):
-                    anchor = max(locs)
-                    offset_px = _top_label_offset(ax, int(np.argmax(locs)))
-                else:
-                    anchor, offset_px = span[1], 0.0
-                vmin, vmax = ax.get_ylim()
-                frac = _axes_fraction(ax.yaxis, anchor, vmin, vmax)
-                frac += offset_px / ax.bbox.height
-                pos = ax.yaxis.label.get_position()
-                if pos[1] != frac:
-                    ax.yaxis.label.set_position((pos[0], frac))
-                    changed = True
+    if "y" in active and ls.get("ylabel_place", "beside") == "above":
+        above_text = ls.get("ylabel_above_text")
+        if above_text is not None:
+            changed = _place_ylabel_above(ax, above_text) or changed
+    elif "y" in active and ax.get_ylabel():
+        span = _frame_span(ax.yaxis, mode["y"])
+        if span is not None:
+            locs = ax.yaxis.get_majorticklocs()
+            if len(locs):
+                anchor = max(locs)
+                offset_px = _top_label_offset(ax, int(np.argmax(locs)))
+            else:
+                anchor, offset_px = span[1], 0.0
+            vmin, vmax = ax.get_ylim()
+            frac = _axes_fraction(ax.yaxis, anchor, vmin, vmax)
+            frac += offset_px / ax.bbox.height
+            pos = ax.yaxis.label.get_position()
+            if pos[1] != frac:
+                ax.yaxis.label.set_position((pos[0], frac))
+                changed = True
     return changed
 
 
-def _place_ylabel_above(ax: Axes) -> bool:
-    """Stack the y-label above the top tick label, left edges aligned.
+def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
+    """Stack the managed above-label over the top tick label, left aligned.
 
     Anchored on the topmost tick label's measured left/top edge, so it
-    tracks the tick label's rendered width. Uses `set_label_coords` (which
-    disables matplotlib's own perpendicular placement), because the draw
-    hook runs after that placement — a plain `set_position` on the label's
-    x would be overwritten every draw and never converge.
+    tracks the tick label's rendered width. The above-label is a plain
+    `transAxes` text child, so a `set_position` sticks — nothing else
+    moves it each draw.
     """
     locs = ax.yaxis.get_majorticklocs()
     labels = ax.yaxis.get_ticklabels()
@@ -200,11 +243,9 @@ def _place_ylabel_above(ax: Axes) -> bool:
     left, upper = ax.transAxes.inverted().transform((bbox.x0, bbox.y1))
     gap = 3.0 * ax.figure.dpi / 72.0 / ax.bbox.height
     target = (float(left), float(upper) + gap)
-    pos = ax.yaxis.label.get_position()
-    autolabelpos = ax.yaxis._autolabelpos  # ty: ignore[unresolved-attribute]
-    moved = abs(pos[0] - target[0]) > 1e-4 or abs(pos[1] - target[1]) > 1e-4
-    if autolabelpos or moved:
-        ax.yaxis.set_label_coords(*target)
+    pos = above_text.get_position()
+    if abs(pos[0] - target[0]) > 1e-4 or abs(pos[1] - target[1]) > 1e-4:
+        above_text.set_position(target)
         return True
     return False
 

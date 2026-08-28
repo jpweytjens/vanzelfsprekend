@@ -112,16 +112,63 @@ def test_ylabel_above_stacks_over_top_tick_left_aligned():
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     vzs.range_frame(ax)
-    vzs.ylabel(ax, "voltage", place="above")
+    lbl = vzs.ylabel(ax, "voltage", place="above")
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
-    label = ax.yaxis.label.get_window_extent(renderer)
+    label = lbl.get_window_extent(renderer)
     ticks = tick_label_bboxes(ax.yaxis, renderer)
     assert ticks
     top = max(ticks, key=lambda b: b.y1)
     assert all(not label.overlaps(b) for b in ticks)
     assert label.y0 >= top.y1 - 1  # sits above the top tick label
     assert abs(label.x0 - top.x0) < 2  # left edges aligned
+    # the managed text carries the label; the real axis label is emptied
+    assert ax.get_ylabel() == ""
+    plt.close(fig)
+
+
+def test_ylabel_above_captured_by_default_tightbbox():
+    # The above-label is a clip-free Text child, so savefig(bbox_inches=
+    # "tight") — which uses fig.get_tightbbox with no extra artists — must
+    # enclose it. An axis label placed above would be clipped instead.
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    lbl = vzs.ylabel(ax, "winner's\naverage speed (km/h)", place="above")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    lb = lbl.get_window_extent(renderer)
+    tight = fig.get_tightbbox(renderer)  # inches, no bbox_extra_artists
+    dpi = fig.dpi
+    assert tight.y1 * dpi >= lb.y1 - 1  # label top enclosed
+    assert tight.x0 * dpi <= lb.x0 + 1  # label left enclosed
+    plt.close(fig)
+
+
+def test_ylabel_above_to_beside_removes_managed_text():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    above = vzs.ylabel(ax, "voltage", place="above")
+    beside = vzs.ylabel(ax, "voltage", place="beside")
+    fig.canvas.draw()
+    assert above not in ax.get_children()  # the managed text is gone
+    assert beside is ax.yaxis.label  # beside is back on the real axis label
+    assert ax.get_ylabel() == "voltage"
+    plt.close(fig)
+
+
+def test_restore_removes_above_managed_text():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    above = vzs.ylabel(ax, "voltage", place="above")
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert above not in ax.get_children()
     plt.close(fig)
 
 

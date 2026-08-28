@@ -106,16 +106,20 @@ def restore(ax: Axes) -> None:
 
     labels_state = state.get("labels")
     if labels_state is not None:
+        # Drop the managed above-label text, if `ylabel(place="above")` made one.
+        above_text = labels_state.get("ylabel_above_text")
+        if above_text is not None:
+            above_text.remove()
+            labels_state["ylabel_above_text"] = None
         snap = labels_state["snapshot"]
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             props = snap[key]
+            axis.label.set_text(props["text"])
             axis.label.set_horizontalalignment(props["ha"])
             axis.label.set_verticalalignment(props["va"])
             axis.label.set_rotation(props["rotation"])
             axis.label.set_position(props["position"])
-        # Undo an `ylabel(place="above")`, whose set_label_coords disabled
-        # matplotlib's own perpendicular y-label placement and replaced the
-        # label's transform.
+        # Restore matplotlib's own perpendicular y-label placement.
         ax.yaxis.set_label_position(snap.get("y_label_position_side", "left"))
         ax.yaxis.label.set_transform(snap["y_label_transform"])
         ax.yaxis._autolabelpos = snap.get("y_autolabelpos", True)  # ty: ignore[unresolved-attribute]
