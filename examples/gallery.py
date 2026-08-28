@@ -29,6 +29,7 @@ README_FIGURES = (
     "brain_body.png",
     "waiting_times.png",
     "power_profiles.png",
+    "resonance_peak.png",
     "small_multiples.png",
 )
 
@@ -142,6 +143,45 @@ def power_profiles() -> None:
     plt.close(fig)
 
 
+def resonance_peak() -> None:
+    """Render a resonance curve with its peak labelled by `FeatureLocator`.
+
+    After Doumont's *Trees, maps and theorems*: the x ticks mark the
+    band's minimum and maximum and, between them, the peak's location
+    `x[argmax(y)]`, which is not the mean. The Lorentzian and its
+    sampled points are a construction, not measurements.
+    """
+    rng = np.random.default_rng(0)
+    frequency = np.linspace(16, 19, 400)
+    sampled = np.linspace(16, 19, 61)
+
+    def lorentzian(f: np.ndarray) -> np.ndarray:
+        return 650 / (1 + ((f - 17.2) / 0.35) ** 2)
+
+    calculated = lorentzian(frequency)
+    measured = lorentzian(sampled) + rng.normal(0, 6, sampled.size)
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    vzs.apply(ax, frame=("data", "loose"))
+    ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
+    ax.scatter(sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
+    ax.xaxis.set_major_locator(
+        vzs.FeatureLocator(
+            sampled,
+            measured,
+            [
+                lambda x, y: x.min(),
+                lambda x, y: x[np.argmax(y)],
+                lambda x, y: x.max(),
+            ],
+        )
+    )
+    ax.xaxis.set_major_formatter("{x:g}")
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)", flush=True)
+    fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def small_multiples_grid() -> None:
     """Render monthly CO2 at four latitude-spanning stations.
 
@@ -179,6 +219,7 @@ def main() -> None:
     brain_body()
     waiting_times()
     power_profiles()
+    resonance_peak()
     small_multiples_grid()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)

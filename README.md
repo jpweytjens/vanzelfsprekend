@@ -106,6 +106,20 @@ The critical-power model for four rider archetypes on a log time axis. Toward th
 
 ![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
+A resonance curve after Doumont, measured points over a calculated Lorentzian. `FeatureLocator` marks the band's edges and, between them, the one place the reader came to find. The edges are summaries of the x values, but the peak is a feature of the pair, `x[argmax(y)]`, so its tick lands at 17.2 GHz whether or not that is the mean:
+
+```python
+ax.xaxis.set_major_locator(
+    vzs.FeatureLocator(
+        x,
+        y,
+        [lambda x, y: x.min(), lambda x, y: x[np.argmax(y)], lambda x, y: x.max()],
+    )
+)
+```
+
+![A sharp resonance peak, black measured points over an orange calculated Lorentzian, x ticks at the band's 16 and 19 GHz edges and the peak's 17.2 GHz](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/resonance_peak.png)
+
 Monthly CO₂ at four NOAA stations from the Arctic to the South Pole in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the seasonal swing shrinking toward the pole reads on equal terms without repeating furniture:
 
 ```python
@@ -158,6 +172,8 @@ Each works on its own, on any matplotlib axes:
 | `TalbotLocator(n, loose, ...)` | nice-number ticks inside the data range |
 | `LogBreaksLocator(n, loose, base)` | the same for log axes |
 | `DateBreaksLocator(n, loose)` | the same for date axes |
+| `FeatureLocator(x, y, features)` | ticks at features of the pair, such as a peak `x[argmax(y)]` |
+| `SummaryLocator(values, reducers)` | ticks at summaries of one axis, such as its mean |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
 
 ### Palettes
