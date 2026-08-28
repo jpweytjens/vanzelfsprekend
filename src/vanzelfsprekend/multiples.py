@@ -9,6 +9,7 @@ from matplotlib.axis import Axis, Ticker
 from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from matplotlib.ticker import Locator
 
+from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.compose import apply
 from vanzelfsprekend.frame import _is_date_converter
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
@@ -173,6 +174,45 @@ def _trim_members(
     ]
 
 
+def _place_labels(
+    panels: Sequence[Axes],
+    specs: Sequence[SubplotSpec],
+    gridspec: GridSpecBase,
+    xlabel: str | Sequence[str] | None,
+    ylabel: str | Sequence[str] | None,
+) -> dict[int, dict[str, str]]:
+    """Label furnished panels; return `{id(ax): {name: prior_text}}`."""
+    prior: dict[int, dict[str, str]] = {}
+
+    def _set(ax: Axes, name: str, text: str) -> None:
+        prior.setdefault(id(ax), {})[name] = (
+            ax.get_xlabel() if name == "x" else ax.get_ylabel()
+        )
+        (labels_.xlabel if name == "x" else labels_.ylabel)(ax, text)
+
+    bottom = [
+        (ax, ss)
+        for ax, ss in zip(panels, specs, strict=True)
+        if ss.rowspan.stop == gridspec.nrows
+    ]
+    left = [
+        (ax, ss) for ax, ss in zip(panels, specs, strict=True) if ss.colspan.start == 0
+    ]
+    if isinstance(xlabel, str):
+        ax, _ = max(bottom, key=lambda pair: pair[1].colspan.stop)
+        _set(ax, "x", xlabel)
+    elif xlabel is not None:
+        for ax, ss in bottom:
+            _set(ax, "x", xlabel[ss.colspan.start])
+    if isinstance(ylabel, str):
+        ax, _ = min(left, key=lambda pair: pair[1].rowspan.start)
+        _set(ax, "y", ylabel)
+    elif ylabel is not None:
+        for ax, ss in left:
+            _set(ax, "y", ylabel[ss.rowspan.start])
+    return prior
+
+
 def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
@@ -293,6 +333,11 @@ def small_multiples(
                     **{side: False, f"label{side}": False},
                 )
         add_applier(ax, "multiples", _apply_multiples)
+    prior_labels = _place_labels(panels, specs, gridspec, xlabel, ylabel)
+    for ax in panels:
+        ensure_state(ax)["multiples"]["snapshot"]["labels"] = prior_labels.get(
+            id(ax), {}
+        )
     for ax in panels:
         run_appliers(ax)
     return panels

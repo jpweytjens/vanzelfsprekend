@@ -267,3 +267,28 @@ def test_spanning_panel_trims_over_covered_columns():
     # C's bottom spine speaks for both columns: union of all x data.
     assert panels["C"].spines["bottom"].get_bounds() == (0.0, 7.0)
     plt.close(fig)
+
+
+def test_single_ylabel_lands_once_on_top_left():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, ylabel="rate")
+    assert axes[0, 0].get_ylabel() == "rate"
+    assert all(ax.get_ylabel() == "" for ax in axes.flat if ax is not axes[0, 0])
+    plt.close(fig)
+
+
+def test_single_xlabel_lands_once_on_bottom_right():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, xlabel="year")
+    assert axes[1, 1].get_xlabel() == "year"
+    assert all(ax.get_xlabel() == "" for ax in axes.flat if ax is not axes[1, 1])
+    plt.close(fig)
+
+
+def test_ylabel_sequence_labels_each_row():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, compare="row", ylabel=["a", "b"])
+    assert axes[0, 0].get_ylabel() == "a"
+    assert axes[1, 0].get_ylabel() == "b"
+    assert axes[0, 1].get_ylabel() == ""
+    plt.close(fig)
