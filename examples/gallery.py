@@ -154,18 +154,19 @@ def resonance_peak() -> None:
     points are a construction, not measurements.
     """
     rng = np.random.default_rng(0)
-    frequency = np.linspace(15.4, 19.6, 500)
+    frequency = np.linspace(15.6, 19.4, 500)
     sampled = np.linspace(16, 19, 61)
 
     def lorentzian(f: np.ndarray) -> np.ndarray:
         return 650 / (1 + ((f - 17.2) / 0.35) ** 2)
 
     calculated = lorentzian(frequency)
-    measured = lorentzian(sampled) + rng.normal(0, 10, sampled.size)
+    random_sampled = sampled + rng.normal(0, 0.04, sampled.size)
+    measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
-    vzs.apply(ax, frame="loose", offset=(8, 2))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
-    ax.scatter(sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
+    ax.scatter(random_sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
     # Output power has a true zero, so show the axis from the 0 baseline
     # up past the measured peak that pokes above the calculated curve.
     ax.set_ylim(0, measured.max() * 1.05)
@@ -174,6 +175,9 @@ def resonance_peak() -> None:
     )
     ax.yaxis.set_major_locator(
         vzs.FeatureLocator(frequency, calculated, [0, lambda x, y: y.max()])
+    )
+    ax.yaxis.set_minor_locator(
+        vzs.SummaryLocator(calculated, reducers=[lambda y: (y.max() - y.min()) / 2])
     )
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
