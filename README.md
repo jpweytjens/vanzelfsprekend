@@ -106,6 +106,14 @@ The critical-power model for four rider archetypes on a log time axis. Toward th
 
 ![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
+Four modelled logistic adoption curves in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the shapes read on equal terms without repeating furniture:
+
+```python
+vzs.small_multiples(axes.flat, xlabel="years since launch", ylabel="adoption (%)")
+```
+
+![A 2x2 grid of logistic adoption curves on a shared scale, spines and ticks only on the left column and bottom row](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/small_multiples.png)
+
 ## Where the ideas come from
 
 The treatment compresses a few small books' worth of advice:
@@ -130,6 +138,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 | `apply(ax, ...)` | the full treatment with defaults |
 | `restore(ax)` | put the axes back as they were |
 | `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
+| `small_multiples(axes, compare, ...)` | one treatment for a grid of axes on a shared scale |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
 

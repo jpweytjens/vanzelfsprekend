@@ -29,6 +29,7 @@ README_FIGURES = (
     "brain_body.png",
     "waiting_times.png",
     "power_profiles.png",
+    "small_multiples.png",
 )
 
 
@@ -141,6 +142,29 @@ def power_profiles() -> None:
     plt.close(fig)
 
 
+def small_multiples_grid() -> None:
+    """Render a 2x2 small-multiples grid of logistic adoption curves.
+
+    Model curves, not measurements: four logistic functions with
+    different midpoints and rates, the classic technology-adoption
+    shape.
+    """
+    t = np.linspace(0, 30, 200)
+    curves = {
+        "A": 1 / (1 + np.exp(-0.55 * (t - 8))),
+        "B": 1 / (1 + np.exp(-0.30 * (t - 14))),
+        "C": 1 / (1 + np.exp(-0.80 * (t - 18))),
+        "D": 1 / (1 + np.exp(-0.45 * (t - 23))),
+    }
+    fig, axes = plt.subplots(2, 2, figsize=(7, 5))
+    for ax, (name, y) in zip(axes.flat, curves.items(), strict=True):
+        ax.plot(t, 100 * y)
+        ax.set_title(name, fontsize=10, color=vzs.palettes.TEXT_INK)
+    vzs.small_multiples(axes.flat, xlabel="years since launch", ylabel="adoption (%)")
+    fig.savefig(OUTPUT / "small_multiples.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
@@ -149,6 +173,7 @@ def main() -> None:
     brain_body()
     waiting_times()
     power_profiles()
+    small_multiples_grid()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")
