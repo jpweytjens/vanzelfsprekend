@@ -109,6 +109,18 @@ def _apply_multiples(ax: Axes) -> bool:
     return changed
 
 
+def _construct(cls: type, name: str, kind: str, *args: object) -> object:
+    """`cls(*args)`, with construction failures named for the caller."""
+    try:
+        return cls(*args)
+    except (TypeError, ValueError) as err:
+        raise ValueError(
+            f"cannot unshare {name}-axis: its {kind} {cls.__name__} is not "
+            "default-constructible; unshare it or drop the sharing before "
+            "small_multiples"
+        ) from err
+
+
 def _unshare_tickers(
     panels: tuple[Axes, ...],
 ) -> dict[int, dict[str, tuple[Ticker, Ticker]]]:
@@ -119,8 +131,16 @@ def _unshare_tickers(
     snapshot records a sibling's locator as the original. The fresh
     pair only needs to be functional — `apply` replaces it immediately
     and restore re-attaches the saved originals.
+
+    Two-phase: every fresh locator/formatter is constructed first,
+    against a plan, with no axis touched; only once every construction
+    across every panel has succeeded does the second phase assign them.
+    A locator/formatter that isn't default-constructible therefore
+    raises before any axis is mutated, leaving the grid untouched.
     """
-    saved: dict[int, dict[str, tuple[Ticker, Ticker]]] = {}
+    plan: list[
+        tuple[Axes, str, Axis, Ticker, Ticker, object, object, object, object]
+    ] = []
     for ax in panels:
         for name, axis, grouper in (
             ("x", ax.xaxis, ax.get_shared_x_axes()),
@@ -131,19 +151,47 @@ def _unshare_tickers(
             old_major, old_minor = axis.major, axis.minor
             converter = axis.get_converter()
             is_date = converter is not None and _is_date_converter(converter)
-            axis.major = Ticker()
-            axis.minor = Ticker()
-            locator = type(old_major.locator)()
+            locator = _construct(type(old_major.locator), name, "locator")
             formatter = (
-                type(old_major.formatter)(locator)  # ty: ignore[too-many-positional-arguments]
+                _construct(type(old_major.formatter), name, "formatter", locator)
                 if is_date
-                else type(old_major.formatter)()
+                else _construct(type(old_major.formatter), name, "formatter")
             )
-            axis.set_major_locator(locator)  # ty: ignore[invalid-argument-type]
-            axis.set_major_formatter(formatter)  # ty: ignore[invalid-argument-type]
-            axis.set_minor_locator(type(old_minor.locator)())  # ty: ignore[invalid-argument-type]
-            axis.set_minor_formatter(type(old_minor.formatter)())  # ty: ignore[invalid-argument-type]
-            saved.setdefault(id(ax), {})[name] = (old_major, old_minor)
+            minor_locator = _construct(type(old_minor.locator), name, "locator")
+            minor_formatter = _construct(type(old_minor.formatter), name, "formatter")
+            plan.append(
+                (
+                    ax,
+                    name,
+                    axis,
+                    old_major,
+                    old_minor,
+                    locator,
+                    formatter,
+                    minor_locator,
+                    minor_formatter,
+                )
+            )
+
+    saved: dict[int, dict[str, tuple[Ticker, Ticker]]] = {}
+    for (
+        ax,
+        name,
+        axis,
+        old_major,
+        old_minor,
+        locator,
+        formatter,
+        minor_locator,
+        minor_formatter,
+    ) in plan:
+        axis.major = Ticker()
+        axis.minor = Ticker()
+        axis.set_major_locator(locator)  # ty: ignore[invalid-argument-type]
+        axis.set_major_formatter(formatter)  # ty: ignore[invalid-argument-type]
+        axis.set_minor_locator(minor_locator)  # ty: ignore[invalid-argument-type]
+        axis.set_minor_formatter(minor_formatter)  # ty: ignore[invalid-argument-type]
+        saved.setdefault(id(ax), {})[name] = (old_major, old_minor)
     return saved
 
 
@@ -212,6 +260,10 @@ def small_multiples(
     per row; `'column'` scopes x per column), and keeps axis furniture
     only on the left column and bottom row. Works on grids from
     `plt.subplots`, `subplot_mosaic` or a raw gridspec; builds nothing.
+
+    Every panel converges onto one ascending scale per group, so a
+    panel with a deliberately inverted axis is silently re-oriented on
+    the first draw.
 
     Parameters
     ----------

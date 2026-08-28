@@ -136,6 +136,20 @@ def test_sharex_panels_get_their_own_tickers():
     plt.close(fig)
 
 
+def test_unshare_failure_leaves_grid_untouched():
+    from matplotlib.ticker import FormatStrFormatter
+
+    fig, axes = plt.subplots(1, 2, sharex=True)
+    axes[0].plot([0, 4], [0, 1])
+    axes[1].plot([6, 10], [0, 1])
+    axes[0].xaxis.set_major_formatter(FormatStrFormatter("%.1f"))
+    with pytest.raises(ValueError, match="not default-constructible"):
+        vzs.small_multiples(axes)
+    assert axes[0].xaxis.major is axes[1].xaxis.major
+    assert not hasattr(axes[0], "_vanzelfsprekend_state")
+    plt.close(fig)
+
+
 def test_sharex_date_grid_draws():
     import datetime as dt
 
@@ -232,6 +246,13 @@ def _column_union_x(axes, col):
     )
 
 
+def _row_union_y(axes, row):
+    return (
+        min(ax.yaxis.get_data_interval()[0] for ax in axes[row, :]),
+        max(ax.yaxis.get_data_interval()[1] for ax in axes[row, :]),
+    )
+
+
 def _figure_union_x(axes):
     return (
         min(ax.xaxis.get_data_interval()[0] for ax in axes.flat),
@@ -275,6 +296,18 @@ def test_column_compare_bottom_spine_trims_to_its_column(frame):
     dmin, dmax = _column_union_x(axes, 0)
     expected = _expected_span(ax.xaxis.get_majorticklocs(), dmin, dmax, frame)
     assert ax.spines["bottom"].get_bounds() == pytest.approx(expected)
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+def test_row_compare_left_spine_trims_to_its_row(frame):
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, compare="row", frame=frame)
+    fig.canvas.draw()
+    ax = axes[0, 0]
+    dmin, dmax = _row_union_y(axes, 0)
+    expected = _expected_span(ax.yaxis.get_majorticklocs(), dmin, dmax, frame)
+    assert ax.spines["left"].get_bounds() == pytest.approx(expected)
     plt.close(fig)
 
 
@@ -370,9 +403,10 @@ def test_restore_one_panel_degrades_siblings_to_single_axes():
     plt.close(fig)
 
 
-def test_restore_every_panel_matches_pristine_grid():
+@pytest.mark.parametrize("sharex", [False, True])
+def test_restore_every_panel_matches_pristine_grid(sharex):
     def build(treat):
-        fig, axes = plt.subplots(2, 2, sharex=True)
+        fig, axes = plt.subplots(2, 2, sharex=sharex)
         for ax, (lo, hi) in zip(
             axes.flat, [(0, 1), (2, 5), (-3, 0), (4, 9)], strict=True
         ):
