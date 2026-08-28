@@ -114,12 +114,13 @@ The critical-power model for four rider archetypes on a log time axis. Toward th
 
 ![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find. The edges are fixed numbers, but the peak is a feature of the pair, `x[argmax(y)]`, so its tick lands at 17.2 GHz whether or not that is the mean:
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` — the same idea reduced to one axis's own values — sets a minor tick at half power, the level the linewidth is read at:
 
 ```python
 ax.xaxis.set_major_locator(
     vzs.FeatureLocator(x, y, [16, lambda x, y: x[np.argmax(y)], 19])
 )
+ax.yaxis.set_minor_locator(vzs.SummaryLocator(y, [lambda y: y.max() / 2]))
 ```
 
 ![A sharp resonance peak, black measured points over an orange calculated Lorentzian, x ticks at the band's 16 and 19 GHz edges and the peak's 17.2 GHz](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/resonance_peak.png)
@@ -176,8 +177,8 @@ Each works on its own, on any matplotlib axes:
 | `TalbotLocator(n, loose, ...)` | nice-number ticks inside the data range |
 | `LogBreaksLocator(n, loose, base)` | the same for log axes |
 | `DateBreaksLocator(n, loose)` | the same for date axes |
-| `FeatureLocator(x, y, features)` | ticks at features of the pair, such as a peak `x[argmax(y)]` |
-| `SummaryLocator(values, reducers)` | ticks at summaries of one axis, such as its mean |
+| `FeatureLocator(x, y, features)` | ticks at features of the pair, each a callable or a fixed number, such as a peak `x[argmax(y)]` |
+| `SummaryLocator(values, reducers)` | ticks at summaries of one axis, each a callable or a fixed number, such as its mean |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
 
 ### Palettes
