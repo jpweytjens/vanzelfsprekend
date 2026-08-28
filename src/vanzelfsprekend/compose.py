@@ -237,7 +237,7 @@ class _Accessor:
         return xlabel(self._ax, text, labelpad=labelpad)
 
     def set_ylabel(
-        self, text: str, flush: bool = False, labelpad: float | None = None
+        self, text: str, flush: bool = True, labelpad: float | None = None
     ) -> Text:
         """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
         return ylabel(self._ax, text, flush=flush, labelpad=labelpad)

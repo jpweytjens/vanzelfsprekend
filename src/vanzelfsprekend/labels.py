@@ -40,7 +40,7 @@ def xlabel(ax: Axes, text: str, labelpad: float | None = None) -> Text:
 
 
 def ylabel(
-    ax: Axes, text: str, flush: bool = False, labelpad: float | None = None
+    ax: Axes, text: str, flush: bool = True, labelpad: float | None = None
 ) -> Text:
     """Set a horizontal y-label at the top of the left spine.
 
@@ -53,7 +53,7 @@ def ylabel(
     text : str
         The label text.
     flush : bool
-        If True, anchor the label at the topmost tick with
+        If True (the default), anchor the label at the topmost tick with
         `va='center_baseline'`, so it sits flush with the top tick label.
         If False, place it above the spine's top end.
     labelpad : float, optional

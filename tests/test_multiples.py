@@ -277,6 +277,22 @@ def test_single_ylabel_lands_once_on_top_left():
     plt.close(fig)
 
 
+def test_grid_ylabel_sits_flush_with_top_tick():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, ylabel="rate")
+    fig.canvas.draw()
+    ax = axes[0, 0]
+    label = ax.yaxis.label.get_window_extent()
+    ticks = [
+        t.get_window_extent()
+        for t in ax.yaxis.get_ticklabels()
+        if t.get_text() and t.get_visible()
+    ]
+    top = max(ticks, key=lambda b: b.y1)
+    assert abs(label.y1 - top.y1) < 1
+    plt.close(fig)
+
+
 def test_single_xlabel_lands_once_on_bottom_right():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, xlabel="year")
