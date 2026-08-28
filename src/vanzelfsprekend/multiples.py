@@ -6,7 +6,7 @@ from typing import Literal
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis, Ticker
-from matplotlib.gridspec import SubplotSpec
+from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from matplotlib.ticker import Locator
 
 from vanzelfsprekend.compose import apply
@@ -146,6 +146,33 @@ def _unshare_tickers(
     return saved
 
 
+def _carries_furniture(ss: SubplotSpec, gridspec: GridSpecBase) -> dict[str, bool]:
+    """Whether `ss` sits against the grid's bottom row / left column."""
+    return {
+        "x": ss.rowspan.stop == gridspec.nrows,
+        "y": ss.colspan.start == 0,
+    }
+
+
+def _spans_intersect(a: range, b: range) -> bool:
+    return max(a.start, b.start) < min(a.stop, b.stop)
+
+
+def _trim_members(
+    panels: Sequence[Axes],
+    specs: Sequence[SubplotSpec],
+    ss: SubplotSpec,
+    name: str,
+) -> list[Axes]:
+    """Panels whose colspan (`'x'`) / rowspan (`'y'`) intersects `ss`'s."""
+    span = ss.colspan if name == "x" else ss.rowspan
+    return [
+        ax
+        for ax, other in zip(panels, specs, strict=True)
+        if _spans_intersect(span, other.colspan if name == "x" else other.rowspan)
+    ]
+
+
 def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
@@ -217,7 +244,7 @@ def small_multiples(
         for key, members in per_key.items()
         for ax in members
     }
-    for ax in panels:
+    for ax, ss in zip(panels, specs, strict=True):
         panel_groups = {}
         for name in ("x", "y"):
             key = key_of[(name, id(ax))]
@@ -241,6 +268,30 @@ def small_multiples(
                 "y": ax.get_autoscaley_on(),
             },
         )
+        carries = _carries_furniture(ss, gridspec)
+        snapshot = state["multiples"]["snapshot"]
+        snapshot["furniture"] = {}
+        for name in panel_groups:
+            axis = ax.xaxis if name == "x" else ax.yaxis
+            side = "bottom" if name == "x" else "left"
+            if carries[name]:
+                members = _trim_members(panels, specs, ss, name)
+                intervals = ensure_state(ax)["frame"].setdefault("intervals", {})
+                intervals[name] = lambda members=members, name=name: _data_union(
+                    members, name
+                )
+            else:
+                params = axis.get_tick_params(which="major")
+                snapshot["furniture"][name] = {
+                    "spine": ax.spines[side].get_visible(),
+                    "tick": params.get(side, True),
+                    "label": params.get(f"label{side}", True),
+                }
+                ax.spines[side].set_visible(False)
+                axis.set_tick_params(
+                    which="both",
+                    **{side: False, f"label{side}": False},
+                )
         add_applier(ax, "multiples", _apply_multiples)
     for ax in panels:
         run_appliers(ax)

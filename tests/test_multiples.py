@@ -203,3 +203,67 @@ def test_appliers_reach_a_fixed_point(sharex):
     fig.canvas.draw()
     assert not any(run_appliers(ax) for ax in axes.flat)
     plt.close(fig)
+
+
+def test_inner_panels_carry_no_furniture():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    inner = axes[0, 1]  # top-right: neither left column nor bottom row
+    assert not inner.spines["bottom"].get_visible()
+    assert not inner.spines["left"].get_visible()
+    assert not any(t.get_visible() for t in inner.xaxis.get_ticklabels())
+    outer = axes[1, 0]  # bottom-left: both
+    assert outer.spines["bottom"].get_visible()
+    assert outer.spines["left"].get_visible()
+    assert any(t.get_visible() for t in outer.xaxis.get_ticklabels())
+    # top-left keeps y furniture but not x; bottom-right the reverse
+    assert axes[0, 0].spines["left"].get_visible()
+    assert not axes[0, 0].spines["bottom"].get_visible()
+    assert axes[1, 1].spines["bottom"].get_visible()
+    assert not axes[1, 1].spines["left"].get_visible()
+    plt.close(fig)
+
+
+def _column_union_x(axes, col):
+    return (
+        min(ax.xaxis.get_data_interval()[0] for ax in axes[:, col]),
+        max(ax.xaxis.get_data_interval()[1] for ax in axes[:, col]),
+    )
+
+
+@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+def test_bottom_spine_trims_to_column_union(frame):
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, frame=frame)
+    fig.canvas.draw()
+    ax = axes[1, 0]
+    dmin, dmax = _column_union_x(axes, 0)
+    ticks = sorted(ax.xaxis.get_majorticklocs())
+    if frame == "data":
+        expected = (dmin, dmax)
+    elif frame == "nice":
+        inside = [t for t in ticks if dmin <= t <= dmax]
+        expected = (min(inside), max(inside))
+    else:
+        below = [t for t in ticks if t <= dmin + 1e-9]
+        above = [t for t in ticks if t >= dmax - 1e-9]
+        expected = (
+            max(below) if below else min(ticks),
+            min(above) if above else max(ticks),
+        )
+    assert ax.spines["bottom"].get_bounds() == pytest.approx(expected)
+    plt.close(fig)
+
+
+def test_spanning_panel_trims_over_covered_columns():
+    fig = plt.figure()
+    panels = fig.subplot_mosaic("AB;CC")  # C spans both columns, bottom row
+    panels["A"].plot([0, 2], [0, 1])
+    panels["B"].plot([5, 7], [0, 1])
+    panels["C"].plot([1, 3], [0, 1])
+    vzs.small_multiples(panels.values(), frame="data")
+    fig.canvas.draw()
+    # C's bottom spine speaks for both columns: union of all x data.
+    assert panels["C"].spines["bottom"].get_bounds() == (0.0, 7.0)
+    plt.close(fig)
