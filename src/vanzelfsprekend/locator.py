@@ -463,6 +463,8 @@ class QuartileLocator(FixedLocator):
         if values.size == 0:
             raise ValueError("data has no finite values")
         super().__init__(
+            # tolist: FixedLocator's stub wants Sequence[float], which an
+            # ndarray does not satisfy structurally.
             np.unique(np.quantile(values, (0, 0.25, 0.5, 0.75, 1))).tolist()
         )
 
