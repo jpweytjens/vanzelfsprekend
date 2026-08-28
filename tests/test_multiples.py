@@ -348,7 +348,7 @@ def test_single_ylabel_lands_once_on_top_left():
     plt.close(fig)
 
 
-def test_grid_ylabel_sits_flush_with_top_tick():
+def test_grid_ylabel_sits_beside_top_tick():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, ylabel="rate")
     fig.canvas.draw()

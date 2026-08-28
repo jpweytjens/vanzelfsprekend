@@ -74,7 +74,7 @@ def main() -> None:
     draw_data(treated)
     treated.text(1905, 0.8, "observed", color=vzs.palettes.DATA_INK)
     vzs.line_labels(treated)
-    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", flush=True)  # noqa: RUF001
+    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)")  # noqa: RUF001
     treated.set_title("vanzelfsprekend")
 
     fig.savefig(DOCS / "warming_scenarios.png", dpi=150, bbox_inches="tight")

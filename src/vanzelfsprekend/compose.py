@@ -106,12 +106,19 @@ def restore(ax: Axes) -> None:
 
     labels_state = state.get("labels")
     if labels_state is not None:
+        snap = labels_state["snapshot"]
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
-            props = labels_state["snapshot"][key]
+            props = snap[key]
             axis.label.set_horizontalalignment(props["ha"])
             axis.label.set_verticalalignment(props["va"])
             axis.label.set_rotation(props["rotation"])
             axis.label.set_position(props["position"])
+        # Undo an `ylabel(place="above")`, whose set_label_coords disabled
+        # matplotlib's own perpendicular y-label placement and replaced the
+        # label's transform.
+        ax.yaxis.set_label_position(snap.get("y_label_position_side", "left"))
+        ax.yaxis.label.set_transform(snap["y_label_transform"])
+        ax.yaxis._autolabelpos = snap.get("y_autolabelpos", True)  # ty: ignore[unresolved-attribute]
 
     mute_state = state.get("mute")
     if mute_state is not None:
@@ -237,10 +244,10 @@ class _Accessor:
         return xlabel(self._ax, text, labelpad=labelpad)
 
     def set_ylabel(
-        self, text: str, flush: bool = True, labelpad: float | None = None
+        self, text: str, place: str = "beside", labelpad: float | None = None
     ) -> Text:
         """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
-        return ylabel(self._ax, text, flush=flush, labelpad=labelpad)
+        return ylabel(self._ax, text, place=place, labelpad=labelpad)
 
     def line_labels(
         self,

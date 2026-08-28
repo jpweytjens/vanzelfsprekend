@@ -240,7 +240,7 @@ def test_restore_reverts_tick_label_transforms():
     plt.close(fig_b)
 
 
-def test_flush_ylabel_follows_displaced_top_label():
+def test_beside_ylabel_follows_displaced_top_label():
     # Four quantiles jam near the top: the max label is pushed well up.
     values = np.array([0.0, 9.4, 9.5, 9.6, 10.0])
     fig, ax = plt.subplots(figsize=(4, 3))
@@ -248,7 +248,7 @@ def test_flush_ylabel_follows_displaced_top_label():
     vzs.apply(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(values))
     ax.yaxis.set_major_formatter("{x:.1f}")
-    vzs.ylabel(ax, "value", flush=True)
+    vzs.ylabel(ax, "value")
     fig.canvas.draw()
     fig.canvas.draw()
     labels = ax.yaxis.get_ticklabels()

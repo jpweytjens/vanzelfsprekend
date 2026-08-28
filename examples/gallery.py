@@ -97,7 +97,7 @@ def grand_tours() -> None:
     # arrives, and apply detects date-ness at call time.
     vzs.apply(ax, frame=("data", "loose"))
     vzs.line_labels(ax)
-    vzs.ylabel(ax, "winner's\naverage speed (km/h)", flush=True)
+    vzs.ylabel(ax, "winner's\naverage speed (km/h)")
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -111,7 +111,7 @@ def brain_body() -> None:
     vzs.apply(ax, frame="loose")
     ax.scatter(table["body_kg"], table["brain_g"], s=12)
     vzs.xlabel(ax, "body mass (kg)")
-    vzs.ylabel(ax, "brain mass (g)", flush=True)
+    vzs.ylabel(ax, "brain mass (g)")
     fig.savefig(OUTPUT / "brain_body.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -123,7 +123,7 @@ def waiting_times() -> None:
     vzs.apply(ax, frame="data")
     ax.hist(table["waiting"], bins=27)
     vzs.xlabel(ax, "minutes to the next eruption")
-    vzs.ylabel(ax, "eruptions", flush=True, labelpad=10)
+    vzs.ylabel(ax, "eruptions", labelpad=10)
     fig.savefig(OUTPUT / "waiting_times.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -154,7 +154,7 @@ def power_profiles() -> None:
         ax.plot(seconds, power, color=color, linewidth=1.2, label=label)
     vzs.line_labels(ax)
     vzs.xlabel(ax, "duration (s)")
-    vzs.ylabel(ax, "power (W)", flush=True)
+    vzs.ylabel(ax, "power (W)")
     fig.savefig(OUTPUT / "power_profiles.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -199,7 +199,7 @@ def resonance_peak() -> None:
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
     vzs.xlabel(ax, "frequency (GHz)")
-    vzs.ylabel(ax, "output power (mW)", flush=True)
+    vzs.ylabel(ax, "output power (mW)", place="above")
     fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

@@ -63,7 +63,7 @@ def test_restore_reverts_to_prior_state():
 
     vzs.range_frame(ax)
     vzs.xlabel(ax, "t")
-    vzs.ylabel(ax, "v", flush=True)
+    vzs.ylabel(ax, "v")
     fig.canvas.draw()
 
     vzs.restore(ax)

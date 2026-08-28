@@ -43,28 +43,33 @@ def test_xlabel_right_edge_at_spine_end(labeled_ax):
     assert abs(label.x1 - spine_end_px) < 2
 
 
-def test_ylabel_flush_false_sits_above_spine_top_without_overlap():
+def test_ylabel_above_stacks_over_top_tick_left_aligned():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     vzs.range_frame(ax)
-    vzs.ylabel(ax, "voltage", flush=False)
+    vzs.ylabel(ax, "voltage", place="above")
     fig.canvas.draw()
-    label = ax.yaxis.label.get_window_extent()
-    ticks = [
-        t.get_window_extent()
-        for t in ax.yaxis.get_ticklabels()
-        if t.get_text() and t.get_visible()
-    ]
+    renderer = fig.canvas.get_renderer()
+    label = ax.yaxis.label.get_window_extent(renderer)
+    ticks = tick_label_bboxes(ax.yaxis, renderer)
     assert ticks
+    top = max(ticks, key=lambda b: b.y1)
     assert all(not label.overlaps(b) for b in ticks)
-    spine_top = ax.spines["left"].get_bounds()[1]
-    spine_top_px = ax.transData.transform((0, spine_top))[1]
-    assert label.y0 >= spine_top_px - 1
+    assert label.y0 >= top.y1 - 1  # sits above the top tick label
+    assert abs(label.x0 - top.x0) < 2  # left edges aligned
     plt.close(fig)
 
 
-def test_ylabel_defaults_to_flush_with_top_tick_label(labeled_ax):
+def test_ylabel_invalid_place_raises():
+    fig, ax = plt.subplots()
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match="place"):
+        vzs.ylabel(ax, "voltage", place="over")
+    plt.close(fig)
+
+
+def test_ylabel_defaults_to_beside_with_top_tick_label(labeled_ax):
     renderer = labeled_ax.figure.canvas.get_renderer()
     label = labeled_ax.yaxis.label.get_window_extent(renderer)
     ticks = tick_label_bboxes(labeled_ax.yaxis, renderer)
@@ -84,12 +89,12 @@ def test_labels_follow_after_resize(labeled_ax):
     assert abs(label.x1 - spine_end_px) < 2
 
 
-def test_flush_ylabel_top_aligns_with_top_tick_label():
+def test_beside_ylabel_top_aligns_with_top_tick_label():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     vzs.range_frame(ax)
-    vzs.ylabel(ax, "voltage", flush=True)
+    vzs.ylabel(ax, "voltage", place="beside")
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)
@@ -137,12 +142,12 @@ def test_xlabel_labelpad_shifts_down():
     plt.close(fig_pad)
 
 
-def test_flush_ylabel_with_loose_frame_no_overlap():
+def test_beside_ylabel_with_loose_frame_no_overlap():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     vzs.range_frame(ax, frame="loose")
-    vzs.ylabel(ax, "voltage", flush=True)
+    vzs.ylabel(ax, "voltage", place="beside")
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     label = ax.yaxis.label.get_window_extent(renderer)
@@ -164,7 +169,7 @@ def test_log_axes_labels_anchor_in_log_space():
     ax.scatter(x, y)
     vzs.range_frame(ax)
     vzs.xlabel(ax, "body mass (g)")
-    vzs.ylabel(ax, "metabolic rate", flush=True)
+    vzs.ylabel(ax, "metabolic rate", place="beside")
     fig.canvas.draw()
 
     xmin, xmax = ax.get_xlim()
