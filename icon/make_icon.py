@@ -1,8 +1,8 @@
 """Draw the vanzelfsprekend repo icon with vanzelfsprekend itself.
 
 Three series, a range frame with offset spines, end labels instead of
-a legend, and the ink-first colours: series one near-black, then Tol's
-vibrant orange and teal. The s series is a sigmoid, echoing its label.
+a legend, and Tol's high-contrast scheme: blue, yellow, red, one per
+line. The s series is a sigmoid, echoing its label.
 
     uv run icon/make_icon.py    # writes icon/vanzelfsprekend-plotted.svg + .png
 """
@@ -47,13 +47,20 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(SIZE_IN, SIZE_IN))
 
-    # Apply first so the ink-first cycle colours the lines: series one
-    # near-black, then the explicit Tol vibrant picks.
+    # Apply first for the range-frame styling; the three lines take
+    # Tol's high-contrast blue, yellow and red explicitly.
     vzs.apply(ax, frame="data", offset=10)
 
     x, ys = series()
     for y, label, color in zip(
-        ys, "vzs", (None, "tol:orange", "tol:teal"), strict=True
+        ys,
+        "vzs",
+        (
+            "tol:high_contrast.blue",
+            "tol:high_contrast.yellow",
+            "tol:high_contrast.red",
+        ),
+        strict=True,
     ):
         ax.plot(x, y, label=label, linewidth=LINE_WIDTH, color=color)
 
