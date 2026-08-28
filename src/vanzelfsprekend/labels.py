@@ -9,7 +9,9 @@ from vanzelfsprekend.frame import _frame_span
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
-def xlabel(ax: Axes, text: str, labelpad: float | None = None) -> Text:
+def xlabel(
+    ax: Axes, text: str, flush: bool = False, labelpad: float | None = None
+) -> Text:
     """Set an x-label that sits below the right end of the bottom spine.
 
     Call after `range_frame`.
@@ -20,6 +22,16 @@ def xlabel(ax: Axes, text: str, labelpad: float | None = None) -> Text:
         A range-framed axes.
     text : str
         The label text.
+    flush : bool
+        Where the label's right edge sits. `False` (the default) anchors
+        it at the spine end (the last tick in `'nice'` mode, the data max
+        in `'data'`), lining up with the *centre* of the rightmost tick
+        label. `True` pushes it out to that tick label's right edge, so
+        the label and the tick-label row share a flush right margin. The
+        nudge is strictly outward — clamped never to move left of the
+        spine end — so it only takes effect where the last tick sits at
+        the spine end (`'nice'`/`'loose'` mode); in `'data'` mode, where
+        the spine already reaches past the last tick label, it is a no-op.
     labelpad : float, optional
         Gap in points between the label and the tick-label column, whose
         edge is set by the *widest* tick label (matplotlib's own per-draw
@@ -31,7 +43,7 @@ def xlabel(ax: Axes, text: str, labelpad: float | None = None) -> Text:
     matplotlib.text.Text
         The label artist.
     """
-    _labels_state(ax)
+    _labels_state(ax)["xlabel_flush"] = flush
     ax.set_xlabel(text, labelpad=labelpad)
     ax.xaxis.label.set_horizontalalignment("right")
     add_applier(ax, "labels", _apply_labels)
@@ -99,6 +111,7 @@ def _labels_state(ax: Axes) -> dict:
     if ls is None:
         ls = {
             "ylabel_place": "beside",
+            "xlabel_flush": False,
             "snapshot": {
                 "x": _label_props(ax.xaxis.label),
                 "y": _label_props(ax.yaxis.label),
@@ -134,6 +147,10 @@ def _apply_labels(ax: Axes) -> bool:
         if span is not None:
             vmin, vmax = ax.get_xlim()
             frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
+            if ls.get("xlabel_flush", False):
+                flush_frac = _xlabel_flush_frac(ax)
+                if flush_frac is not None:
+                    frac = max(frac, flush_frac)
             pos = ax.xaxis.label.get_position()
             if pos[0] != frac:
                 ax.xaxis.label.set_position((frac, pos[1]))
@@ -190,6 +207,26 @@ def _place_ylabel_above(ax: Axes) -> bool:
         ax.yaxis.set_label_coords(*target)
         return True
     return False
+
+
+def _xlabel_flush_frac(ax: Axes) -> float | None:
+    """Axes-fraction x of the rightmost tick label's right edge, or None.
+
+    Returns None when there is no rightmost tick label to anchor to, so
+    the caller falls back to the spine-end anchor.
+    """
+    locs = ax.xaxis.get_majorticklocs()
+    labels = ax.xaxis.get_ticklabels()
+    if not len(locs) or not labels:
+        return None
+    right = int(np.argmax(locs))
+    if right >= len(labels):
+        return None
+    try:
+        bbox = labels[right].get_window_extent()
+    except RuntimeError:
+        return None
+    return float(ax.transAxes.inverted().transform((bbox.x1, 0))[0])
 
 
 def _top_label_offset(ax: Axes, top_index: int) -> float:

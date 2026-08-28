@@ -239,9 +239,11 @@ class _Accessor:
             weights=weights,
         )
 
-    def set_xlabel(self, text: str, labelpad: float | None = None) -> Text:
+    def set_xlabel(
+        self, text: str, flush: bool = False, labelpad: float | None = None
+    ) -> Text:
         """End-of-spine x-label; see `vanzelfsprekend.xlabel`."""
-        return xlabel(self._ax, text, labelpad=labelpad)
+        return xlabel(self._ax, text, flush=flush, labelpad=labelpad)
 
     def set_ylabel(
         self, text: str, place: str = "beside", labelpad: float | None = None

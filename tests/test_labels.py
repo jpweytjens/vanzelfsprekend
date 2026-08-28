@@ -58,6 +58,55 @@ def test_xlabel_right_edge_at_spine_end_data_mode():
     plt.close(fig)
 
 
+def test_xlabel_flush_aligns_right_edge_with_last_tick_label():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    vzs.xlabel(ax, "time (s)", flush=True)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    label = ax.xaxis.label.get_window_extent(renderer)
+    ticks = tick_label_bboxes(ax.xaxis, renderer)
+    right = max(ticks, key=lambda b: b.x1)
+    spine_end = ax.spines["bottom"].get_bounds()[1]
+    spine_end_px = ax.transData.transform((spine_end, 0))[0]
+    assert abs(label.x1 - right.x1) < 2  # right edges flush with last tick label
+    assert label.x1 > spine_end_px + 1  # nudged outward past the spine end
+    plt.close(fig)
+
+
+def test_xlabel_flush_clamps_to_spine_end_in_data_mode():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax, frame="data")
+    vzs.xlabel(ax, "time (s)", flush=True)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    label = ax.xaxis.label.get_window_extent(renderer)
+    spine_end = ax.spines["bottom"].get_bounds()[1]
+    spine_end_px = ax.transData.transform((spine_end, 0))[0]
+    assert abs(label.x1 - spine_end_px) < 2  # clamp keeps it at the spine end
+    plt.close(fig)
+
+
+def test_xlabel_flush_falls_back_to_spine_end_without_tick_labels():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    ax.set_xticklabels([])
+    vzs.xlabel(ax, "time (s)", flush=True)
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    label = ax.xaxis.label.get_window_extent(renderer)
+    spine_end = ax.spines["bottom"].get_bounds()[1]
+    spine_end_px = ax.transData.transform((spine_end, 0))[0]
+    assert abs(label.x1 - spine_end_px) < 2
+    plt.close(fig)
+
+
 def test_ylabel_above_stacks_over_top_tick_left_aligned():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
