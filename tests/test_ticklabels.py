@@ -55,15 +55,32 @@ def test_tick_marks_stay_at_the_quantiles():
 
 
 def test_well_spaced_labels_stay_put():
+    def boxes(ax: plt.Axes) -> list:
+        ax.figure.canvas.draw()
+        return [
+            t.get_window_extent().bounds
+            for axis in (ax.xaxis, ax.yaxis)
+            for t in axis.get_ticklabels()
+        ]
+
     fig, ax = plt.subplots()
     ax.plot([0, 1, 2], [0, 1, 4])
     vzs.apply(ax)
-    fig.canvas.draw()
-    applied = get_state(ax)["tick_labels"]["applied"]
-    offsets = [entry[1] for per_axis in applied.values() for entry in per_axis.values()]
-    assert offsets
-    assert np.allclose(offsets, 0.0)
+
+    # The reference gets the identical treatment but never runs the
+    # applier, so any pixel the applier moves a well-spaced label shows
+    # up as a measured difference -- not as the applier's own bookkeeping
+    # claiming zero.
+    fig_ref, ax_ref = plt.subplots()
+    ax_ref.plot([0, 1, 2], [0, 1, 4])
+    vzs.apply(ax_ref)
+    get_state(ax_ref)["appliers"].pop("tick_labels")
+
+    treated = boxes(ax)
+    assert treated
+    assert treated == boxes(ax_ref)
     plt.close(fig)
+    plt.close(fig_ref)
 
 
 def test_second_draw_is_stable():
@@ -142,7 +159,10 @@ def test_grow_past_prior_max_does_not_inherit_shift():
     # Two ticks close enough to collide: majorTicks[0]'s label gets shifted.
     ax.yaxis.set_major_locator(FixedLocator([4.0, 4.05]))
     fig.canvas.draw()
-    assert abs(_measured_y_offsets(ax)[0]) > 0.5  # sanity: it really moved
+    # Sanity: the pair really separated. The pairwise difference cancels
+    # the font-metric baseline that a single |offset| threshold hides in.
+    off = _measured_y_offsets(ax)
+    assert off[1] - off[0] > 5.0
 
     # Grow past the pool matplotlib already materialized: Axis.get_major_ticks
     # only ever appends, and Axis._copy_tick_props clones each new tick's
