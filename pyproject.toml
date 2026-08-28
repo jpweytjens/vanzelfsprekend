@@ -72,11 +72,18 @@ select = [
   "PERF",            # no-avoidable-work idioms, list comprehensions
   "FURB",            # modernization, complements UP/SIM/PTH
   "RET",             # early-exit function exits
+  "ICN003",          # bans from-imports of the modules in banned-from
 ]
 ignore = [
   "TRY003",  # long exception messages are fine here
   "ANN401",  # an honest -> Any is allowed
 ]
+
+[tool.ruff.lint.flake8-import-conventions]
+# The solver is one authority with two clients: always name the module
+# (placement.GAP, placement.stack), never pull its members into another
+# namespace where their provenance disappears.
+banned-from = ["vanzelfsprekend.placement"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "S101", "ANN"]  # docstrings are public-API; assert and signatures follow pytest idiom

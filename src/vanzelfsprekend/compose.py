@@ -8,7 +8,7 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
-from vanzelfsprekend import palettes
+from vanzelfsprekend import palettes, placement
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.hook import (
     add_applier,
@@ -236,7 +236,7 @@ class _Accessor:
         at: Literal["start", "end"] = "end",
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
-        gap: float = 2.0,
+        gap: float = placement.GAP,
     ) -> list[Annotation]:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
         return line_labels(self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap)

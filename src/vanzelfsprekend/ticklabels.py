@@ -14,8 +14,8 @@ from matplotlib.axis import Axis
 from matplotlib.text import Text
 from matplotlib.transforms import ScaledTranslation, Transform
 
+from vanzelfsprekend import placement
 from vanzelfsprekend.hook import get_state
-from vanzelfsprekend.placement import GAP, stack
 
 _BASE_ATTR = "_vanzelfsprekend_base"
 
@@ -67,7 +67,7 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
     desired = ax.transData.transform(points)[:, dim]
     sizes = np.array([e.width if name == "x" else e.height for e in extents])
     px_per_pt = ax.figure.dpi / 72.0
-    offsets = stack(desired, sizes, GAP * px_per_pt) - desired
+    offsets = placement.stack(desired, sizes, placement.GAP * px_per_pt) - desired
     for stale in set(applied) - set(labels):
         stale.set_transform(cast("Transform", applied[stale][0]))
         del applied[stale]

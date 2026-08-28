@@ -12,8 +12,8 @@ from matplotlib.text import Annotation
 from matplotlib.textpath import TextPath
 from matplotlib.typing import ColorType
 
+from vanzelfsprekend import placement
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-from vanzelfsprekend.placement import GAP, stack
 
 
 def line_labels(
@@ -21,7 +21,7 @@ def line_labels(
     at: Literal["start", "end"] = "end",
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
-    gap: float = GAP,
+    gap: float = placement.GAP,
 ) -> list[Annotation]:
     """Label each line at one end, in place of a legend.
 
@@ -168,7 +168,7 @@ def _apply_line_labels(ax: Axes, at: str) -> bool:
             changed = True
     desired = ax.transData.transform([t.xy for t in side["texts"]])[:, 1]
     px_per_pt = ax.figure.dpi / 72.0
-    placed = stack(desired, heights, side["gap"] * px_per_pt)
+    placed = placement.stack(desired, heights, side["gap"] * px_per_pt)
     sign = 1.0 if at == "end" else -1.0
     for text, dy in zip(side["texts"], (placed - desired) / px_per_pt, strict=True):
         position = (sign * side["pad"], dy - _ink_rise(text))
