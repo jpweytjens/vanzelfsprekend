@@ -48,6 +48,7 @@ def draw_data(ax: plt.Axes) -> None:
         s=6,
         color="0.2",
         label="observed",
+        zorder=3,
     )
     for column, (label, color) in SCENARIOS.items():
         ax.plot(
