@@ -57,6 +57,12 @@ A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exac
 vzs.apply(ax, frame=("data", "loose"))
 ```
 
+Under `loose` the spines also stand off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart — a `None` in either slot keeps that spine's mode default:
+
+```python
+vzs.apply(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
+```
+
 `xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `flush=True` anchors the y-label at the topmost tick label; `labelpad` widens the gap to the tick labels:
 
 ```python
@@ -73,6 +79,8 @@ vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
 Tick labels get the same care: ticks placed by the data, such as `QuartileLocator`'s, can land arbitrarily close, and where their labels crowd they shift apart just enough to stay readable, keeping their order. The tick marks stay exactly at their values.
+
+To place ticks yourself — `QuartileLocator`, `FeatureLocator`, or any matplotlib locator — set it *after* `apply`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
 
 Linear, log and date axes are handled; set the scale before calling `apply`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 

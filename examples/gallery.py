@@ -163,7 +163,7 @@ def resonance_peak() -> None:
     calculated = lorentzian(frequency)
     measured = lorentzian(sampled) + rng.normal(0, 10, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
-    vzs.apply(ax, frame="loose")
+    vzs.apply(ax, frame="loose", offset=(8, 2))
     ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
     ax.scatter(sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
     # Output power has a true zero, so show the axis from the 0 baseline
