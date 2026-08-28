@@ -232,27 +232,65 @@ def _column_union_x(axes, col):
     )
 
 
+def _figure_union_x(axes):
+    return (
+        min(ax.xaxis.get_data_interval()[0] for ax in axes.flat),
+        max(ax.xaxis.get_data_interval()[1] for ax in axes.flat),
+    )
+
+
+def _expected_span(ticks, dmin, dmax, frame):
+    ticks = sorted(ticks)
+    if frame == "data":
+        return (dmin, dmax)
+    if frame == "nice":
+        inside = [t for t in ticks if dmin <= t <= dmax]
+        return (min(inside), max(inside))
+    below = [t for t in ticks if t <= dmin + 1e-9]
+    above = [t for t in ticks if t >= dmax - 1e-9]
+    return (
+        max(below) if below else min(ticks),
+        min(above) if above else max(ticks),
+    )
+
+
 @pytest.mark.parametrize("frame", ["nice", "data", "loose"])
-def test_bottom_spine_trims_to_column_union(frame):
+def test_bottom_spine_spans_figure_x_union(frame):
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, frame=frame)
     fig.canvas.draw()
     ax = axes[1, 0]
-    dmin, dmax = _column_union_x(axes, 0)
-    ticks = sorted(ax.xaxis.get_majorticklocs())
-    if frame == "data":
-        expected = (dmin, dmax)
-    elif frame == "nice":
-        inside = [t for t in ticks if dmin <= t <= dmax]
-        expected = (min(inside), max(inside))
-    else:
-        below = [t for t in ticks if t <= dmin + 1e-9]
-        above = [t for t in ticks if t >= dmax - 1e-9]
-        expected = (
-            max(below) if below else min(ticks),
-            min(above) if above else max(ticks),
-        )
+    dmin, dmax = _figure_union_x(axes)
+    expected = _expected_span(ax.xaxis.get_majorticklocs(), dmin, dmax, frame)
     assert ax.spines["bottom"].get_bounds() == pytest.approx(expected)
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+def test_column_compare_bottom_spine_trims_to_its_column(frame):
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, compare="column", frame=frame)
+    fig.canvas.draw()
+    ax = axes[1, 0]
+    dmin, dmax = _column_union_x(axes, 0)
+    expected = _expected_span(ax.xaxis.get_majorticklocs(), dmin, dmax, frame)
+    assert ax.spines["bottom"].get_bounds() == pytest.approx(expected)
+    plt.close(fig)
+
+
+def test_figure_compare_spine_reaches_all_shared_ticks():
+    # A shared tick must never float past a furnished spine whose own
+    # row/column falls short: top row reaches high, bottom row stays low.
+    fig, axes = plt.subplots(2, 2)
+    for ax, (lo, hi) in zip(
+        axes.flat, [(0, 100), (0, 95), (0, 40), (0, 35)], strict=True
+    ):
+        ax.plot([0, 30], [lo, hi])
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    for ax in (axes[0, 0], axes[1, 0]):  # left column keeps y furniture
+        lo, hi = ax.spines["left"].get_bounds()
+        assert all(lo - 1e-9 <= t <= hi + 1e-9 for t in ax.yaxis.get_majorticklocs())
     plt.close(fig)
 
 

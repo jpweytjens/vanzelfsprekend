@@ -155,25 +155,6 @@ def _carries_furniture(ss: SubplotSpec, gridspec: GridSpecBase) -> dict[str, boo
     }
 
 
-def _spans_intersect(a: range, b: range) -> bool:
-    return max(a.start, b.start) < min(a.stop, b.stop)
-
-
-def _trim_members(
-    panels: Sequence[Axes],
-    specs: Sequence[SubplotSpec],
-    ss: SubplotSpec,
-    name: str,
-) -> list[Axes]:
-    """Panels whose colspan (`'x'`) / rowspan (`'y'`) intersects `ss`'s."""
-    span = ss.colspan if name == "x" else ss.rowspan
-    return [
-        ax
-        for ax, other in zip(panels, specs, strict=True)
-        if _spans_intersect(span, other.colspan if name == "x" else other.rowspan)
-    ]
-
-
 def _place_labels(
     panels: Sequence[Axes],
     specs: Sequence[SubplotSpec],
@@ -315,7 +296,11 @@ def small_multiples(
             axis = ax.xaxis if name == "x" else ax.yaxis
             side = "bottom" if name == "x" else "left"
             if carries[name]:
-                members = _trim_members(panels, specs, ss, name)
+                # Trim to the axis's scale group — the same panels that set
+                # its shared ticks and limits — so every drawn tick lands on
+                # the spine. A narrower positional trim would leave a shared
+                # tick floating past a spine whose own row/column falls short.
+                members = panel_groups[name]
                 intervals = ensure_state(ax)["frame"].setdefault("intervals", {})
                 intervals[name] = lambda members=members, name=name: _data_union(
                     members, name
