@@ -282,14 +282,6 @@ def palette_swatches() -> None:
     ax.set_xlim(0, 1)
     ax.set_ylim(0, len(schemes))
     ax.axis("off")
-    ax.set_title(
-        "Paul Tol's colour schemes: write tol:orange for the vibrant "
-        "default, or tol:scheme.name to reach any scheme",
-        fontsize=11,
-        color=vzs.palettes.TEXT_INK,
-        loc="left",
-        pad=14,
-    )
     by_size = sorted(schemes.items(), key=lambda kv: len(kv[1]), reverse=True)
     for row, (scheme, colours) in enumerate(by_size):
         y = row + 0.5
