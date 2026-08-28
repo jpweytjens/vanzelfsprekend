@@ -462,9 +462,11 @@ class FeatureLocator(FixedLocator):
     ----------
     x, y : array-like
         The plotted coordinates the features read.
-    features : sequence of callable
+    features : sequence of callable or number
         Callables `(x, y) -> float | ndarray` giving tick positions on
-        the labelled axis.
+        the labelled axis. A plain number (or array) is taken as a fixed
+        position, so a constant baseline can sit beside a computed
+        feature, as in `[0, lambda x, y: y.max()]`.
 
     Raises
     ------
@@ -476,7 +478,7 @@ class FeatureLocator(FixedLocator):
         self,
         x: ArrayLike,
         y: ArrayLike,
-        features: Sequence[Callable[..., ArrayLike]],
+        features: Sequence[Callable[..., ArrayLike] | ArrayLike],
     ) -> None:
         xs = np.asarray(x, dtype=float).ravel()
         ys = np.asarray(y, dtype=float).ravel()
@@ -500,8 +502,9 @@ class SummaryLocator(FixedLocator):
     ----------
     values : array-like
         The plotted values whose summaries the ticks mark.
-    reducers : sequence of callable
-        Callables `values -> float | ndarray` giving tick positions.
+    reducers : sequence of callable or number
+        Callables `values -> float | ndarray` giving tick positions. A
+        plain number (or array) is taken as a fixed position.
 
     Raises
     ------
@@ -512,7 +515,7 @@ class SummaryLocator(FixedLocator):
     def __init__(
         self,
         values: ArrayLike,
-        reducers: Sequence[Callable[..., ArrayLike]],
+        reducers: Sequence[Callable[..., ArrayLike] | ArrayLike],
     ) -> None:
         vals = np.asarray(values, dtype=float).ravel()
         vals = vals[np.isfinite(vals)]
@@ -548,9 +551,17 @@ class QuartileLocator(SummaryLocator):
 
 
 def _tick_positions(
-    reducers: Sequence[Callable[..., ArrayLike]], *data: np.ndarray
+    reducers: Sequence[Callable[..., ArrayLike] | ArrayLike], *data: np.ndarray
 ) -> list[float]:
-    parts = [np.asarray(reducer(*data), dtype=float).ravel() for reducer in reducers]
+    parts = [
+        np.asarray(
+            # ty: ignore[call-top-callable] — callable() narrowing over the
+            # Callable | ArrayLike union leaves a top callable ty won't call.
+            reducer(*data) if callable(reducer) else reducer,
+            dtype=float,
+        ).ravel()
+        for reducer in reducers
+    ]
     values = np.concatenate(parts) if parts else np.empty(0)
     values = values[np.isfinite(values)]
     if values.size == 0:

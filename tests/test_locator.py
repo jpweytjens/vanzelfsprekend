@@ -420,6 +420,13 @@ def test_feature_locator_marks_the_peak_on_axes():
     plt.close(fig)
 
 
+def test_feature_locator_accepts_constant_positions():
+    x = np.array([0.0, 1.0, 2.0])
+    y = np.array([0.0, 1.0, 2.0])
+    locator = FeatureLocator(x, y, [0, lambda x, y: y.max()])
+    np.testing.assert_allclose(locator(), [0.0, 2.0])
+
+
 def test_summary_locator_marks_reducer_results():
     locator = SummaryLocator([0.0, 1.0, 2.0, 3.0, 4.0], [np.min, np.mean, np.max])
     np.testing.assert_allclose(locator(), [0.0, 2.0, 4.0])
@@ -439,3 +446,8 @@ def test_summary_locator_ignores_non_finite_values():
 def test_summary_locator_without_finite_data_raises(values):
     with pytest.raises(ValueError, match="finite"):
         SummaryLocator(values, [np.mean])
+
+
+def test_summary_locator_accepts_constant_positions():
+    locator = SummaryLocator([1.0, 2.0, 3.0], [0, np.max])
+    np.testing.assert_allclose(locator(), [0.0, 3.0])
