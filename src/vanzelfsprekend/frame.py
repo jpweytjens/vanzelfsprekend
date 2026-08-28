@@ -168,13 +168,19 @@ def _apply_frame(ax: Axes) -> bool:
         return False
     frame_state = state["frame"]
     changed = False
+    overrides = frame_state.get("intervals", {})
     for name, axis, spine_name in (
         ("x", ax.xaxis, "bottom"),
         ("y", ax.yaxis, "left"),
     ):
         if name not in frame_state["active"]:
             continue
-        span = _frame_span(axis, frame_state["mode"][name])
+        override = overrides.get(name)
+        span = _frame_span(
+            axis,
+            frame_state["mode"][name],
+            interval=override() if override is not None else None,
+        )
         if span is None:
             continue
         spine = ax.spines[spine_name]
@@ -184,15 +190,30 @@ def _apply_frame(ax: Axes) -> bool:
     return changed
 
 
-def _frame_span(axis: Axis, frame: str) -> tuple[float, float] | None:
-    dmin, dmax = axis.get_data_interval()
+def _frame_span(
+    axis: Axis, frame: str, interval: tuple[float, float] | None = None
+) -> tuple[float, float] | None:
+    dmin, dmax = interval if interval is not None else axis.get_data_interval()
     if not np.isfinite([dmin, dmax]).all() or dmin == dmax:
         return None
     if frame == "data":
         return (dmin, dmax)
     ticks = axis.get_majorticklocs()
+    if len(ticks) == 0:
+        return None
     if frame == "nice":
         ticks = [t for t in ticks if dmin <= t <= dmax]
+    elif interval is not None:
+        # Loose over an injected interval: end at the drawn ticks
+        # bounding it, since ticks inside the interval cannot bracket
+        # the data. Tolerance absorbs mizani's float dust.
+        tol = 1e-9 * (dmax - dmin)
+        below = [t for t in ticks if t <= dmin + tol]
+        above = [t for t in ticks if t >= dmax - tol]
+        ticks = [
+            max(below) if below else min(ticks),
+            min(above) if above else max(ticks),
+        ]
     if len(ticks) == 0:
         return None
     return (min(ticks), max(ticks))

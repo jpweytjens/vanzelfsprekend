@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
+from vanzelfsprekend.hook import get_state
 
 
 @pytest.fixture
@@ -343,5 +345,58 @@ def test_draw_hook_swallows_applier_errors():
         raise RuntimeError("applier blew up")
 
     hook.add_applier(ax, "boom", boom)
+    fig.canvas.draw()  # must not raise
+    plt.close(fig)
+
+
+def _framed_ax(frame):
+    fig, ax = plt.subplots()
+    ax.plot([0, 10], [0, 10])
+    vzs.range_frame(ax, frame=frame)
+    return fig, ax
+
+
+def test_frame_span_interval_override_data_mode():
+    fig, ax = _framed_ax("data")
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: (2.0, 3.0)}
+    fig.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == (2.0, 3.0)
+    plt.close(fig)
+
+
+def test_frame_span_interval_override_nice_mode():
+    fig, ax = _framed_ax("nice")
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: (1.5, 8.5)}
+    fig.canvas.draw()
+    ticks = [t for t in ax.xaxis.get_majorticklocs() if 1.5 <= t <= 8.5]
+    assert ax.spines["bottom"].get_bounds() == (min(ticks), max(ticks))
+    plt.close(fig)
+
+
+def test_frame_span_interval_override_loose_mode():
+    fig, ax = _framed_ax("loose")
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: (3.1, 6.9)}
+    fig.canvas.draw()
+    ticks = sorted(ax.xaxis.get_majorticklocs())
+    lo = max(t for t in ticks if t <= 3.1)
+    hi = min(t for t in ticks if t >= 6.9)
+    assert ax.spines["bottom"].get_bounds() == (lo, hi)
+    plt.close(fig)
+
+
+def test_frame_span_override_returning_none_leaves_panel_local_trim():
+    fig, ax = _framed_ax("data")
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: None}
+    fig.canvas.draw()
+    assert ax.spines["bottom"].get_bounds() == tuple(ax.xaxis.get_data_interval())
+    plt.close(fig)
+
+
+def test_frame_span_loose_interval_with_no_ticks_does_not_raise():
+    from matplotlib.ticker import NullLocator
+
+    fig, ax = _framed_ax("loose")
+    ax.xaxis.set_major_locator(NullLocator())
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: (3.1, 6.9)}
     fig.canvas.draw()  # must not raise
     plt.close(fig)
