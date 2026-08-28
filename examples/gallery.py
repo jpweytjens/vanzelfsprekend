@@ -97,7 +97,7 @@ def grand_tours() -> None:
     # arrives, and apply detects date-ness at call time.
     vzs.apply(ax, frame=("data", "loose"))
     vzs.line_labels(ax)
-    vzs.ylabel(ax, "winner's\naverage speed (km/h)")
+    vzs.ylabel(ax, "winner's\naverage speed (km/h)", place="above")
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
@@ -198,7 +198,7 @@ def resonance_peak() -> None:
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
-    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.xlabel(ax, "frequency (GHz)", flush=True)
     vzs.ylabel(ax, "output power (mW)", place="above")
     fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
