@@ -21,6 +21,17 @@ from matplotlib.patches import Rectangle
 
 import vanzelfsprekend as vzs
 
+matplotlib.rcParams.update(
+    {
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Lucida Grande", "DejaVu Sans"],
+        "font.size": 10,
+        "svg.fonttype": "none",  # keep the end labels as real text in the SVG
+        "figure.facecolor": "none",
+        "axes.facecolor": "none",
+    }
+)
+
 DATA = Path(__file__).parent / "data"
 OUTPUT = Path(__file__).parent / "output"
 DOCS = Path(__file__).parents[1] / "docs"
@@ -265,7 +276,7 @@ def palette_swatches() -> None:
             )
             ax.text(
                 cx + cell * 0.43,
-                y - 0.32,
+                y,
                 name,
                 ha="center",
                 va="center",
