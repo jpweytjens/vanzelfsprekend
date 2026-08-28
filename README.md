@@ -110,9 +110,9 @@ Old Faithful's waiting times as a histogram under `frame="data"`, both spines fl
 
 ![Histogram of waiting times between Old Faithful eruptions, two-peaked, with spines running exactly along the bars' span](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/waiting_times.png)
 
-The critical-power model for four rider archetypes on a log time axis. Toward the right the curves flatten to each rider's sustainable power and crowd within a few percent of one another, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
+The critical-power model for four rider archetypes on a log time axis, drawn in Tol's `bright` scheme instead of the vibrant default — a qualified colour name (`color="tol:bright.blue"`) reaches any scheme. The curves cross at staggered durations, then flatten toward the right to each rider's sustainable power and crowd within a few percent, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
 
-![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
+![Four modelled power-duration curves on a log time axis in Tol's bright scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
 A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` — the same idea reduced to one axis's own values — sets a minor tick at half power, the level the linewidth is read at:
 

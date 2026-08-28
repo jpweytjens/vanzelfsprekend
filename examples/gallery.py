@@ -115,15 +115,18 @@ def waiting_times() -> None:
     plt.close(fig)
 
 
-# Morton's 3-parameter critical-power model with illustrative parameters,
-# anchored to trained-cyclist means (CP 301 +/- 35 W, W' 12.7 +/- 3.4 kJ;
-# Chorley et al. 2020, doi:10.1007/s00421-020-04459-6) with the contrasts
-# between archetypes exaggerated. The curves are the model, not riders.
+# Morton's 3-parameter critical-power model, (CP, W', Pmax), with
+# critical power near trained-cyclist means (CP 301 +/- 35 W; Chorley et
+# al. 2020, doi:10.1007/s00421-020-04459-6) and W' and Pmax stylised to
+# fan the archetypes apart: the explosive types carry a large anaerobic
+# reserve, the aerobic diesels a small one, so the curves cross at
+# staggered durations instead of a single knot. The curves are the
+# model, not riders.
 ARCHETYPES = {
-    "sprinter": (290, 24000, 1750, "tol:orange"),
-    "puncheur": (340, 20000, 1500, "tol:blue"),
-    "climber": (370, 16000, 1250, "tol:teal"),
-    "time-trialist": (400, 13000, 1150, "tol:magenta"),
+    "sprinter": (300, 28000, 1800, "tol:bright.blue"),
+    "puncheur": (345, 33000, 1500, "tol:bright.red"),
+    "climber": (380, 9500, 1220, "tol:bright.green"),
+    "time-trialist": (415, 10000, 1080, "tol:bright.yellow"),
 }
 
 
