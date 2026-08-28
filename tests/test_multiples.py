@@ -122,3 +122,26 @@ def test_rejects_label_sequence_length_mismatch():
     with pytest.raises(ValueError, match=r"3.*2|2.*3"):
         vzs.small_multiples(axes.flat, compare="row", ylabel=["a", "b", "c"])
     plt.close(fig)
+
+
+def test_sharex_panels_get_their_own_tickers():
+    fig, axes = plt.subplots(1, 2, sharex=True)
+    axes[0].plot([0, 4], [0, 1])
+    axes[1].plot([6, 10], [0, 1])
+    assert axes[0].xaxis.major is axes[1].xaxis.major  # matplotlib's sharing
+    vzs.small_multiples(axes)
+    assert axes[0].xaxis.major is not axes[1].xaxis.major
+    fig.canvas.draw()  # and the treatment survives a draw
+    plt.close(fig)
+
+
+def test_sharex_date_grid_draws():
+    import datetime as dt
+
+    fig, axes = plt.subplots(1, 2, sharex=True)
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=7 * i) for i in range(9)]
+    axes[0].plot(days[:5], range(5))
+    axes[1].plot(days[4:], range(5))
+    vzs.small_multiples(axes)
+    fig.canvas.draw()  # fresh date locator/formatter pair must be functional
+    plt.close(fig)

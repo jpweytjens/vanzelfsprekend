@@ -5,12 +5,13 @@ from typing import Literal
 
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.axis import Axis
+from matplotlib.axis import Axis, Ticker
 from matplotlib.gridspec import SubplotSpec
 from matplotlib.ticker import Locator
 
 from vanzelfsprekend.compose import apply
 from vanzelfsprekend.frame import _is_date_converter
+from vanzelfsprekend.hook import ensure_state
 
 
 def _data_union(axes: Sequence[Axes], name: str) -> tuple[float, float] | None:
@@ -67,6 +68,44 @@ class _GroupLocator(Locator):
         return self._inner.view_limits(vmin, vmax)
 
 
+def _unshare_tickers(
+    panels: tuple[Axes, ...],
+) -> dict[int, dict[str, tuple[Ticker, Ticker]]]:
+    """Give each matplotlib-shared axis its own `Ticker` pair.
+
+    Must run before `apply`: shared panels hold one `Ticker` object, so
+    a locator installed through it lands in every sibling and the frame
+    snapshot records a sibling's locator as the original. The fresh
+    pair only needs to be functional — `apply` replaces it immediately
+    and restore re-attaches the saved originals.
+    """
+    saved: dict[int, dict[str, tuple[Ticker, Ticker]]] = {}
+    for ax in panels:
+        for name, axis, grouper in (
+            ("x", ax.xaxis, ax.get_shared_x_axes()),
+            ("y", ax.yaxis, ax.get_shared_y_axes()),
+        ):
+            if len(grouper.get_siblings(ax)) <= 1:
+                continue
+            old_major, old_minor = axis.major, axis.minor
+            converter = axis.get_converter()
+            is_date = converter is not None and _is_date_converter(converter)
+            axis.major = Ticker()
+            axis.minor = Ticker()
+            locator = type(old_major.locator)()
+            formatter = (
+                type(old_major.formatter)(locator)  # ty: ignore[too-many-positional-arguments]
+                if is_date
+                else type(old_major.formatter)()
+            )
+            axis.set_major_locator(locator)  # ty: ignore[invalid-argument-type]
+            axis.set_major_formatter(formatter)  # ty: ignore[invalid-argument-type]
+            axis.set_minor_locator(type(old_minor.locator)())  # ty: ignore[invalid-argument-type]
+            axis.set_minor_formatter(type(old_minor.formatter)())  # ty: ignore[invalid-argument-type]
+            saved.setdefault(id(ax), {})[name] = (old_major, old_minor)
+    return saved
+
+
 def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
@@ -117,6 +156,11 @@ def small_multiples(
     _check_label(ylabel, "ylabel", scoped=compare == "row", count=gridspec.nrows)
     _check_label(xlabel, "xlabel", scoped=compare == "column", count=gridspec.ncols)
 
+    saved_tickers = _unshare_tickers(panels)
+    for ax in panels:
+        ensure_state(ax)["multiples"] = {
+            "snapshot": {"tickers": saved_tickers.get(id(ax), {})}
+        }
     for ax in panels:
         apply(
             ax,
