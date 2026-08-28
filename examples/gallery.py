@@ -158,7 +158,7 @@ def small_multiples_grid() -> None:
     }
     fig, axes = plt.subplots(2, 2, figsize=(7, 5))
     for ax, (name, y) in zip(axes.flat, curves.items(), strict=True):
-        ax.plot(t, 100 * y)
+        ax.plot(t, 100 * y, color=vzs.palettes.DATA_INK)
         ax.set_title(name, fontsize=10, color=vzs.palettes.TEXT_INK)
     vzs.small_multiples(axes.flat, xlabel="years since launch", ylabel="adoption (%)")
     fig.savefig(OUTPUT / "small_multiples.png", dpi=150, bbox_inches="tight")
