@@ -166,7 +166,7 @@ def small_multiples_grid() -> None:
     for ax, (column, title) in zip(axes.flat, panels, strict=True):
         ax.plot(dates, table[column], color=vzs.palettes.DATA_INK)
         ax.set_title(title, fontsize=10, color=vzs.palettes.TEXT_INK)
-    vzs.small_multiples(axes.flat, ylabel="CO₂ (ppm)")
+    vzs.small_multiples(axes.flat, frame=("data", "nice"), ylabel="CO₂ (ppm)")
     fig.savefig(OUTPUT / "small_multiples.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
