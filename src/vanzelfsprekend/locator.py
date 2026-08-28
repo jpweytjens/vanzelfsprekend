@@ -1,7 +1,7 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 import matplotlib as mpl
 import numpy as np
@@ -436,15 +436,101 @@ class DateBreaksLocator(Locator):
         return np.asarray(date2num(dates), dtype=float)
 
 
-class QuartileLocator(FixedLocator):
+class FeatureLocator(FixedLocator):
+    """Place ticks at features of the paired `(x, y)` data.
+
+    Each feature is a callable `(x, y) -> float | ndarray` returning a
+    position (or positions) on the axis this locator is attached to.
+    Because a feature such as a peak is a different coordinate on each
+    axis (`x[argmax(y)]` on the x-axis, `y[argmax(y)]` on the y-axis),
+    the feature is written for the axis it labels; the locator does not
+    project. This is what a single-axis reduction cannot express, so it
+    lives here rather than in `SummaryLocator`: the classic Doumont
+    resonance plot labels the peak with
+    `FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])`.
+
+    The arrays are captured at construction. The features' results are
+    flattened, non-finite positions dropped, and coincident positions
+    collapsed to a single tick, since a tick cannot show multiplicity.
+    Inputs are not cleaned: a feature over arbitrary `(x, y)` has no
+    universal non-finite policy, so the feature owns it (use
+    `np.nanargmax`, or filter the pair first). Tick labels follow the
+    axis formatter; pass a format string such as
+    `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
+
+    Parameters
+    ----------
+    x, y : array-like
+        The plotted coordinates the features read.
+    features : sequence of callable
+        Callables `(x, y) -> float | ndarray` giving tick positions on
+        the labelled axis.
+
+    Raises
+    ------
+    ValueError
+        If the features yield no finite position.
+    """
+
+    def __init__(
+        self,
+        x: ArrayLike,
+        y: ArrayLike,
+        features: Sequence[Callable[..., ArrayLike]],
+    ) -> None:
+        xs = np.asarray(x, dtype=float).ravel()
+        ys = np.asarray(y, dtype=float).ravel()
+        super().__init__(_tick_positions(features, xs, ys))
+
+
+class SummaryLocator(FixedLocator):
+    """Place ticks at summaries of one axis's own values.
+
+    Each reducer is a callable `values -> float | ndarray` (mean,
+    median, any percentile, a custom statistic). This is the
+    single-axis special case of `FeatureLocator`: a reducer is a
+    feature that ignores the other axis, so both funnel through the
+    same flatten, drop-non-finite, and collapse-coincident pipeline.
+    Unlike `FeatureLocator`, the input is cleaned first — non-finite
+    values are dropped before the reducers run. Tick labels follow the
+    axis formatter; pass a format string such as
+    `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
+
+    Parameters
+    ----------
+    values : array-like
+        The plotted values whose summaries the ticks mark.
+    reducers : sequence of callable
+        Callables `values -> float | ndarray` giving tick positions.
+
+    Raises
+    ------
+    ValueError
+        If `values` contains no finite value.
+    """
+
+    def __init__(
+        self,
+        values: ArrayLike,
+        reducers: Sequence[Callable[..., ArrayLike]],
+    ) -> None:
+        vals = np.asarray(values, dtype=float).ravel()
+        vals = vals[np.isfinite(vals)]
+        if vals.size == 0:
+            raise ValueError("data has no finite values")
+        super().__init__(_tick_positions(reducers, vals))
+
+
+class QuartileLocator(SummaryLocator):
     """Place ticks at the five-number summary of `data`.
 
-    Ticks sit at the minimum, first quartile, median, third quartile,
-    and maximum of the data, turning a range frame into Tufte's
-    quartile plot. Non-finite values are ignored. Coincident quantiles
-    collapse to a single tick, since a tick cannot show multiplicity.
-    Tick labels follow the axis formatter; pass a format string such as
-    `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
+    The `SummaryLocator` preset whose reducers are the minimum, first
+    quartile, median, third quartile, and maximum, turning a range
+    frame into Tufte's quartile plot. Non-finite values are ignored.
+    Coincident quantiles collapse to a single tick, since a tick cannot
+    show multiplicity. Tick labels follow the axis formatter; pass a
+    format string such as `ax.xaxis.set_major_formatter("{x:.1f}")` to
+    round them.
 
     Parameters
     ----------
@@ -458,15 +544,20 @@ class QuartileLocator(FixedLocator):
     """
 
     def __init__(self, data: ArrayLike) -> None:
-        values = np.asarray(data, dtype=float).ravel()
-        values = values[np.isfinite(values)]
-        if values.size == 0:
-            raise ValueError("data has no finite values")
-        super().__init__(
-            # tolist: FixedLocator's stub wants Sequence[float], which an
-            # ndarray does not satisfy structurally.
-            np.unique(np.quantile(values, (0, 0.25, 0.5, 0.75, 1))).tolist()
-        )
+        super().__init__(data, (lambda v: np.quantile(v, (0, 0.25, 0.5, 0.75, 1)),))
+
+
+def _tick_positions(
+    reducers: Sequence[Callable[..., ArrayLike]], *data: np.ndarray
+) -> list[float]:
+    parts = [np.asarray(reducer(*data), dtype=float).ravel() for reducer in reducers]
+    values = np.concatenate(parts) if parts else np.empty(0)
+    values = values[np.isfinite(values)]
+    if values.size == 0:
+        raise ValueError("reducers produced no finite tick positions")
+    # tolist: FixedLocator's stub wants Sequence[float], which an ndarray
+    # does not satisfy structurally.
+    return np.unique(values).tolist()
 
 
 def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:

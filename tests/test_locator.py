@@ -8,8 +8,10 @@ from mizani.breaks import breaks_extended
 
 from vanzelfsprekend import (
     DateBreaksLocator,
+    FeatureLocator,
     LogBreaksLocator,
     QuartileLocator,
+    SummaryLocator,
     TalbotLocator,
     range_frame,
 )
@@ -368,3 +370,72 @@ def test_date_view_limits_round_numbers():
 def test_quartile_locator_collapses_coincident_quantiles():
     locator = QuartileLocator([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19])
     assert list(locator()) == [8.0, 19.0]
+
+
+def _lorentzian_peak():
+    x = np.linspace(16, 19, 61)
+    y = 1 / (1 + ((x - 17.2) / 0.3) ** 2)
+    return x, y
+
+
+def test_feature_locator_marks_the_peak():
+    x, y = _lorentzian_peak()
+    locator = FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])
+    np.testing.assert_allclose(locator(), [17.2])
+
+
+def test_feature_locator_flattens_array_valued_features():
+    x = np.array([0.0, 1.0, 2.0, 3.0, 4.0])
+    y = np.array([0.0, 1.0, 0.0, 1.0, 0.0])
+    locator = FeatureLocator(x, y, [lambda x, y: x[y > 0.5]])
+    np.testing.assert_allclose(locator(), [1.0, 3.0])
+
+
+def test_feature_locator_drops_non_finite_results():
+    x = np.array([0.0, 1.0, 2.0])
+    y = np.array([0.0, 1.0, 2.0])
+    locator = FeatureLocator(x, y, [lambda x, y: x[-1], lambda x, y: np.nan])
+    np.testing.assert_allclose(locator(), [2.0])
+
+
+def test_feature_locator_collapses_coincident_features():
+    x = np.array([0.0, 1.0, 2.0])
+    y = np.array([0.0, 1.0, 2.0])
+    locator = FeatureLocator(x, y, [lambda x, y: x.min(), lambda x, y: x[0]])
+    assert list(locator()) == [0.0]
+
+
+def test_feature_locator_without_finite_positions_raises():
+    with pytest.raises(ValueError, match="finite"):
+        FeatureLocator([0.0, 1.0], [0.0, 1.0], [lambda x, y: np.nan])
+
+
+def test_feature_locator_marks_the_peak_on_axes():
+    fig, ax = plt.subplots()
+    x, y = _lorentzian_peak()
+    ax.plot(x, y)
+    ax.xaxis.set_major_locator(FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]]))
+    fig.canvas.draw()
+    np.testing.assert_allclose(ax.xaxis.get_majorticklocs(), [17.2])
+    plt.close(fig)
+
+
+def test_summary_locator_marks_reducer_results():
+    locator = SummaryLocator([0.0, 1.0, 2.0, 3.0, 4.0], [np.min, np.mean, np.max])
+    np.testing.assert_allclose(locator(), [0.0, 2.0, 4.0])
+
+
+def test_summary_locator_flattens_array_valued_reducers():
+    locator = SummaryLocator(np.arange(101.0), [lambda v: np.quantile(v, (0.25, 0.75))])
+    np.testing.assert_allclose(locator(), [25.0, 75.0])
+
+
+def test_summary_locator_ignores_non_finite_values():
+    locator = SummaryLocator([0.0, np.nan, 2.0, np.inf, 4.0], [np.min, np.max])
+    np.testing.assert_allclose(locator(), [0.0, 4.0])
+
+
+@pytest.mark.parametrize("values", [[], [np.nan, np.inf]])
+def test_summary_locator_without_finite_data_raises(values):
+    with pytest.raises(ValueError, match="finite"):
+        SummaryLocator(values, [np.mean])

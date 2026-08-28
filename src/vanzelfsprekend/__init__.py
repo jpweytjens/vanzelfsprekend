@@ -9,8 +9,10 @@ from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.locator import (
     DateBreaksLocator,
+    FeatureLocator,
     LogBreaksLocator,
     QuartileLocator,
+    SummaryLocator,
     TalbotLocator,
 )
 from vanzelfsprekend.multiples import small_multiples
@@ -21,8 +23,10 @@ __version__ = version("vanzelfsprekend")
 
 __all__ = [
     "DateBreaksLocator",
+    "FeatureLocator",
     "LogBreaksLocator",
     "QuartileLocator",
+    "SummaryLocator",
     "TalbotLocator",
     "apply",
     "line_labels",
