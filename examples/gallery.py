@@ -71,9 +71,9 @@ def grand_tours() -> None:
     dates = [dt.date(year, 7, 1) for year in years]
     fig, ax = plt.subplots(figsize=(7, 3.5))
     jerseys = {
-        "tour": ("Tour", "tol:high_contrast.yellow"),
-        "giro": ("Giro", "tol:magenta"),
-        "vuelta": ("Vuelta", "tol:red"),
+        "tour": ("Tour", "#FFCC00"),  # maillot jaune
+        "giro": ("Giro", "#EE2A7B"),  # maglia rosa
+        "vuelta": ("Vuelta", "#E4002B"),  # maillot rojo
     }
     for column, (label, color) in jerseys.items():
         speeds = np.full(years.size, np.nan)
