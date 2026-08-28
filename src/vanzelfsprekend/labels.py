@@ -130,7 +130,7 @@ def _apply_labels(ax: Axes) -> bool:
     ls = state.get("labels", {})
     changed = False
     if "x" in active and ax.get_xlabel():
-        span = _frame_span(ax.xaxis, mode)
+        span = _frame_span(ax.xaxis, mode["x"])
         if span is not None:
             vmin, vmax = ax.get_xlim()
             frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
@@ -142,7 +142,7 @@ def _apply_labels(ax: Axes) -> bool:
         if ls.get("ylabel_place", "beside") == "above":
             changed = _place_ylabel_above(ax) or changed
         else:
-            span = _frame_span(ax.yaxis, mode)
+            span = _frame_span(ax.yaxis, mode["y"])
             if span is not None:
                 locs = ax.yaxis.get_majorticklocs()
                 if len(locs):

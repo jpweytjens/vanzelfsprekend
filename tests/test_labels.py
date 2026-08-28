@@ -43,6 +43,21 @@ def test_xlabel_right_edge_at_spine_end(labeled_ax):
     assert abs(label.x1 - spine_end_px) < 2
 
 
+def test_xlabel_right_edge_at_spine_end_data_mode():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax, frame="data")
+    vzs.xlabel(ax, "time (s)")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    label = ax.xaxis.label.get_window_extent(renderer)
+    spine_end = ax.spines["bottom"].get_bounds()[1]
+    spine_end_px = ax.transData.transform((spine_end, 0))[0]
+    assert abs(label.x1 - spine_end_px) < 2
+    plt.close(fig)
+
+
 def test_ylabel_above_stacks_over_top_tick_left_aligned():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
