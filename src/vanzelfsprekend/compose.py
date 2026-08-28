@@ -93,6 +93,17 @@ def restore(ax: Axes) -> None:
         ax.spines["left"].set_bounds(None, None)
         ax.spines["bottom"].set_bounds(None, None)
 
+    multiples_state = state.get("multiples")
+    if multiples_state is not None:
+        # Imported here: multiples imports `apply` from this module, so a
+        # module-level import would be a cycle. Order matters — the frame
+        # block above must write its locators into the fresh unshared
+        # ticker before the original shared one is re-attached.
+        from vanzelfsprekend.multiples import _reattach_tickers, _teardown_grid
+
+        _teardown_grid(multiples_state["grid"])
+        _reattach_tickers(ax, multiples_state["snapshot"])
+
     labels_state = state.get("labels")
     if labels_state is not None:
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):

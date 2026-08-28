@@ -292,3 +292,80 @@ def test_ylabel_sequence_labels_each_row():
     assert axes[1, 0].get_ylabel() == "b"
     assert axes[0, 1].get_ylabel() == ""
     plt.close(fig)
+
+
+def test_restore_one_panel_degrades_siblings_to_single_axes():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    vzs.restore(axes[0, 0])
+    fig.canvas.draw()
+    # Restored panel: autoscaling back on, no vzs state left.
+    assert axes[0, 0].get_autoscalex_on()
+    assert not hasattr(axes[0, 0], "_vanzelfsprekend_state")
+    # Sibling: still treated, but panel-local — its own data, its own trim.
+    sibling = axes[1, 1]
+    assert sibling.get_autoscalex_on()
+    assert sibling.spines["bottom"].get_visible()  # furniture back
+    ticks = [
+        t
+        for t in sibling.xaxis.get_majorticklocs()
+        if 4 <= t <= 9  # sibling's own data range
+    ]
+    assert sibling.spines["bottom"].get_bounds() == (min(ticks), max(ticks))
+    plt.close(fig)
+
+
+def test_restore_every_panel_matches_pristine_grid():
+    def build(treat):
+        fig, axes = plt.subplots(2, 2, sharex=True)
+        for ax, (lo, hi) in zip(
+            axes.flat, [(0, 1), (2, 5), (-3, 0), (4, 9)], strict=True
+        ):
+            ax.plot([lo, hi], [lo, hi])
+        if treat:
+            vzs.small_multiples(axes.flat)
+            fig.canvas.draw()
+            for ax in axes.flat:
+                vzs.restore(ax)
+        fig.canvas.draw()
+        return fig, axes
+
+    fig_a, treated = build(treat=True)
+    fig_b, pristine = build(treat=False)
+    for ta, pa in zip(treated.flat, pristine.flat, strict=True):
+        assert ta.get_xlim() == pa.get_xlim()
+        assert ta.get_ylim() == pa.get_ylim()
+        assert ta.get_autoscalex_on() == pa.get_autoscalex_on()
+        assert ta.spines["bottom"].get_visible() == pa.spines["bottom"].get_visible()
+        assert ta.spines["bottom"].get_bounds() == pa.spines["bottom"].get_bounds()
+        np.testing.assert_allclose(
+            ta.xaxis.get_majorticklocs(), pa.xaxis.get_majorticklocs()
+        )
+    plt.close(fig_a)
+    plt.close(fig_b)
+
+
+def test_restore_reattaches_original_shared_tickers():
+    fig, axes = plt.subplots(1, 2, sharex=True)
+    axes[0].plot([0, 4], [0, 1])
+    axes[1].plot([6, 10], [0, 1])
+    before = axes[0].xaxis.major
+    assert axes[1].xaxis.major is before
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    for ax in axes:
+        vzs.restore(ax)
+    assert axes[0].xaxis.major is before
+    assert axes[1].xaxis.major is before
+    plt.close(fig)
+
+
+def test_restore_reinstates_label_text():
+    fig, axes = _grid22()
+    axes[0, 0].set_ylabel("prior")
+    vzs.small_multiples(axes.flat, ylabel="rate")
+    for ax in axes.flat:
+        vzs.restore(ax)
+    assert axes[0, 0].get_ylabel() == "prior"
+    plt.close(fig)

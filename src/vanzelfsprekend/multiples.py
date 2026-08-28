@@ -343,6 +343,78 @@ def small_multiples(
     return panels
 
 
+def _teardown_grid(grid: dict) -> None:
+    """Tear the grid layer off every member; idempotent.
+
+    Everything figure-level comes off in one pass — the shared scale
+    cannot survive losing a member. Tickers stay: re-sharing here would
+    hand every still-treated sibling a shared container again, so each
+    panel's original `Ticker` waits for that panel's own restore.
+    """
+    if grid["torn_down"]:
+        return
+    grid["torn_down"] = True
+    # Two passes: a matplotlib-shared `set_xlim`/`set_ylim` disables
+    # autoscale on every sibling sharing that axis, so restoring
+    # autoscale inline here would have a later panel's limits undo an
+    # earlier panel's autoscale. Limits land in the first pass;
+    # autoscale only after every panel's limits have settled.
+    for ax in grid["panels"]:
+        state = get_state(ax)
+        if state is None or "multiples" not in state:
+            continue
+        state["appliers"].pop("multiples", None)
+        snap = state["multiples"]["snapshot"]
+        frame_state = state.get("frame")
+        if frame_state is not None:
+            frame_state.pop("intervals", None)
+        for name in state["multiples"]["groups"]:
+            axis = ax.xaxis if name == "x" else ax.yaxis
+            locator = axis.get_major_locator()
+            if isinstance(locator, _GroupLocator):
+                axis.set_major_locator(locator._inner)
+        ax.set_xlim(snap["limits"]["x"])
+        ax.set_ylim(snap["limits"]["y"])
+        for name, prior in snap["furniture"].items():
+            side = "bottom" if name == "x" else "left"
+            ax.spines[side].set_visible(prior["spine"])
+            axis = ax.xaxis if name == "x" else ax.yaxis
+            axis.set_tick_params(
+                which="both",
+                **{side: prior["tick"], f"label{side}": prior["label"]},
+            )
+        for name, text in snap.get("labels", {}).items():
+            (ax.set_xlabel if name == "x" else ax.set_ylabel)(text)
+    for ax in grid["panels"]:
+        state = get_state(ax)
+        if state is None or "multiples" not in state:
+            continue
+        snap = state["multiples"]["snapshot"]
+        ax.set_autoscalex_on(snap["autoscale"]["x"])
+        ax.set_autoscaley_on(snap["autoscale"]["y"])
+
+
+def _reattach_tickers(ax: Axes, snapshot: dict) -> None:
+    """Re-attach this panel's original shared tickers.
+
+    Runs from `compose.restore` after its frame block, so the pristine
+    locator has already been written into the fresh unshared ticker and
+    the shared container comes back untouched. Also clears the spine
+    bounds the frame block just stamped: `Spine.set_bounds(None, None)`
+    reads "leave unchanged", not "unset", so it always writes the
+    current view interval — never the `None` a panel this treatment
+    framed needs in order to end up as unbounded as one it never
+    touched.
+    """
+    for name, (major, minor) in snapshot["tickers"].items():
+        axis = ax.xaxis if name == "x" else ax.yaxis
+        axis.major = major
+        axis.minor = minor
+        axis.stale = True
+    for side in ("bottom", "left"):
+        ax.spines[side]._bounds = None  # ty: ignore[unresolved-attribute]
+
+
 def _subplotspecs_or_raise(panels: tuple[Axes, ...]) -> list[SubplotSpec]:
     specs = []
     for i, ax in enumerate(panels):
