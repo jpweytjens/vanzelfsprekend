@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 import vanzelfsprekend as vzs
+from vanzelfsprekend.hook import run_appliers
 from vanzelfsprekend.multiples import _GroupLocator
 
 
@@ -144,4 +145,61 @@ def test_sharex_date_grid_draws():
     axes[1].plot(days[4:], range(5))
     vzs.small_multiples(axes)
     fig.canvas.draw()  # fresh date locator/formatter pair must be functional
+    plt.close(fig)
+
+
+def test_compare_figure_shares_both_limits():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    assert len({ax.get_xlim() for ax in axes.flat}) == 1
+    assert len({ax.get_ylim() for ax in axes.flat}) == 1
+    lo, hi = axes.flat[0].get_ylim()
+    assert lo <= -3  # covers every panel's data
+    assert hi >= 9
+    plt.close(fig)
+
+
+def test_compare_row_scopes_y_per_row():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, compare="row")
+    fig.canvas.draw()
+    assert axes[0, 0].get_ylim() == axes[0, 1].get_ylim()
+    assert axes[1, 0].get_ylim() == axes[1, 1].get_ylim()
+    assert axes[0, 0].get_ylim() != axes[1, 0].get_ylim()
+    assert len({ax.get_xlim() for ax in axes.flat}) == 1
+    plt.close(fig)
+
+
+def test_compare_column_scopes_x_per_column():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat, compare="column")
+    fig.canvas.draw()
+    assert axes[0, 0].get_xlim() == axes[1, 0].get_xlim()
+    assert axes[0, 1].get_xlim() == axes[1, 1].get_xlim()
+    assert axes[0, 0].get_xlim() != axes[0, 1].get_xlim()
+    assert len({ax.get_ylim() for ax in axes.flat}) == 1
+    plt.close(fig)
+
+
+def test_ticks_come_from_group_union():
+    fig, axes = plt.subplots(1, 2)
+    axes[0].plot([0, 4], [0, 1])
+    axes[1].plot([6, 10], [0, 1])
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    expected = vzs.TalbotLocator().tick_values(0, 10)
+    np.testing.assert_allclose(axes[0].xaxis.get_majorticklocs(), expected)
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("sharex", [False, True])
+def test_appliers_reach_a_fixed_point(sharex):
+    fig, axes = plt.subplots(2, 2, sharex=sharex)
+    for ax, (lo, hi) in zip(axes.flat, [(0, 1), (2, 5), (-3, 0), (4, 9)], strict=True):
+        ax.plot([lo, hi], [lo, hi])
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    fig.canvas.draw()
+    assert not any(run_appliers(ax) for ax in axes.flat)
     plt.close(fig)

@@ -11,7 +11,7 @@ from matplotlib.ticker import Locator
 
 from vanzelfsprekend.compose import apply
 from vanzelfsprekend.frame import _is_date_converter
-from vanzelfsprekend.hook import ensure_state
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
 def _data_union(axes: Sequence[Axes], name: str) -> tuple[float, float] | None:
@@ -66,6 +66,46 @@ class _GroupLocator(Locator):
 
     def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
         return self._inner.view_limits(vmin, vmax)
+
+
+def _view_union(members: Sequence[Axes], name: str) -> tuple[float, float] | None:
+    """Union of the members' view intervals along `name` (`'x'` or `'y'`).
+
+    Each member's interval is sorted first so an inverted axis doesn't
+    poison the union. Returns `None` when the result would be empty or
+    degenerate.
+    """
+    lo, hi = np.inf, -np.inf
+    for ax in members:
+        axis = ax.xaxis if name == "x" else ax.yaxis
+        vmin, vmax = sorted(axis.get_view_interval())
+        lo, hi = min(lo, vmin), max(hi, vmax)
+    if not np.isfinite([lo, hi]).all() or lo == hi:
+        return None
+    return (lo, hi)
+
+
+def _apply_multiples(ax: Axes) -> bool:
+    """Apply the `"multiples"` treatment: the sole writer of view limits.
+
+    Sets each treated axis' view limits to the union of its scale
+    group's members, so every panel in the group converges to the same
+    limits. Spine bounds stay with the frame applier; tick positions
+    with the wrapped `_GroupLocator`.
+    """
+    state = get_state(ax)
+    if state is None or "multiples" not in state:
+        return False
+    changed = False
+    for name, members in state["multiples"]["groups"].items():
+        union = _view_union(members, name)
+        if union is None:
+            continue
+        axis = ax.xaxis if name == "x" else ax.yaxis
+        if tuple(axis.get_view_interval()) != union:
+            (ax.set_xlim if name == "x" else ax.set_ylim)(union)
+            changed = True
+    return changed
 
 
 def _unshare_tickers(
@@ -150,7 +190,7 @@ def small_multiples(
     specs = _subplotspecs_or_raise(panels)
     _check_spanning(specs, compare)
     groups = _scale_groups(panels, specs, compare)
-    treated = _check_group_agreement(groups)  # noqa: F841
+    treated = _check_group_agreement(groups)
     _check_sharing(panels, groups)
     gridspec = specs[0].get_gridspec()
     _check_label(ylabel, "ylabel", scoped=compare == "row", count=gridspec.nrows)
@@ -170,6 +210,40 @@ def small_multiples(
             nice_numbers=nice_numbers,
             weights=weights,
         )
+    grid = {"panels": panels, "torn_down": False}
+    key_of = {
+        (name, id(ax)): key
+        for name, per_key in groups.items()
+        for key, members in per_key.items()
+        for ax in members
+    }
+    for ax in panels:
+        panel_groups = {}
+        for name in ("x", "y"):
+            key = key_of[(name, id(ax))]
+            if not treated[(name, key)]:
+                continue
+            members = groups[name][key]
+            panel_groups[name] = members
+            axis = ax.xaxis if name == "x" else ax.yaxis
+            frame_state = ensure_state(ax)["frame"]
+            if name in frame_state["active"]:
+                axis.set_major_locator(
+                    _GroupLocator(axis.get_major_locator(), members, name)
+                )
+        state = ensure_state(ax)
+        state["multiples"]["groups"] = panel_groups
+        state["multiples"]["grid"] = grid
+        state["multiples"]["snapshot"].update(
+            limits={"x": ax.get_xlim(), "y": ax.get_ylim()},
+            autoscale={
+                "x": ax.get_autoscalex_on(),
+                "y": ax.get_autoscaley_on(),
+            },
+        )
+        add_applier(ax, "multiples", _apply_multiples)
+    for ax in panels:
+        run_appliers(ax)
     return panels
 
 
