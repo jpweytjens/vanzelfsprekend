@@ -202,6 +202,23 @@ def test_colliding_x_labels_separate_horizontally():
     plt.close(fig)
 
 
+def test_labelright_second_label_set_also_separates():
+    fig, ax = quartile_axes()
+    ax.tick_params(axis="y", labelright=True)
+    fig.canvas.draw()
+    ticks = ax.yaxis.get_major_ticks()
+    order = np.argsort(ax.yaxis.get_majorticklocs())
+    for labels in ([t.label1 for t in ticks], [t.label2 for t in ticks]):
+        boxes = [label.get_window_extent() for label in labels]
+        for lower, upper in pairwise(order):
+            assert boxes[upper].y0 - boxes[lower].y1 >= -0.5
+    np.testing.assert_allclose(
+        ax.yaxis.get_majorticklocs(),
+        np.quantile(ANSCOMBE_II_Y, (0, 0.25, 0.5, 0.75, 1)),
+    )
+    plt.close(fig)
+
+
 def test_restore_reverts_tick_label_transforms():
     def boxes(ax: plt.Axes) -> list:
         ax.figure.canvas.draw()

@@ -54,8 +54,29 @@ def _apply_tick_labels(ax: Axes) -> bool:
 
 def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
     locs = np.asarray(axis.get_majorticklocs(), dtype=float)
-    labels = axis.get_ticklabels()
-    if len(locs) < 2 or len(labels) != len(locs):
+    if len(locs) < 2:
+        return False
+    # Each visible label set (left/bottom `label1`, right/top `label2`) is
+    # its own row or column, so each is solved on its own against the same
+    # tick positions.
+    ticks = axis.get_major_ticks()
+    sides = [
+        [tick.label1 for tick in ticks if tick.label1.get_visible()],
+        [tick.label2 for tick in ticks if tick.label2.get_visible()],
+    ]
+    for stale in set(applied) - {text for side in sides for text in side}:
+        stale.set_transform(cast("Transform", applied[stale][0]))
+        del applied[stale]
+    changed = False
+    for labels in sides:
+        changed = _separate_side(ax, locs, labels, name, applied) or changed
+    return changed
+
+
+def _separate_side(
+    ax: Axes, locs: np.ndarray, labels: list[Text], name: str, applied: dict
+) -> bool:
+    if len(labels) != len(locs):
         return False
     try:
         extents = [text.get_window_extent() for text in labels]
@@ -68,9 +89,6 @@ def _separate(ax: Axes, axis: Axis, name: str, applied: dict) -> bool:
     sizes = np.array([e.width if name == "x" else e.height for e in extents])
     px_per_pt = ax.figure.dpi / 72.0
     offsets = placement.stack(desired, sizes, placement.GAP * px_per_pt) - desired
-    for stale in set(applied) - set(labels):
-        stale.set_transform(cast("Transform", applied[stale][0]))
-        del applied[stale]
     changed = False
     for text, offset in zip(labels, offsets, strict=True):
         entry = applied.get(text)
