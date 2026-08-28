@@ -21,6 +21,10 @@ from vanzelfsprekend.ticks import tick_direction
 
 __version__ = version("vanzelfsprekend")
 
+# Install the `ax.vzs` accessor on import, like pandas and xarray accessors.
+# `unregister()` removes it; `register()` puts it back.
+register()
+
 __all__ = [
     "DateBreaksLocator",
     "FeatureLocator",

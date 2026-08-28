@@ -70,7 +70,7 @@ vzs.ylabel(ax, "count", labelpad=10)  # beside the top tick (default)
 vzs.ylabel(ax, "count", place="above")  # stacked above it, left-aligned
 ```
 
-`register()` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.apply()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
+Importing `vanzelfsprekend` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.apply()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again, and `register()` puts it back. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
 
 `line_labels` replaces a legend: delete `ax.legend()` and each line gets its `label=` text at its right end, in its line's colour. Where lines converge, the labels shift apart just enough to stay readable, keeping their order. `at="start"` labels the left ends instead, slopegraph-style, which pairs well with `frame="loose"` since the offset spine leaves room for the text:
 
@@ -196,6 +196,6 @@ Each works on its own, on any matplotlib axes:
 
 | Name | Does |
 | --- | --- |
-| `register()`, `unregister()` | add or remove the `ax.vzs` accessor |
+| `register()`, `unregister()` | add or remove the `ax.vzs` accessor (import adds it) |
 
 Parameters and behavior are documented in the docstrings.

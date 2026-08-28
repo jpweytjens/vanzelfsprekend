@@ -278,10 +278,11 @@ class _Accessor:
 def register() -> None:
     """Add the `vzs` accessor to `matplotlib.axes.Axes`.
 
-    Opt-in monkeypatching of a single attribute: after calling this once,
-    `ax.vzs.apply(...)`, `ax.vzs.set_xlabel(...)` and the other entry
-    points delegate to the module functions bound to that axes. Calling
-    it again is a no-op.
+    Importing `vanzelfsprekend` calls this once, so `ax.vzs.apply(...)`,
+    `ax.vzs.set_xlabel(...)` and the other entry points work straight
+    away, each delegating to the module function bound to that axes.
+    Calling it again is a no-op; call it to restore the accessor after an
+    `unregister()`.
     """
     if getattr(Axes, "vzs", None) is not None:
         return

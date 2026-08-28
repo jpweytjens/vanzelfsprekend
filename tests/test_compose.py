@@ -5,6 +5,23 @@ from matplotlib.colors import to_rgba
 import vanzelfsprekend as vzs
 
 
+def test_import_installs_accessor():
+    # A subprocess with a fresh import: other tests unregister/re-register
+    # on the shared Axes class, so assert the import-time install in isolation.
+    import subprocess
+    import sys
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import vanzelfsprekend; from matplotlib.axes import Axes;"
+            " assert hasattr(Axes, 'vzs')",
+        ],
+        check=True,
+    )
+
+
 def test_register_adds_working_accessor_and_is_reentrant():
     vzs.register()
     vzs.register()
