@@ -1,6 +1,7 @@
 """Tick-mark direction: in, out, or gone."""
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, cast
 
 import matplotlib as mpl
 from matplotlib.axes import Axes
@@ -54,8 +55,13 @@ def tick_direction(ax: Axes, direction: str = "out") -> Axes:
 
 
 def _rc(key: str) -> Any:
-    """Look up `mpl.rcParams` under a computed key the stubs type as literal-only."""
-    return mpl.rcParams[key]  # ty: ignore[invalid-argument-type]
+    """Look up `mpl.rcParams` under a computed key the stubs type as literal-only.
+
+    The cast, unlike a `ty: ignore`, stays valid whether or not the
+    installed matplotlib's stubs restrict the key type (3.11 does,
+    3.10 does not).
+    """
+    return cast("Mapping[str, Any]", mpl.rcParams)[key]
 
 
 def _tick_geometry(axis: Axis) -> dict:

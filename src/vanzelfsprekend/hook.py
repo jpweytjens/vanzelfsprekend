@@ -11,7 +11,7 @@ labels.
 from collections.abc import Callable
 
 from matplotlib.axes import Axes
-from matplotlib.backend_bases import DrawEvent
+from matplotlib.backend_bases import Event
 
 _STATE_ATTR = "_vanzelfsprekend_state"
 
@@ -51,8 +51,11 @@ def run_appliers(ax: Axes) -> bool:
     return changed
 
 
-def _make_on_draw(ax: Axes) -> Callable[[DrawEvent], None]:
-    def _on_draw(event: DrawEvent) -> None:
+def _make_on_draw(ax: Axes) -> Callable[[Event], None]:
+    # `Event`, not `DrawEvent`: matplotlib 3.10's `mpl_connect` stub takes a
+    # plain `Callable[[Event], Any]`, so a `DrawEvent` handler is rejected
+    # under contravariance. The body only needs `Event.canvas`.
+    def _on_draw(event: Event) -> None:
         try:
             changed = run_appliers(ax)
         except Exception:
