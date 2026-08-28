@@ -106,13 +106,13 @@ The critical-power model for four rider archetypes on a log time axis. Toward th
 
 ![Four modelled power-duration curves on a log time axis, crossing near two minutes and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-Four modelled logistic adoption curves in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the shapes read on equal terms without repeating furniture:
+Monthly CO₂ at four NOAA stations from the Arctic to the South Pole in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the seasonal swing shrinking toward the pole reads on equal terms without repeating furniture:
 
 ```python
-vzs.small_multiples(axes.flat, xlabel="years since launch", ylabel="adoption (%)")
+vzs.small_multiples(axes.flat, ylabel="CO₂ (ppm)")
 ```
 
-![A 2x2 grid of logistic adoption curves on a shared scale, spines and ticks only on the left column and bottom row](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/small_multiples.png)
+![A 2x2 grid of monthly CO2 at Barrow, Mauna Loa, Samoa and the South Pole on a shared scale, the seasonal sawtooth shrinking toward the pole, spines and ticks only on the left column and bottom row](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/small_multiples.png)
 
 ## Where the ideas come from
 

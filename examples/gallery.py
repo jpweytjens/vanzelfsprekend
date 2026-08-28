@@ -143,24 +143,30 @@ def power_profiles() -> None:
 
 
 def small_multiples_grid() -> None:
-    """Render a 2x2 small-multiples grid of logistic adoption curves.
+    """Render monthly CO2 at four latitude-spanning stations.
 
-    Model curves, not measurements: four logistic functions with
-    different midpoints and rates, the classic technology-adoption
-    shape.
+    Real flask measurements from NOAA GML (the data file's header carries
+    the source and citation). One shared scale across the panels shows
+    the seasonal sawtooth collapsing from the Arctic (Barrow) to the
+    South Pole, while the northern stations ride a few ppm above the
+    southern.
     """
-    t = np.linspace(0, 30, 200)
-    curves = {
-        "A": 1 / (1 + np.exp(-0.55 * (t - 8))),
-        "B": 1 / (1 + np.exp(-0.30 * (t - 14))),
-        "C": 1 / (1 + np.exp(-0.80 * (t - 18))),
-        "D": 1 / (1 + np.exp(-0.45 * (t - 23))),
-    }
+    table = load("co2_stations_monthly.csv")
+    dates = [
+        dt.date(int(year), int(month), 15)
+        for year, month in zip(table["year"], table["month"], strict=True)
+    ]
+    panels = [
+        ("barrow", "Barrow 71°N"),
+        ("mauna_loa", "Mauna Loa 20°N"),
+        ("samoa", "Samoa 14°S"),
+        ("south_pole", "South Pole 90°S"),
+    ]
     fig, axes = plt.subplots(2, 2, figsize=(7, 5))
-    for ax, (name, y) in zip(axes.flat, curves.items(), strict=True):
-        ax.plot(t, 100 * y, color=vzs.palettes.DATA_INK)
-        ax.set_title(name, fontsize=10, color=vzs.palettes.TEXT_INK)
-    vzs.small_multiples(axes.flat, xlabel="years since launch", ylabel="adoption (%)")
+    for ax, (column, title) in zip(axes.flat, panels, strict=True):
+        ax.plot(dates, table[column], color=vzs.palettes.DATA_INK)
+        ax.set_title(title, fontsize=10, color=vzs.palettes.TEXT_INK)
+    vzs.small_multiples(axes.flat, ylabel="CO₂ (ppm)")
     fig.savefig(OUTPUT / "small_multiples.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
