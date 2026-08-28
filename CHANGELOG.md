@@ -17,6 +17,7 @@ Ticks:
 
 Labels:
 - Axis labels sit at the ends of the spines, and the y label reads horizontally at the top instead of rotated along the side
+- The horizontal y label sits beside the top tick, or with place="above" stacks over it with left edges aligned — Doumont's good and better graphs
 - Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable
 
 Colour:

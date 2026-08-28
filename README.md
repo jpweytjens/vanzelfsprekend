@@ -36,7 +36,7 @@ fig, ax = plt.subplots(figsize=(5, 3.5))
 ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
 vzs.apply(ax)
 vzs.xlabel(ax, "time (s)")
-vzs.ylabel(ax, "voltage", flush=True)
+vzs.ylabel(ax, "voltage")
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
@@ -63,10 +63,11 @@ Under `loose` the spines also stand off the plot by 8 points: a loose frame roun
 vzs.apply(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
 ```
 
-`xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `flush=True` anchors the y-label at the topmost tick label; `labelpad` widens the gap to the tick labels:
+`xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `place="beside"` (the default) anchors it level with the top tick label; `place="above"` stacks it over the top tick, its left edge aligned with the tick label's — Doumont's two y-labels, from his "good" and "better" graphs. `labelpad` widens the gap to the tick labels:
 
 ```python
-vzs.ylabel(ax, "count", flush=True, labelpad=10)
+vzs.ylabel(ax, "count", labelpad=10)  # beside the top tick (default)
+vzs.ylabel(ax, "count", place="above")  # stacked above it, left-aligned
 ```
 
 `register()` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.apply()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
@@ -118,7 +119,7 @@ The critical-power model for four rider archetypes on a log time axis, drawn in 
 
 ![Four modelled power-duration curves on a log time axis in Tol's bright scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` — the same idea reduced to one axis's own values — sets a minor tick at half power, the level the linewidth is read at:
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` — the same idea reduced to one axis's own values — sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine — his "better graph":
 
 ```python
 ax.xaxis.set_major_locator(
@@ -169,7 +170,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 
 | Name | Does |
 | --- | --- |
-| `xlabel(ax, text)`, `ylabel(ax, text, flush)` | end-of-spine axis labels |
+| `xlabel(ax, text)`, `ylabel(ax, text, place)` | end-of-spine axis labels |
 | `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
 
 ### Locators
