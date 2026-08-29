@@ -10,7 +10,7 @@ from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from matplotlib.ticker import Locator
 
 from vanzelfsprekend import labels as labels_
-from vanzelfsprekend.compose import apply
+from vanzelfsprekend.compose import distill
 from vanzelfsprekend.frame import _is_date_converter
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
@@ -39,7 +39,7 @@ def _data_union(axes: Sequence[Axes], name: str) -> tuple[float, float] | None:
 class _GroupLocator(Locator):
     """Delegate tick placement to `inner`, fed the group's data union.
 
-    Installed on a panel's axis in place of the locator `apply` chose,
+    Installed on a panel's axis in place of the locator `distill` chose,
     so ticks are recomputed on every draw from the union of the group
     members' data instead of the one panel's. Everything else defers to
     `inner`, whose own axis binding is left in place so a formatter
@@ -126,10 +126,10 @@ def _unshare_tickers(
 ) -> dict[int, dict[str, tuple[Ticker, Ticker]]]:
     """Give each matplotlib-shared axis its own `Ticker` pair.
 
-    Must run before `apply`: shared panels hold one `Ticker` object, so
+    Must run before `distill`: shared panels hold one `Ticker` object, so
     a locator installed through it lands in every sibling and the frame
     snapshot records a sibling's locator as the original. The fresh
-    pair only needs to be functional — `apply` replaces it immediately
+    pair only needs to be functional — `distill` replaces it immediately
     and restore re-attaches the saved originals.
 
     Two-phase: every fresh locator/formatter is constructed first,
@@ -255,7 +255,7 @@ def small_multiples(
 ) -> tuple[Axes, ...]:
     """Treat a grid of axes as small multiples on a common scale.
 
-    Applies `apply` to every panel, scopes scales by `compare`
+    Distills every panel, scopes scales by `compare`
     (`'figure'` shares both axes across all panels; `'row'` scopes y
     per row; `'column'` scopes x per column), and keeps axis furniture
     only on the left column and bottom row. Works on grids from
@@ -272,7 +272,7 @@ def small_multiples(
     compare : {'figure', 'row', 'column'}
         The smallest set of panels that are fully comparable.
     frame, n, offset, nice_numbers, weights
-        Forwarded to `apply` per panel; see `vanzelfsprekend.apply`.
+        Forwarded to `distill` per panel; see `vanzelfsprekend.distill`.
     xlabel, ylabel : str or sequence of str, optional
         Axis labels. A sequence is accepted only for an axis `compare`
         scopes to rows or columns, one entry per row or column.
@@ -302,7 +302,7 @@ def small_multiples(
             "snapshot": {"tickers": saved_tickers.get(id(ax), {})}
         }
     for ax in panels:
-        apply(
+        distill(
             ax,
             frame=frame,
             n=n,

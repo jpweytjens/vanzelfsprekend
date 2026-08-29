@@ -28,7 +28,7 @@ def test_register_adds_working_accessor_and_is_reentrant():
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
     nice = [1, 2.5, 5]
-    result = ax.vzs.apply(frame="data", offset=5, nice_numbers=nice)
+    result = ax.vzs.distill(frame="data", offset=5, nice_numbers=nice)
     assert result is ax
     assert not ax.spines["top"].get_visible()
     assert ax.spines["bottom"].get_position() == ("outward", 5)
@@ -41,12 +41,12 @@ def test_register_adds_working_accessor_and_is_reentrant():
     plt.close(fig)
 
 
-def test_apply_matches_range_frame_bounds():
+def test_distill_matches_range_frame_bounds():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     x, y = rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50)
     ax.scatter(x, y)
-    vzs.apply(ax)
+    vzs.distill(ax)
     fig.canvas.draw()
     bottom = ax.spines["bottom"].get_bounds()
 
@@ -150,7 +150,7 @@ def test_restore_via_accessor():
     vzs.register()
     fig, ax = plt.subplots()
     ax.plot([1, 2, 3], [3, 1, 2])
-    ax.vzs.apply()
+    ax.vzs.distill()
     fig.canvas.draw()
     ax.vzs.restore()
     assert not hasattr(ax, "_vanzelfsprekend_state")
@@ -207,9 +207,9 @@ def test_restore_after_repeated_range_frame_restores_original_locator():
     plt.close(fig)
 
 
-def test_apply_mutes_and_installs_ink_first_cycle():
+def test_distill_mutes_and_installs_ink_first_cycle():
     fig, ax = plt.subplots()
-    vzs.apply(ax)
+    vzs.distill(ax)
     (first,) = ax.plot([0, 1], [0, 1])
     (second,) = ax.plot([0, 1], [1, 0])
     assert to_rgba(first.get_color()) == to_rgba(vzs.palettes.DATA_INK)
@@ -220,16 +220,16 @@ def test_apply_mutes_and_installs_ink_first_cycle():
 
 def test_restore_reinstates_prior_cycle():
     fig, ax = plt.subplots()
-    vzs.apply(ax)
+    vzs.distill(ax)
     vzs.restore(ax)
     (line,) = ax.plot([0, 1], [0, 1])
     assert to_rgba(line.get_color()) == to_rgba("#1f77b4")  # matplotlib's default C0
     plt.close(fig)
 
 
-def test_apply_before_plotting_frames_the_data_on_draw():
+def test_distill_before_plotting_frames_the_data_on_draw():
     fig, ax = plt.subplots()
-    vzs.apply(ax)
+    vzs.distill(ax)
     ax.plot([1, 2, 3], [3, 1, 2])
     fig.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == (1.0, 3.0)
@@ -241,7 +241,7 @@ def test_restore_reinstates_minor_locators():
     ax.set_yscale("log")
     ax.plot([1, 2, 3], [3, 40, 700])
     minor_before = ax.yaxis.get_minor_locator()
-    vzs.apply(ax)
+    vzs.distill(ax)
     vzs.restore(ax)
     assert ax.yaxis.get_minor_locator() is minor_before
     plt.close(fig)

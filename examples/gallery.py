@@ -66,7 +66,7 @@ def anscombe() -> None:
     numerals = ["I", "II", "III", "IV"]
     for i, (ax, numeral) in enumerate(zip(axes.flat, numerals, strict=True), 1):
         x, y = table[f"x{i}"], table[f"y{i}"]
-        vzs.apply(ax, frame="data")
+        vzs.distill(ax, frame="data")
         ax.scatter(x, y, s=12)
         ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
         ax.yaxis.set_major_locator(vzs.QuartileLocator(y))
@@ -93,9 +93,9 @@ def grand_tours() -> None:
         speeds = np.full(years.size, np.nan)
         speeds[table["year"].astype(int) - first] = table[column]
         ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
-    # Plot before apply: the axis becomes a date axis when date data
-    # arrives, and apply detects date-ness at call time.
-    vzs.apply(ax, frame=("data", "loose"))
+    # Plot before distill: the axis becomes a date axis when date data
+    # arrives, and distill detects date-ness at call time.
+    vzs.distill(ax, frame=("data", "loose"))
     vzs.line_labels(ax)
     vzs.ylabel(ax, "winner's\naverage speed (km/h)", place="above")
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
@@ -108,7 +108,7 @@ def brain_body() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.set_xscale("log")
     ax.set_yscale("log")
-    vzs.apply(ax, frame="loose")
+    vzs.distill(ax, frame="loose")
     ax.scatter(table["body_kg"], table["brain_g"], s=12)
     vzs.xlabel(ax, "body mass (kg)")
     vzs.ylabel(ax, "brain mass (g)")
@@ -120,7 +120,7 @@ def waiting_times() -> None:
     """Render the bimodal Old Faithful waiting times as a histogram."""
     table = load("old_faithful.csv")
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.apply(ax, frame="data")
+    vzs.distill(ax, frame="data")
     ax.hist(table["waiting"], bins=27)
     vzs.xlabel(ax, "minutes to the next eruption")
     vzs.ylabel(ax, "eruptions", labelpad=10)
@@ -148,7 +148,7 @@ def power_profiles() -> None:
     seconds = np.geomspace(1, 10_000, 400)
     fig, ax = plt.subplots(figsize=(7, 3.5))
     ax.set_xscale("log")
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.distill(ax, frame=("data", "nice"))
     for label, (cp, w_prime, p_max, color) in ARCHETYPES.items():
         power = cp + w_prime / (seconds + w_prime / (p_max - cp))
         ax.plot(seconds, power, color=color, linewidth=1.2, label=label)
@@ -180,7 +180,7 @@ def resonance_peak() -> None:
     random_sampled = sampled + rng.normal(0, 0.04, sampled.size)
     measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
-    vzs.apply(ax, frame="loose", offset=(24, -6))
+    vzs.distill(ax, frame="loose", offset=(24, -6))
     ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
     ax.scatter(random_sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
     # Output power has a true zero, so show the axis from the 0 baseline

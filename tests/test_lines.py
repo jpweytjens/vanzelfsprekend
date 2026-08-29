@@ -246,7 +246,7 @@ def test_labels_anchor_correctly_on_date_axes():
 def test_restore_removes_line_labels():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vzs.apply(ax)
+    vzs.distill(ax)
     vzs.line_labels(ax)
     vzs.line_labels(ax, at="start")
     fig.canvas.draw()

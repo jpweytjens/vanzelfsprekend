@@ -1,4 +1,4 @@
-"""The apply composer, teardown, and the `ax.vzs` accessor registration."""
+"""The distill composer, teardown, and the `ax.vzs` accessor registration."""
 
 from collections.abc import Sequence
 from typing import Literal
@@ -25,7 +25,7 @@ from vanzelfsprekend.ticklabels import _apply_tick_labels
 from vanzelfsprekend.ticks import _rc, tick_direction
 
 
-def apply(
+def distill(
     ax: Axes,
     frame: str | tuple[str, str] = "nice",
     n: int = 5,
@@ -33,13 +33,13 @@ def apply(
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> Axes:
-    """Apply vanzelfsprekend's default treatment to `ax`.
+    """Distill `ax` to vanzelfsprekend's default treatment.
 
     The top-level entry point. Today it applies `range_frame` with good
     defaults; it is the seam where later styling and mark helpers will be
     bundled. Takes the same arguments as `range_frame`. It also greys the
     axis furniture and installs the ink-first Tol colour cycle. A custom
-    per-axes cycle set before `apply` is restored to the rc default, not
+    per-axes cycle set before `distill` is restored to the rc default, not
     recovered. Where tick labels crowd, they drift apart just enough to
     stay readable, keeping their order; the tick marks stay exactly at
     their values.
@@ -95,7 +95,7 @@ def restore(ax: Axes) -> None:
 
     multiples_state = state.get("multiples")
     if multiples_state is not None:
-        # Imported here: multiples imports `apply` from this module, so a
+        # Imported here: multiples imports `distill` from this module, so a
         # module-level import would be a cycle. Order matters — the frame
         # block above must write its locators into the fresh unshared
         # ticker before the original shared one is re-attached.
@@ -203,7 +203,7 @@ class _Accessor:
     def __init__(self, ax: Axes) -> None:
         self._ax = ax
 
-    def apply(
+    def distill(
         self,
         frame: str | tuple[str, str] = "nice",
         n: int = 5,
@@ -211,8 +211,8 @@ class _Accessor:
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
-        """Apply vanzelfsprekend's default treatment; see `vanzelfsprekend.apply`."""
-        return apply(
+        """Distill the axes to the default treatment; see `vanzelfsprekend.distill`."""
+        return distill(
             self._ax,
             frame=frame,
             n=n,
@@ -284,7 +284,7 @@ class _Accessor:
 def register() -> None:
     """Add the `vzs` accessor to `matplotlib.axes.Axes`.
 
-    Importing `vanzelfsprekend` calls this once, so `ax.vzs.apply(...)`,
+    Importing `vanzelfsprekend` calls this once, so `ax.vzs.distill(...)`,
     `ax.vzs.set_xlabel(...)` and the other entry points work straight
     away, each delegating to the module function bound to that axes.
     Calling it again is a no-op; call it to restore the accessor after an

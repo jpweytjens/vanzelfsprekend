@@ -17,7 +17,7 @@ ANSCOMBE_II_Y = np.array(
 def quartile_axes() -> tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.scatter(np.arange(ANSCOMBE_II_Y.size), ANSCOMBE_II_Y, s=12)
-    vzs.apply(ax, frame="data")
+    vzs.distill(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(ANSCOMBE_II_Y))
     ax.yaxis.set_major_formatter("{x:.1f}")
     return fig, ax
@@ -65,7 +65,7 @@ def test_well_spaced_labels_stay_put():
 
     fig, ax = plt.subplots()
     ax.plot([0, 1, 2], [0, 1, 4])
-    vzs.apply(ax)
+    vzs.distill(ax)
 
     # The reference gets the identical treatment but never runs the
     # applier, so any pixel the applier moves a well-spaced label shows
@@ -73,7 +73,7 @@ def test_well_spaced_labels_stay_put():
     # claiming zero.
     fig_ref, ax_ref = plt.subplots()
     ax_ref.plot([0, 1, 2], [0, 1, 4])
-    vzs.apply(ax_ref)
+    vzs.distill(ax_ref)
     get_state(ax_ref)["appliers"].pop("tick_labels")
 
     treated = boxes(ax)
@@ -114,7 +114,7 @@ def test_shrink_then_grow_does_not_compound_displacement():
 def _build_axes() -> tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.plot([0, 1], [0, 10])
-    vzs.apply(ax, frame="data")
+    vzs.distill(ax, frame="data")
     ax.yaxis.set_major_formatter("{x:.2f}")
     return fig, ax
 
@@ -152,7 +152,7 @@ def test_tick_params_after_draw_reseparates_labels():
 
 def test_grow_past_prior_max_does_not_inherit_shift():
     fig, ax = _build_axes()
-    # `apply` already materialized a tick pool for the default locator;
+    # `distill` already materialized a tick pool for the default locator;
     # growing past it is what forces matplotlib to mint brand-new ticks.
     pool_size = len(ax.yaxis.majorTicks)
 
@@ -190,7 +190,7 @@ def test_colliding_x_labels_separate_horizontally():
     # genuinely overlap without the applier.
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.plot([5.0, 6.0], [0, 1])
-    vzs.apply(ax, frame="data")
+    vzs.distill(ax, frame="data")
     ax.xaxis.set_major_locator(FixedLocator([5.0, 5.05]))
     ax.xaxis.set_major_formatter("{x:.4f}")
     fig.canvas.draw()
@@ -245,7 +245,7 @@ def test_beside_ylabel_follows_displaced_top_label():
     values = np.array([0.0, 9.4, 9.5, 9.6, 10.0])
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.scatter(np.arange(values.size), values, s=12)
-    vzs.apply(ax, frame="data")
+    vzs.distill(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(values))
     ax.yaxis.set_major_formatter("{x:.1f}")
     vzs.ylabel(ax, "value")

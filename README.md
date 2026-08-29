@@ -5,13 +5,13 @@
 
 <img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
-Let the plot speak for itself: a matplotlib treatment in the tradition of [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
+Distill a matplotlib plot until it speaks for itself — a treatment in the tradition of [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
 
-One call, `vzs.apply(ax)`, turns a default matplotlib axes into a quiet one where everything left on the page is information. The box around the plot becomes two spines that end at the data, so each spine shows its variable's span. Ticks land on round numbers strictly inside that span. The legend gives way to labels at the lines' ends, each in its line's colour. The axis furniture fades to grey, and the ink goes to the data.
+One call, `vzs.distill(ax)`, turns a default matplotlib axes into a quiet one where everything left on the page is information. The box around the plot becomes two spines that end at the data, so each spine shows its variable's span. Ticks land on round numbers strictly inside that span. The legend gives way to labels at the lines' ends, each in its line's colour. The axis furniture fades to grey, and the ink goes to the data.
 
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.png)
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "loose"))` and `line_labels(ax)` in place of the legend.
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `distill(ax, frame=("data", "loose"))` and `line_labels(ax)` in place of the legend.
 
 ## Install
 
@@ -34,33 +34,33 @@ import vanzelfsprekend as vzs
 rng = np.random.default_rng(0)
 fig, ax = plt.subplots(figsize=(5, 3.5))
 ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-vzs.apply(ax)
+vzs.distill(ax)
 vzs.xlabel(ax, "time (s)")
 vzs.ylabel(ax, "voltage")
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
-`apply` installs a draw hook that keeps the treatment glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly. More examples are in the [gallery](#gallery).
+`distill` installs a draw hook that keeps the treatment glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly. More examples are in the [gallery](#gallery).
 
 ## Usage
 
-`apply(ax)` ends the spines at the outermost ticks. Two other modes:
+`distill(ax)` ends the spines at the outermost ticks. Two other modes:
 
 ```python
-vzs.apply(ax, frame="data")  # spines end at the exact data min and max
-vzs.apply(ax, frame="loose")  # spines end at nice numbers bounding the data
+vzs.distill(ax, frame="data")  # spines end at the exact data min and max
+vzs.distill(ax, frame="loose")  # spines end at nice numbers bounding the data
 ```
 
 A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exactly where the data does while the value axis keeps nice bounds:
 
 ```python
-vzs.apply(ax, frame=("data", "loose"))
+vzs.distill(ax, frame=("data", "loose"))
 ```
 
 Under `loose` the spines also stand off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart — a `None` in either slot keeps that spine's mode default:
 
 ```python
-vzs.apply(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
+vzs.distill(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
 ```
 
 `xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `place="beside"` (the default) anchors it level with the top tick label; `place="above"` stacks it over the top tick, its left edge aligned with the tick label's — Doumont's two y-labels, from his "good" and "better" graphs. `labelpad` widens the gap to the tick labels:
@@ -70,7 +70,7 @@ vzs.ylabel(ax, "count", labelpad=10)  # beside the top tick (default)
 vzs.ylabel(ax, "count", place="above")  # stacked above it, left-aligned
 ```
 
-Importing `vanzelfsprekend` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.apply()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again, and `register()` puts it back. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
+Importing `vanzelfsprekend` adds a `vzs` accessor to every axes, in the style of pandas and xarray accessors, so the entry points work anywhere as `ax.vzs.distill()`, `ax.vzs.line_labels()` and so on; `unregister()` removes it again, and `register()` puts it back. The accessor mimics matplotlib's method names where one exists with the same contract: `ax.vzs.set_xlabel("time (s)")` is `vzs.xlabel(ax, "time (s)")`.
 
 `line_labels` replaces a legend: delete `ax.legend()` and each line gets its `label=` text at its right end, in its line's colour. Where lines converge, the labels shift apart just enough to stay readable, keeping their order. `at="start"` labels the left ends instead, slopegraph-style, which pairs well with `frame="loose"` since the offset spine leaves room for the text:
 
@@ -81,9 +81,9 @@ vzs.line_labels(ax, at="start")  # and/or at its left end
 
 Tick labels get the same care: ticks placed by the data, such as `QuartileLocator`'s, can land arbitrarily close, and where their labels crowd they shift apart just enough to stay readable, keeping their order. The tick marks stay exactly at their values.
 
-To place ticks yourself — `QuartileLocator`, `FeatureLocator`, or any matplotlib locator — set it *after* `apply`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
+To place ticks yourself — `QuartileLocator`, `FeatureLocator`, or any matplotlib locator — set it *after* `distill`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
 
-Linear, log and date axes are handled; set the scale before calling `apply`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
+Linear, log and date axes are handled; set the scale before calling `distill`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 
 Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant — a lone series stays near-black, and colour enters at the second — but any of the eight schemes is one colour string away: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
 
@@ -96,7 +96,7 @@ Every figure below comes from [a single script](https://github.com/jpweytjens/va
 Anscombe's quartet, four sets built to share their summary statistics, with `frame="data"` and `QuartileLocator` ticks. The axes refuse to repeat the identity: each panel's spines span that panel's own data, its ticks sit at its minimum, quartiles and maximum, and set IV's bottom axis collapses to two marks because ten of its eleven x values are the same number:
 
 ```python
-vzs.apply(ax, frame="data")
+vzs.distill(ax, frame="data")
 ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
 ax.xaxis.set_major_formatter("{x:.0f}")
 ```
@@ -159,7 +159,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 
 | Name | Does |
 | --- | --- |
-| `apply(ax, ...)` | the full treatment with defaults |
+| `distill(ax, ...)` | the full treatment with defaults |
 | `restore(ax)` | put the axes back as they were |
 | `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
 | `small_multiples(axes, compare, ...)` | one treatment for a grid of axes on a shared scale |

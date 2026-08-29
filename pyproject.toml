@@ -1,7 +1,7 @@
 [project]
 name = "vanzelfsprekend"
 version = "0.1.0"
-description = "Tufte and Doumont for matplotlib: range frames and direct labels"
+description = "Distill a matplotlib plot until it speaks for itself — range frames and direct labels in the tradition of Tufte and Doumont"
 readme = "README.md"
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]

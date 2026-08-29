@@ -47,9 +47,9 @@ def main() -> None:
 
     fig, ax = plt.subplots(figsize=(SIZE_IN, SIZE_IN))
 
-    # Apply first for the range-frame styling; the three lines take
+    # Distill first for the range-frame styling; the three lines take
     # Tol's high-contrast blue, yellow and red explicitly.
-    vzs.apply(ax, frame="data", offset=10)
+    vzs.distill(ax, frame="data", offset=10)
 
     x, ys = series()
     for y, label, color in zip(

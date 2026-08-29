@@ -27,5 +27,5 @@ Colour:
 - The scheme colours work anywhere matplotlib takes a colour, as tol:orange and friends
 
 Undo:
-- restore(ax) puts the axes back exactly as they were before apply(ax)
-- register() adds a vzs accessor to every axes, so ax.vzs.apply(), ax.vzs.set_xlabel() and the other entry points work anywhere
+- restore(ax) puts the axes back exactly as they were before distill(ax)
+- register() adds a vzs accessor to every axes, so ax.vzs.distill(), ax.vzs.set_xlabel() and the other entry points work anywhere
