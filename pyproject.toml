@@ -51,6 +51,10 @@ dev = [
     "ruff>=0.15.20",
     "ty>=0.0.74",
 ]
+examples = [
+    "pandas>=2.3.3",
+    "seaborn>=0.13.2",
+]
 
 [tool.pytest.ini_options]
 filterwarnings = [

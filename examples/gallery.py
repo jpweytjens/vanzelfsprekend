@@ -38,6 +38,7 @@ DOCS = Path(__file__).parents[1] / "docs"
 README_FIGURES = (
     "anscombe.png",
     "grand_tours.png",
+    "seaborn_lineplot.png",
     "brain_body.png",
     "waiting_times.png",
     "power_profiles.png",
@@ -99,6 +100,37 @@ def grand_tours() -> None:
     vzs.line_labels(ax)
     vzs.ylabel(ax, "winner's\naverage speed (km/h)", place="above")
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def seaborn_lineplot() -> None:
+    """Distill a plot seaborn drew: the same treatment, another producer.
+
+    The four series are a constructed random walk, not a measurement.
+    seaborn keeps each legend entry's text on a proxy artist separate
+    from the drawn line, so the end labels come from `labels=` rather
+    than the lines' own `label=`.
+    """
+    import pandas as pd
+    import seaborn as sns
+
+    rng = np.random.default_rng(365)
+    dates = pd.date_range("2016-01-01", periods=365, freq="D")
+    walks = rng.standard_normal((365, 4)).cumsum(axis=0)
+    frame = pd.DataFrame(walks, index=dates, columns=list("ABCD")).rolling(7).mean()
+    # seaborn's common whitegrid, scoped so it does not leak into the
+    # other gallery figures; distill strips the grid it draws.
+    with sns.axes_style("whitegrid"):
+        fig, ax = plt.subplots(figsize=(7, 3.5))
+        sns.lineplot(data=frame, palette="tab10", linewidth=2.0, ax=ax)
+    legend = ax.get_legend()
+    if legend is not None:
+        legend.remove()
+    # Plot before distill: the axis becomes a date axis when date data
+    # arrives, and distill detects date-ness at call time.
+    vzs.distill(ax, frame=("data", "nice"))
+    vzs.line_labels(ax, labels=list("ABCD"))
+    fig.savefig(OUTPUT / "seaborn_lineplot.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -317,12 +349,14 @@ def main() -> None:
     OUTPUT.mkdir(exist_ok=True)
     anscombe()
     grand_tours()
+    seaborn_lineplot()
     brain_body()
     waiting_times()
     power_profiles()
     resonance_peak()
     small_multiples_grid()
     palette_swatches()
+    seaborn_lineplot()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")

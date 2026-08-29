@@ -91,7 +91,7 @@ Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant —
 
 ## Gallery
 
-Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run examples/gallery.py`. The datasets sit in [`examples/data`](https://github.com/jpweytjens/vanzelfsprekend/tree/main/examples/data), each file naming its source and licence; what is not a measurement says so, from Anscombe's hand-built quartet to the modelled power profiles.
+Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in [`examples/data`](https://github.com/jpweytjens/vanzelfsprekend/tree/main/examples/data), each file naming its source and licence; what is not a measurement says so, from Anscombe's hand-built quartet to the modelled power profiles.
 
 Anscombe's quartet, four sets built to share their summary statistics, with `frame="data"` and `QuartileLocator` ticks. The axes refuse to repeat the identity: each panel's spines span that panel's own data, its ticks sit at its minimum, quartiles and maximum, and set IV's bottom axis collapses to two marks because ten of its eleven x values are the same number:
 
@@ -106,6 +106,18 @@ ax.xaxis.set_major_formatter("{x:.0f}")
 A century of grand tour winners' average speeds, each race in its jersey's colour, labelled at the lines' ends. The Tour and the Vuelta arrive too close together for unaided text, so the labels shift just apart; the time spine ends exactly at the first and last editions, and the world wars stay visible as holes in the record:
 
 ![Line chart of winners' average speeds at the Tour, Giro and Vuelta since 1903, each line labelled at its right end, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
+
+A wide-form line chart that seaborn drew, distilled by the same one call: the treatment reads an axes, not the library that filled it, so it reaches a seaborn plot as readily as a bare matplotlib one. The four series are a constructed random walk under seaborn's `whitegrid` theme; `distill` trims the box to two spines, drops the grid, and keeps the tick marks the theme had switched off, while `line_labels` stands in for the legend. seaborn keeps each legend entry's text on a proxy artist away from the drawn line, so the labels come from `labels=` rather than the lines' own names:
+
+```python
+with sns.axes_style("whitegrid"):
+    ax = sns.lineplot(data=frame, palette="tab10")
+ax.get_legend().remove()
+vzs.distill(ax, frame=("nice", "loose"))
+vzs.line_labels(ax, labels=list("ABCD"))
+```
+
+![Four random-walk series that seaborn drew, distilled to two spines with no grid, the legend replaced by A to D at the line ends in their colours and the year shown once at the axis end](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/seaborn_lineplot.png)
 
 The brain and body masses of 62 mammal species on log-log axes with `frame="loose"`: offset spines end at the powers of ten bounding the data, the minor ticks disappear, and the allometry reads as the straight line it is:
 
