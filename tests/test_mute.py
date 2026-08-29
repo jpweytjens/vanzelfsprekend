@@ -48,6 +48,44 @@ def test_restore_reverts_mute():
     plt.close(fig)
 
 
+def _grid_visible(ax):
+    return (
+        any(g.get_visible() for g in ax.get_xgridlines()),
+        any(g.get_visible() for g in ax.get_ygridlines()),
+    )
+
+
+def test_mute_turns_the_grid_off():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])
+    ax.grid(True)
+    vzs.mute(ax)
+    fig.canvas.draw()
+    assert _grid_visible(ax) == (False, False)
+    plt.close(fig)
+
+
+def test_restore_reinstates_a_grid_that_was_on():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])
+    ax.grid(True)
+    vzs.mute(ax)
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert _grid_visible(ax) == (True, True)
+    plt.close(fig)
+
+
+def test_restore_keeps_the_grid_off_when_it_started_off():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])  # no grid to begin with
+    vzs.mute(ax)
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert _grid_visible(ax) == (False, False)
+    plt.close(fig)
+
+
 def test_restore_resets_tick_ink_on_tickless_axes():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])

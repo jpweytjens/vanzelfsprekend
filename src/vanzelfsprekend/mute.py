@@ -19,10 +19,11 @@ def mute(
 
     Spines and tick marks take `line_ink` at `line_width` points; tick
     labels and axis labels take the darker `text_ink`, since text is
-    read while lines are only looked at. Data artists are untouched.
-    The prior colours and widths are snapshotted on the first call so
-    `restore` can undo the change; later calls update the inks without
-    overwriting the snapshot.
+    read while lines are only looked at. Gridlines are turned off —
+    they are furniture, not data — and data artists are untouched.
+    The prior colours, widths and grid visibility are snapshotted on
+    the first call so `restore` can undo the change; later calls update
+    the inks without overwriting the snapshot.
 
     Returns
     -------
@@ -42,6 +43,13 @@ def mute(
                 },
                 "x": _axis_ink(ax.xaxis),
                 "y": _axis_ink(ax.yaxis),
+                "grid": {
+                    key: {
+                        "major": _grid_on(axis, "major"),
+                        "minor": _grid_on(axis, "minor"),
+                    }
+                    for key, axis in (("x", ax.xaxis), ("y", ax.yaxis))
+                },
             }
         }
     for spine in ax.spines.values():
@@ -50,7 +58,13 @@ def mute(
     ax.tick_params(which="both", color=line_ink, width=line_width, labelcolor=text_ink)
     ax.xaxis.label.set_color(text_ink)
     ax.yaxis.label.set_color(text_ink)
+    ax.grid(False, which="both")  # gridlines are furniture; the data carries the ink
     return ax
+
+
+def _grid_on(axis: Axis, which: str) -> bool:
+    kw = axis._major_tick_kw if which == "major" else axis._minor_tick_kw  # ty: ignore[unresolved-attribute]
+    return bool(kw.get("gridOn", False))
 
 
 def _axis_ink(axis: Axis) -> dict:

@@ -130,6 +130,11 @@ def restore(ax: Axes) -> None:
         for name, prior in snap["spines"].items():
             ax.spines[name].set_edgecolor(prior["color"])
             ax.spines[name].set_linewidth(prior["width"])
+        grid = snap.get("grid")
+        if grid is not None:
+            for key, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
+                axis.grid(grid[key]["major"], which="major")
+                axis.grid(grid[key]["minor"], which="minor")
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             prior = snap[key]
             if prior["tick"] is not None:
