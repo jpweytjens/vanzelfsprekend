@@ -1,5 +1,6 @@
 """End-of-line direct labels: label each line at one end instead of in a legend."""
 
+import warnings
 from functools import partial
 from itertools import cycle
 from typing import Literal, cast
@@ -22,6 +23,7 @@ def line_labels(
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
     gap: float = placement.GAP,
+    labels: list[str | None] | None = None,
 ) -> list[Annotation]:
     """Label each line at one end, in place of a legend.
 
@@ -54,6 +56,17 @@ def line_labels(
         Horizontal gap in points between a line's end and its label.
     gap : float
         Minimum vertical clearance in points between label boxes.
+    labels : list of (str or None), optional
+        Supply the text yourself instead of reading each line's
+        `label=`. Needed for producers that keep the legend text on a
+        separate artist from the drawn line (seaborn labels its data
+        lines `_child0`, `_child1`, ... and carries the real text on
+        empty proxy lines). The list has one entry per *anchorable*
+        line — a line with a finite end point, in draw order — and a
+        `None` or `""` entry skips that line. A length that does not
+        match the anchorable lines raises `ValueError`. With the
+        default `labels=None`, lines are read as above and an empty
+        result warns, pointing here.
 
     Returns
     -------
@@ -68,12 +81,35 @@ def line_labels(
     if prior is not None:
         for text in prior["texts"]:
             text.remove()
-    anchored = [
-        (line, label, anchor)
-        for line in ax.get_lines()
-        if (label := _labeled(line)) is not None
-        and (anchor := _anchor(line, at)) is not None
-    ]
+    if labels is None:
+        anchored = [
+            (line, label, anchor)
+            for line in ax.get_lines()
+            if (label := _labeled(line)) is not None
+            and (anchor := _anchor(line, at)) is not None
+        ]
+        if not anchored:
+            warnings.warn(
+                "vanzelfsprekend: no labelled lines with a finite end point "
+                "found; pass labels=... to supply them",
+                stacklevel=2,
+            )
+    else:
+        targets = [
+            (line, anchor)
+            for line in ax.get_lines()
+            if (anchor := _anchor(line, at)) is not None
+        ]
+        if len(labels) != len(targets):
+            raise ValueError(
+                f"labels has {len(labels)} entries but there are "
+                f"{len(targets)} lines to label"
+            )
+        anchored = [
+            (line, label, anchor)
+            for (line, anchor), label in zip(targets, labels, strict=True)
+            if label not in (None, "")
+        ]
     lines = [line for line, _, _ in anchored]
     sign = 1.0 if at == "end" else -1.0
     texts = [

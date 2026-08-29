@@ -275,3 +275,77 @@ def test_invalid_labelcolor_raises():
     with pytest.raises(ValueError, match="colour"):
         vzs.line_labels(ax, labelcolor=[])
     plt.close(fig)
+
+
+def test_labels_override_labels_underscore_lines_in_order():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="_child0")
+    ax.plot(x, x + 1, label="_child1")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, labels=["A", "B"])
+    fig.canvas.draw()
+    assert [t.get_text() for t in texts] == ["A", "B"]
+    assert texts[0].xy == (x[-1], x[-1])
+    assert texts[1].xy == (x[-1], x[-1] + 1)
+    plt.close(fig)
+
+
+def test_labels_count_excludes_nonanchorable_proxies():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="_child0")
+    ax.plot(x, x + 1, label="_child1")
+    ax.plot([], [], label="A")  # seaborn-style empty legend proxy
+    ax.plot([], [], label="B")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, labels=["A", "B"])
+    fig.canvas.draw()
+    assert [t.get_text() for t in texts] == ["A", "B"]
+    plt.close(fig)
+
+
+def test_labels_none_slot_skips_that_line():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="_a")
+    ax.plot(x, x + 1, label="_b")
+    ax.plot(x, x + 2, label="_c")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, labels=["A", None, "C"])
+    fig.canvas.draw()
+    assert [t.get_text() for t in texts] == ["A", "C"]
+    assert texts[0].xy == (x[-1], x[-1])
+    assert texts[1].xy == (x[-1], x[-1] + 2)
+    plt.close(fig)
+
+
+def test_labels_count_mismatch_raises():
+    fig, ax = plt.subplots()
+    converging_lines(ax)  # three anchorable lines
+    with pytest.raises(ValueError, match="labels"):
+        vzs.line_labels(ax, labels=["only", "two"])
+    plt.close(fig)
+
+
+def test_line_labels_warns_when_nothing_labelled():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="_child0")  # seaborn-style: skipped by default
+    vzs.range_frame(ax)
+    with pytest.warns(UserWarning, match="labels="):
+        texts = vzs.line_labels(ax)
+    assert texts == []
+    plt.close(fig)
+
+
+def test_labels_all_none_is_silent(recwarn):
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="_a")
+    ax.plot(x, x + 1, label="_b")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, labels=[None, None])
+    assert texts == []
+    assert not any("labels=" in str(w.message) for w in recwarn)
+    plt.close(fig)

@@ -261,9 +261,12 @@ class _Accessor:
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
         gap: float = placement.GAP,
+        labels: list[str | None] | None = None,
     ) -> list[Annotation]:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
-        return line_labels(self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap)
+        return line_labels(
+            self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap, labels=labels
+        )
 
     def mute(
         self,
