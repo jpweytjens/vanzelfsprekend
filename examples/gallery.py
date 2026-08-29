@@ -123,11 +123,9 @@ def seaborn_lineplot() -> None:
     with sns.axes_style("whitegrid"):
         fig, ax = plt.subplots(figsize=(7, 3.5))
         sns.lineplot(data=frame, palette="tab10", linewidth=2.0, ax=ax)
-    legend = ax.get_legend()
-    if legend is not None:
-        legend.remove()
     # Plot before distill: the axis becomes a date axis when date data
-    # arrives, and distill detects date-ness at call time.
+    # arrives, and distill detects date-ness at call time. line_labels
+    # replaces seaborn's legend, hiding it in the process.
     vzs.distill(ax, frame=("data", "nice"))
     vzs.line_labels(ax, labels=list("ABCD"))
     fig.savefig(OUTPUT / "seaborn_lineplot.png", dpi=150, bbox_inches="tight")

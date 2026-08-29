@@ -112,8 +112,7 @@ A wide-form line chart that seaborn drew, distilled by the same one call: the tr
 ```python
 with sns.axes_style("whitegrid"):
     ax = sns.lineplot(data=frame, palette="tab10")
-ax.get_legend().remove()
-vzs.distill(ax, frame=("nice", "loose"))
+vzs.distill(ax, frame=("data", "nice"))
 vzs.line_labels(ax, labels=list("ABCD"))
 ```
 
