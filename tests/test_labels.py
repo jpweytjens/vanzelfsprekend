@@ -1,8 +1,57 @@
+import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 import vanzelfsprekend as vzs
+
+
+def _date_ax():
+    fig, ax = plt.subplots()
+    days = [datetime.date(2016, 1, 1) + datetime.timedelta(days=i) for i in range(300)]
+    ax.plot(days, np.arange(300))
+    return fig, ax
+
+
+def test_date_offset_aligns_with_the_xlabel_anchor():
+    fig, ax = _date_ax()
+    vzs.distill(ax, frame=("data", "nice"))
+    vzs.xlabel(ax, "t")
+    fig.canvas.draw()
+    off = ax.xaxis.get_offset_text()
+    assert off.get_position()[0] == pytest.approx(ax.xaxis.label.get_position()[0])
+    assert off.get_horizontalalignment() == "right"
+    plt.close(fig)
+
+
+def test_date_offset_lifts_above_an_xlabel():
+    fig, ax = _date_ax()
+    vzs.distill(ax, frame=("data", "nice"))
+    fig.canvas.draw()
+    off = ax.xaxis.get_offset_text()
+    r = fig.canvas.get_renderer()
+    y_alone = off.get_window_extent(r).y0
+    vzs.xlabel(ax, "t")
+    fig.canvas.draw()
+    y_stacked = off.get_window_extent(r).y0
+    assert y_stacked > y_alone
+    plt.close(fig)
+
+
+def test_restore_resets_the_date_offset():
+    fig, ax = _date_ax()
+    vzs.distill(ax, frame=("data", "nice"))
+    vzs.xlabel(ax, "t")
+    fig.canvas.draw()
+    off = ax.xaxis.get_offset_text()
+    r = fig.canvas.get_renderer()
+    y_stacked = off.get_window_extent(r).y0
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert off.get_position()[0] == pytest.approx(1.0)
+    assert off.get_window_extent(r).y0 < y_stacked
+    plt.close(fig)
 
 
 @pytest.fixture

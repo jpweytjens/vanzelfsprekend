@@ -17,7 +17,7 @@ from vanzelfsprekend.hook import (
     ensure_state,
     get_state,
 )
-from vanzelfsprekend.labels import xlabel, ylabel
+from vanzelfsprekend.labels import _apply_date_offset, xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
@@ -59,6 +59,7 @@ def distill(
     ax.set_prop_cycle(color=palettes.CYCLE)
     state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
     add_applier(ax, "tick_labels", _apply_tick_labels)
+    add_applier(ax, "date_offset", _apply_date_offset)
     return ax
 
 
@@ -174,6 +175,12 @@ def restore(ax: Axes) -> None:
         for side in line_labels_state.values():
             for text in side["texts"]:
                 text.remove()
+
+    date_offset_state = state.get("date_offset")
+    if date_offset_state is not None:
+        off = ax.xaxis.get_offset_text()
+        off.set_transform(date_offset_state["transform"])
+        off.set_x(date_offset_state["x"])
 
     legend_state = state.get("legend")
     if legend_state is not None:

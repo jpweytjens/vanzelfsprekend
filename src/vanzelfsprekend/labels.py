@@ -1,11 +1,14 @@
 """End-of-spine axis labels for a range frame."""
 
+from typing import cast
+
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.text import Text
+from matplotlib.transforms import ScaledTranslation, Transform
 
-from vanzelfsprekend.frame import _frame_span
+from vanzelfsprekend.frame import _frame_span, _is_date_converter
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
@@ -218,6 +221,58 @@ def _apply_labels(ax: Axes) -> bool:
             if pos[1] != frac:
                 ax.yaxis.label.set_position((pos[0], frac))
                 changed = True
+    return changed
+
+
+def _apply_date_offset(ax: Axes) -> bool:
+    """Anchor a date axis's offset text ("2016") to the spine end.
+
+    `ConciseDateFormatter` parks the shared-year offset in the axes'
+    bottom-right corner; move it to the right end of the bottom spine,
+    the anchor `xlabel` uses, and lift it clear of an `xlabel` when both
+    are present. matplotlib re-pins the offset's y every draw, so the
+    lift rides on a transform translation it leaves alone. Snapshots the
+    offset's original transform and x once so `restore` can undo it.
+    """
+    state = get_state(ax)
+    if state is None or "frame" not in state:
+        return False
+    frame_state = state["frame"]
+    if "x" not in frame_state["active"] or not _is_date_converter(
+        ax.xaxis.get_converter()
+    ):
+        return False
+    off = ax.xaxis.get_offset_text()
+    snap = state.setdefault(
+        "date_offset",
+        {
+            "transform": off.get_transform(),
+            "x": off.get_position()[0],
+            "stacked": False,
+        },
+    )
+    changed = False
+    span = _frame_span(ax.xaxis, frame_state["mode"]["x"])
+    if span is not None:
+        vmin, vmax = ax.get_xlim()
+        frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
+        if off.get_position()[0] != frac:
+            off.set_x(frac)
+            changed = True
+    if off.get_horizontalalignment() != "right":
+        off.set_horizontalalignment("right")
+        changed = True
+    base = cast(Transform, snap["transform"])
+    stacked = bool(ax.get_xlabel())
+    if stacked != snap["stacked"]:
+        if stacked:
+            rise = float(off.get_fontsize()) + 2.0
+            shift = ScaledTranslation(0.0, rise / 72.0, ax.figure.dpi_scale_trans)
+            off.set_transform(base + shift)
+        else:
+            off.set_transform(base)
+        snap["stacked"] = stacked
+        changed = True
     return changed
 
 
