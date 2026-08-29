@@ -135,6 +135,10 @@ def restore(ax: Axes) -> None:
             for key, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
                 axis.grid(grid[key]["major"], which="major")
                 axis.grid(grid[key]["minor"], which="minor")
+        ticks = snap.get("ticks")
+        if ticks is not None:
+            ax.tick_params(axis="x", which="major", bottom=ticks["x"])
+            ax.tick_params(axis="y", which="major", left=ticks["y"])
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             prior = snap[key]
             if prior["tick"] is not None:

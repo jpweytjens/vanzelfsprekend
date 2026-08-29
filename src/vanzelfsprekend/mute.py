@@ -20,10 +20,12 @@ def mute(
     Spines and tick marks take `line_ink` at `line_width` points; tick
     labels and axis labels take the darker `text_ink`, since text is
     read while lines are only looked at. Gridlines are turned off —
-    they are furniture, not data — and data artists are untouched.
-    The prior colours, widths and grid visibility are snapshotted on
-    the first call so `restore` can undo the change; later calls update
-    the inks without overwriting the snapshot.
+    they are furniture, not data — while the near-side tick marks
+    (bottom, left) are turned on, since they anchor the labels to the
+    spine; data artists are untouched. The prior colours, widths, grid
+    and tick visibility are snapshotted on the first call so `restore`
+    can undo the change; later calls update the inks without
+    overwriting the snapshot.
 
     Returns
     -------
@@ -50,6 +52,7 @@ def mute(
                     }
                     for key, axis in (("x", ax.xaxis), ("y", ax.yaxis))
                 },
+                "ticks": {"x": _tick_on(ax.xaxis), "y": _tick_on(ax.yaxis)},
             }
         }
     for spine in ax.spines.values():
@@ -59,12 +62,21 @@ def mute(
     ax.xaxis.label.set_color(text_ink)
     ax.yaxis.label.set_color(text_ink)
     ax.grid(False, which="both")  # gridlines are furniture; the data carries the ink
+    # Tick marks anchor the labels to the spine, so a theme that hid them
+    # (seaborn's grid styles) should not leave the range frame with none.
+    ax.tick_params(axis="x", which="major", bottom=True)
+    ax.tick_params(axis="y", which="major", left=True)
     return ax
 
 
 def _grid_on(axis: Axis, which: str) -> bool:
     kw = axis._major_tick_kw if which == "major" else axis._minor_tick_kw  # ty: ignore[unresolved-attribute]
     return bool(kw.get("gridOn", False))
+
+
+def _tick_on(axis: Axis) -> bool:
+    """Whether the axis's near-side major tick marks are drawn (bottom, left)."""
+    return bool(axis._major_tick_kw.get("tick1On", True))  # ty: ignore[unresolved-attribute]
 
 
 def _axis_ink(axis: Axis) -> dict:

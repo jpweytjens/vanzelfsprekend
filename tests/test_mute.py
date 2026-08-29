@@ -86,6 +86,29 @@ def test_restore_keeps_the_grid_off_when_it_started_off():
     plt.close(fig)
 
 
+def test_mute_shows_tick_marks_a_theme_hid():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])
+    ax.tick_params(left=False, bottom=False)  # a whitegrid-style theme
+    vzs.mute(ax)
+    fig.canvas.draw()
+    assert ax.yaxis.get_major_ticks()[0].tick1line.get_visible()
+    assert ax.xaxis.get_major_ticks()[0].tick1line.get_visible()
+    plt.close(fig)
+
+
+def test_restore_reinstates_tick_marks_a_theme_hid():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])
+    ax.tick_params(left=False, bottom=False)
+    vzs.mute(ax)
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert not ax.yaxis.get_major_ticks()[0].tick1line.get_visible()
+    assert not ax.xaxis.get_major_ticks()[0].tick1line.get_visible()
+    plt.close(fig)
+
+
 def test_restore_resets_tick_ink_on_tickless_axes():
     fig, ax = plt.subplots()
     ax.plot([0, 1], [0, 1])
