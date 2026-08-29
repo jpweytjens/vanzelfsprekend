@@ -66,8 +66,8 @@ def restore(ax: Axes) -> None:
     """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
 
     Disconnects the draw hook and restores exactly the properties vanzelfsprekend
-    changed — the original locators, spine visibility and positions,
-    label alignment, furniture colours, and the colour cycle — from the
+    changed (the original locators, spine visibility and positions,
+    label alignment, furniture colours, and the colour cycle) from the
     snapshot taken at first application. A no-op on an axes vanzelfsprekend
     never touched.
     """
@@ -96,7 +96,7 @@ def restore(ax: Axes) -> None:
     multiples_state = state.get("multiples")
     if multiples_state is not None:
         # Imported here: multiples imports `distill` from this module, so a
-        # module-level import would be a cycle. Order matters — the frame
+        # module-level import would be a cycle. Order matters: the frame
         # block above must write its locators into the fresh unshared
         # ticker before the original shared one is re-attached.
         from vanzelfsprekend.multiples import _reattach_tickers, _teardown_grid

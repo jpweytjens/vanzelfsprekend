@@ -129,7 +129,7 @@ def _unshare_tickers(
     Must run before `distill`: shared panels hold one `Ticker` object, so
     a locator installed through it lands in every sibling and the frame
     snapshot records a sibling's locator as the original. The fresh
-    pair only needs to be functional — `distill` replaces it immediately
+    pair only needs to be functional; `distill` replaces it immediately
     and restore re-attaches the saved originals.
 
     Two-phase: every fresh locator/formatter is constructed first,
@@ -348,8 +348,8 @@ def small_multiples(
             axis = ax.xaxis if name == "x" else ax.yaxis
             side = "bottom" if name == "x" else "left"
             if carries[name]:
-                # Trim to the axis's scale group — the same panels that set
-                # its shared ticks and limits — so every drawn tick lands on
+                # Trim to the axis's scale group (the same panels that set
+                # its shared ticks and limits) so every drawn tick lands on
                 # the spine. A narrower positional trim would leave a shared
                 # tick floating past a spine whose own row/column falls short.
                 members = panel_groups[name]
@@ -383,7 +383,7 @@ def small_multiples(
 def _teardown_grid(grid: dict) -> None:
     """Tear the grid layer off every member; idempotent.
 
-    Everything figure-level comes off in one pass — the shared scale
+    Everything figure-level comes off in one pass; the shared scale
     cannot survive losing a member. Tickers stay: re-sharing here would
     hand every still-treated sibling a shared container again, so each
     panel's original `Ticker` waits for that panel's own restore.
@@ -439,7 +439,7 @@ def _reattach_tickers(ax: Axes, snapshot: dict) -> None:
     the shared container comes back untouched. Also clears the spine
     bounds the frame block just stamped: `Spine.set_bounds(None, None)`
     reads "leave unchanged", not "unset", so it always writes the
-    current view interval — never the `None` a panel this treatment
+    current view interval, never the `None` a panel this treatment
     framed needs in order to end up as unbounded as one it never
     touched.
     """

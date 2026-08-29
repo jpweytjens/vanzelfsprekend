@@ -62,7 +62,7 @@ def line_labels(
         separate artist from the drawn line (seaborn labels its data
         lines `_child0`, `_child1`, ... and carries the real text on
         empty proxy lines). The list has one entry per *anchorable*
-        line — a line with a finite end point, in draw order — and a
+        line (a line with a finite end point, in draw order), and a
         `None` or `""` entry skips that line. A length that does not
         match the anchorable lines raises `ValueError`. With the
         default `labels=None`, lines are read as above and an empty

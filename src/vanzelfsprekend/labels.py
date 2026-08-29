@@ -28,8 +28,8 @@ def xlabel(
         in `'data'`), lining up with the *centre* of the rightmost tick
         label. `True` pushes it out to that tick label's right edge, so
         the label and the tick-label row share a flush right margin. The
-        nudge is strictly outward — clamped never to move left of the
-        spine end — so it only takes effect where the last tick sits at
+        nudge is strictly outward (clamped never to move left of the
+        spine end), so it only takes effect where the last tick sits at
         the spine end (`'nice'`/`'loose'` mode); in `'data'` mode, where
         the spine already reaches past the last tick label, it is a no-op.
     labelpad : float, optional
@@ -226,7 +226,7 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
 
     Anchored on the topmost tick label's measured left/top edge, so it
     tracks the tick label's rendered width. The above-label is a plain
-    `transAxes` text child, so a `set_position` sticks — nothing else
+    `transAxes` text child, so a `set_position` sticks; nothing else
     moves it each draw.
     """
     locs = ax.yaxis.get_majorticklocs()

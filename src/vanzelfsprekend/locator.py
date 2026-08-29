@@ -493,7 +493,7 @@ class SummaryLocator(FixedLocator):
     single-axis special case of `FeatureLocator`: a reducer is a
     feature that ignores the other axis, so both funnel through the
     same flatten, drop-non-finite, and collapse-coincident pipeline.
-    Unlike `FeatureLocator`, the input is cleaned first — non-finite
+    Unlike `FeatureLocator`, the input is cleaned first: non-finite
     values are dropped before the reducers run. Tick labels follow the
     axis formatter; pass a format string such as
     `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
@@ -555,7 +555,7 @@ def _tick_positions(
 ) -> list[float]:
     parts = [
         np.asarray(
-            # ty: ignore[call-top-callable] — callable() narrowing over the
+            # ty: ignore[call-top-callable]; callable() narrowing over the
             # Callable | ArrayLike union leaves a top callable ty won't call.
             reducer(*data) if callable(reducer) else reducer,
             dtype=float,

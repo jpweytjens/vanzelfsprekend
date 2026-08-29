@@ -19,8 +19,8 @@ def mute(
 
     Spines and tick marks take `line_ink` at `line_width` points; tick
     labels and axis labels take the darker `text_ink`, since text is
-    read while lines are only looked at. Gridlines are turned off —
-    they are furniture, not data — while the near-side tick marks
+    read while lines are only looked at. Gridlines are turned off,
+    since they are furniture and not data, while the near-side tick marks
     (bottom, left) are turned on, since they anchor the labels to the
     spine; data artists are untouched. The prior colours, widths, grid
     and tick visibility are snapshotted on the first call so `restore`

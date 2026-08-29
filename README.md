@@ -5,7 +5,7 @@
 
 <img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
-Distill a matplotlib plot until it speaks for itself — a treatment in the tradition of [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
+Distill a matplotlib plot until it speaks for itself: a treatment in the tradition of [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
 
 One call, `vzs.distill(ax)`, turns a default matplotlib axes into a quiet one where everything left on the page is information. The box around the plot becomes two spines that end at the data, so each spine shows its variable's span. Ticks land on round numbers strictly inside that span. The legend gives way to labels at the lines' ends, each in its line's colour. The axis furniture fades to grey, and the ink goes to the data.
 
@@ -57,13 +57,13 @@ A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exac
 vzs.distill(ax, frame=("data", "loose"))
 ```
 
-Under `loose` the spines also stand off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart — a `None` in either slot keeps that spine's mode default:
+Under `loose` the spines also stand off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart; a `None` in either slot keeps that spine's mode default:
 
 ```python
 vzs.distill(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
 ```
 
-`xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `place="beside"` (the default) anchors it level with the top tick label; `place="above"` stacks it over the top tick, its left edge aligned with the tick label's — Doumont's two y-labels, from his "good" and "better" graphs. `labelpad` widens the gap to the tick labels:
+`xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `place="beside"` (the default) anchors it level with the top tick label; `place="above"` stacks it over the top tick, its left edge aligned with the tick label's, Doumont's two y-labels, from his "good" and "better" graphs. `labelpad` widens the gap to the tick labels:
 
 ```python
 vzs.ylabel(ax, "count", labelpad=10)  # beside the top tick (default)
@@ -81,13 +81,13 @@ vzs.line_labels(ax, at="start")  # and/or at its left end
 
 Tick labels get the same care: ticks placed by the data, such as `QuartileLocator`'s, can land arbitrarily close, and where their labels crowd they shift apart just enough to stay readable, keeping their order. The tick marks stay exactly at their values.
 
-To place ticks yourself — `QuartileLocator`, `FeatureLocator`, or any matplotlib locator — set it *after* `distill`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
+To place ticks yourself (`QuartileLocator`, `FeatureLocator`, or any matplotlib locator) set it *after* `distill`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
 
 Linear, log and date axes are handled; set the scale before calling `distill`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 
-Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant — a lone series stays near-black, and colour enters at the second — but any of the eight schemes is one colour string away: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
+Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant (a lone series stays near-black, and colour enters at the second), but any of the eight schemes is one colour string away: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
 
-![Eight rows of Paul Tol's colour schemes — bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light — each swatch labelled with the colour name to type after tol:](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/palettes.png)
+![Eight rows of Paul Tol's colour schemes (bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light), each swatch labelled with the colour name to type after tol:](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/palettes.png)
 
 ## Gallery
 
@@ -127,11 +127,11 @@ Old Faithful's waiting times as a histogram under `frame="data"`, both spines fl
 
 ![Histogram of waiting times between Old Faithful eruptions, two-peaked, with spines running exactly along the bars' span](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/waiting_times.png)
 
-The critical-power model for four rider archetypes on a log time axis, drawn in Tol's `bright` scheme instead of the vibrant default — a qualified colour name (`color="tol:bright.blue"`) reaches any scheme. The curves cross at staggered durations, then flatten toward the right to each rider's sustainable power and crowd within a few percent, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
+The critical-power model for four rider archetypes on a log time axis, drawn in Tol's `bright` scheme instead of the vibrant default; a qualified colour name (`color="tol:bright.blue"`) reaches any scheme. The curves cross at staggered durations, then flatten toward the right to each rider's sustainable power and crowd within a few percent, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
 
 ![Four modelled power-duration curves on a log time axis in Tol's bright scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` — the same idea reduced to one axis's own values — sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine — his "better graph":
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` (the same idea reduced to one axis's own values) sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine, his "better graph":
 
 ```python
 ax.xaxis.set_major_locator(
