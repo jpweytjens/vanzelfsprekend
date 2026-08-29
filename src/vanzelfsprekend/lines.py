@@ -27,10 +27,12 @@ def line_labels(
 ) -> list[Annotation]:
     """Label each line at one end, in place of a legend.
 
-    Text comes from each line's `label=`; lines with matplotlib's
-    auto-generated `_`-prefixed labels or without a finite point are
-    skipped. Labels sit just outside their line's end, each label's ink
-    centred on the line end (measured from the glyph outlines, so the
+    An existing legend is hidden, since the labels replace it, and
+    `restore` brings it back. Text comes from each line's `label=`;
+    lines with matplotlib's auto-generated `_`-prefixed labels or
+    without a finite point are skipped. Labels sit just outside their
+    line's end, each label's ink centred on the line end (measured from
+    the glyph outlines, so the
     font's em-box metrics cannot skew it), and are pushed
     apart vertically only as far as needed to clear each other, keeping
     the end-value order (an exact least-squares stack, re-solved on
@@ -76,6 +78,12 @@ def line_labels(
     if at not in ("start", "end"):
         raise ValueError(f"at must be 'start' or 'end', got {at!r}")
     state = ensure_state(ax)
+    legend = ax.get_legend()
+    if legend is not None:
+        # line_labels replaces the legend, so hide it; snapshot its prior
+        # visibility once so `restore` can bring it back.
+        state.setdefault("legend", {"artist": legend, "visible": legend.get_visible()})
+        legend.set_visible(False)
     sides = state.setdefault("line_labels", {})
     prior = sides.pop(at, None)
     if prior is not None:

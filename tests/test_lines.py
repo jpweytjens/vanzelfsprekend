@@ -339,6 +339,27 @@ def test_line_labels_warns_when_nothing_labelled():
     plt.close(fig)
 
 
+def test_line_labels_hides_the_legend_it_replaces():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    ax.legend()
+    vzs.range_frame(ax)
+    vzs.line_labels(ax)
+    assert not ax.get_legend().get_visible()
+    plt.close(fig)
+
+
+def test_restore_reinstates_the_legend():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    ax.legend()
+    vzs.distill(ax)
+    vzs.line_labels(ax)
+    vzs.restore(ax)
+    assert ax.get_legend().get_visible()
+    plt.close(fig)
+
+
 def test_labels_all_none_is_silent(recwarn):
     fig, ax = plt.subplots()
     x = np.linspace(0.0, 10.0, 50)

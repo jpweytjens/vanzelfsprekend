@@ -175,6 +175,10 @@ def restore(ax: Axes) -> None:
             for text in side["texts"]:
                 text.remove()
 
+    legend_state = state.get("legend")
+    if legend_state is not None:
+        legend_state["artist"].set_visible(legend_state["visible"])
+
     ticks_state = state.get("ticks")
     if ticks_state is not None:
         for key in ("x", "y"):
