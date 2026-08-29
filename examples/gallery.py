@@ -21,18 +21,6 @@ from matplotlib.patches import Rectangle
 
 import vanzelfsprekend as vzs
 
-matplotlib.rcParams.update(
-    {
-        "font.family": "sans-serif",
-        "font.sans-serif": ["Lucida Grande", "DejaVu Sans"],
-        "font.size": 10,
-        "font.weight": 500,  # the sans faces lack a 400 face; ask for 500 directly
-        # "svg.fonttype": "none",  # keep the end labels as real text in the SVG
-        # "figure.facecolor": "none",
-        # "axes.facecolor": "none",
-    }
-)
-
 DATA = Path(__file__).parent / "data"
 OUTPUT = Path(__file__).parent / "output"
 DOCS = Path(__file__).parents[1] / "docs"
