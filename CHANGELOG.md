@@ -11,6 +11,12 @@ Labels:
 - line_labels hides the legend it replaces, rather than leaving both on the axes
 - On a date axis the shared year that ConciseDateFormatter prints once, the "2016" under the ticks, now sits at the right end of the bottom spine where the x label goes, and stacks above an x label when you set one
 
+Colour:
+- palettes.cycle(scheme="ink") builds a colour cycle for set_prop_cycle: the default "ink" keeps every mark on the neutral DATA_INK, while a scheme name cycles that scheme's colours without its bad-data grey, so colour is something you opt into once it tells series apart
+- distill installs that neutral ink cycle, so a series drawn after it stays near-black until you set a scheme cycle yourself; it no longer turns the second mark vibrant orange on its own
+- The three inks are named as roles, not a palette: DATA_INK for the marks, TEXT_INK for the text, LINE_INK for the frame, a grey value hierarchy
+- The CYCLE constant is gone, replaced by cycle() as the single source for the cycle distill installs and the one you install yourself
+
 ## 0.1.0
 
 First release.
