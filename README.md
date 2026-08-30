@@ -85,7 +85,13 @@ To place ticks yourself (`QuartileLocator`, `FeatureLocator`, or any matplotlib 
 
 Linear, log and date axes are handled; set the scale before calling `distill`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. That shared year sits at the right end of the bottom spine, where `xlabel` goes, and stacks above an `xlabel` if you set one. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 
-Colours come from Paul Tol's schemes. The default cycle is ink-first vibrant (a lone series stays near-black, and colour enters at the second), but any of the eight schemes is one colour string away: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
+Colour is a choice you make, not one vanzelfsprekend makes for you. Three greys carry the roles: `DATA_INK` for the marks, `TEXT_INK` for labels and titles, `LINE_INK` for the frame — a value hierarchy, darkest for the data and lightest for the furniture, not a palette. `distill` installs the neutral ink cycle (`vzs.palettes.cycle()`), so a lone series stays near-black and nothing turns colourful on its own. Opt into colour only once it distinguishes series: install a scheme cycle before you draw, and keep the lines solid and directly labelled rather than adding a second, redundant channel:
+
+```python
+ax.set_prop_cycle(vzs.palettes.cycle("muted"))  # then plot; line_labels names them
+```
+
+A single colour comes from Paul Tol's schemes through matplotlib's named-colour registry: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. The two spaces stay distinct: the `tol:` prefix disambiguates a colour name in matplotlib's global registry, while `cycle` takes the bare scheme name (`"muted"`) since it is already in vanzelfsprekend's own namespace. `vzs.palettes.SCHEMES` enumerates them in code, and the reference below names every swatch:
 
 ![Eight rows of Paul Tol's colour schemes (bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light), each swatch labelled with the colour name to type after tol:](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/palettes.png)
 
@@ -202,6 +208,8 @@ Each works on its own, on any matplotlib axes:
 | Name | Does |
 | --- | --- |
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
+| `palettes.cycle(scheme="ink")` | a prop-cycle for `set_prop_cycle`: neutral `DATA_INK`, or a scheme's colours minus its bad-data grey |
+| `palettes.DATA_INK`, `TEXT_INK`, `LINE_INK` | the three role greys: marks, text, frame |
 
 ### Registration
 

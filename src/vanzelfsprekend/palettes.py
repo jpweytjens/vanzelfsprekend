@@ -7,6 +7,10 @@ sequence; `list(SCHEME.values())` is the colour-cycle form. `PALE` and
 `DARK` are meant for text backgrounds and text, not for lines or maps;
 their colour names drop the technote's redundant scheme prefix, so the
 colour is `blue`, reached as `tol:dark.blue`, not `tol:dark.dark_blue`.
+
+The three inks -- `DATA_INK`, `TEXT_INK`, `LINE_INK` -- are roles, not a
+scheme: a grey value hierarchy for the marks, the text and the frame.
+`cycle` turns a chosen scheme, or the neutral ink, into a colour cycle.
 """
 
 from cycler import Cycler, cycler
