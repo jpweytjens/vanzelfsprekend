@@ -95,6 +95,19 @@ A single colour comes from Paul Tol's schemes through matplotlib's named-colour 
 
 ![Eight rows of Paul Tol's colour schemes (bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light), each swatch labelled with the colour name to type after tol:](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/palettes.png)
 
+What you reach for depends on what you bring. Hand a finished plot to `distill` and it trims the frame and greys the furniture, touching nothing you drew — that is the only step. When you draw the plot yourself and want it restrained from the start, three orthogonal knobs shape the ink: `distill` (and `mute`) own the frame, `cycle` owns the colour, and the `vanzelfsprekend` style owns the marks' geometry — lighter lines, smaller marks, quieter titles. Each answers one question and none overlaps, so you compose the ones you want and `distill` is always the last word:
+
+```python
+with plt.style.context("vanzelfsprekend"):  # geometry knob
+    fig, ax = plt.subplots()
+    ax.set_prop_cycle(vzs.palettes.cycle("muted"))  # colour knob (or leave neutral)
+    ax.plot(...)
+    vzs.distill(ax, frame="data")  # frame knob: trim, grey, declutter
+    fig.savefig("figure.png")
+```
+
+Keep the drawing, `distill` and save inside the `style.context`: matplotlib reads these defaults when it renders, not when you call `plot`, so leaving the context early would drop them before the figure is drawn.
+
 ## Gallery
 
 Every figure below comes from [a single script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in [`examples/data`](https://github.com/jpweytjens/vanzelfsprekend/tree/main/examples/data), each file naming its source and licence; what is not a measurement says so, from Anscombe's hand-built quartet to the modelled power profiles.
@@ -210,6 +223,12 @@ Each works on its own, on any matplotlib axes:
 | `palettes` | Tol's schemes as constants; registers the `tol:` colour names |
 | `palettes.cycle(scheme="ink")` | a prop-cycle for `set_prop_cycle`: neutral `DATA_INK`, or a scheme's colours minus its bad-data grey |
 | `palettes.DATA_INK`, `TEXT_INK`, `LINE_INK` | the three role greys: marks, text, frame |
+
+### Style
+
+| Name | Does |
+| --- | --- |
+| `"vanzelfsprekend"` | a registered matplotlib style (import adds it) for `plt.style.use`/`context`: lighter lines, smaller marks, quieter titles; sets no colour or frame property |
 
 ### Registration
 
