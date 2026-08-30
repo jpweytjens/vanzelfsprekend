@@ -207,13 +207,13 @@ def test_restore_after_repeated_range_frame_restores_original_locator():
     plt.close(fig)
 
 
-def test_distill_mutes_and_installs_ink_first_cycle():
+def test_distill_mutes_and_installs_ink_cycle():
     fig, ax = plt.subplots()
     vzs.distill(ax)
     (first,) = ax.plot([0, 1], [0, 1])
     (second,) = ax.plot([0, 1], [1, 0])
     assert to_rgba(first.get_color()) == to_rgba(vzs.palettes.DATA_INK)
-    assert to_rgba(second.get_color()) == to_rgba(vzs.palettes.VIBRANT["orange"])
+    assert to_rgba(second.get_color()) == to_rgba(vzs.palettes.DATA_INK)
     assert ax.spines["left"].get_edgecolor() == to_rgba(vzs.palettes.LINE_INK)
     plt.close(fig)
 

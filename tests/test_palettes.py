@@ -19,12 +19,30 @@ def test_scheme_shapes_pin_the_technote():
     assert palettes.SCHEMES["vibrant"] is palettes.VIBRANT
 
 
-def test_inks_and_cycle():
+def test_inks():
     assert palettes.DATA_INK == "#333333"
     assert palettes.TEXT_INK == palettes.DARK["grey"] == "#555555"
     assert palettes.LINE_INK == "#999999"
-    assert palettes.CYCLE[0] == palettes.DATA_INK
-    assert palettes.CYCLE[1:] == tuple(palettes.VIBRANT.values())
+
+
+def test_cycle_defaults_to_ink():
+    cycle = palettes.cycle()
+    assert [entry["color"] for entry in cycle] == [palettes.DATA_INK]
+    assert palettes.cycle("ink") == cycle
+
+
+def test_cycle_of_scheme_drops_the_bad_data_grey():
+    cycle = palettes.cycle("muted")
+    colours = [entry["color"] for entry in cycle]
+    assert colours == [
+        hex_colour for name, hex_colour in palettes.MUTED.items() if name != "pale_grey"
+    ]
+    assert palettes.MUTED["pale_grey"] not in colours
+
+
+def test_cycle_of_unknown_scheme_raises():
+    with pytest.raises(ValueError, match="mauve"):
+        palettes.cycle("mauve")
 
 
 def test_bare_tol_names_resolve_to_vibrant():

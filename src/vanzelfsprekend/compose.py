@@ -38,11 +38,12 @@ def distill(
     The top-level entry point. Today it applies `range_frame` with good
     defaults; it is the seam where later styling and mark helpers will be
     bundled. Takes the same arguments as `range_frame`. It also greys the
-    axis furniture and installs the ink-first Tol colour cycle. A custom
-    per-axes cycle set before `distill` is restored to the rc default, not
-    recovered. Where tick labels crowd, they drift apart just enough to
-    stay readable, keeping their order; the tick marks stay exactly at
-    their values.
+    axis furniture and installs the neutral ink cycle, so a mark drawn
+    after `distill` is `DATA_INK` until you opt into colour with a scheme
+    cycle of your own (`palettes.cycle`). A custom per-axes cycle set
+    before `distill` is restored to the rc default, not recovered. Where
+    tick labels crowd, they drift apart just enough to stay readable,
+    keeping their order; the tick marks stay exactly at their values.
 
     Returns
     -------
@@ -56,7 +57,7 @@ def distill(
     state = ensure_state(ax)
     if "cycle" not in state:
         state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
-    ax.set_prop_cycle(color=palettes.CYCLE)
+    ax.set_prop_cycle(palettes.cycle("ink"))
     state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
     add_applier(ax, "tick_labels", _apply_tick_labels)
     add_applier(ax, "date_offset", _apply_date_offset)

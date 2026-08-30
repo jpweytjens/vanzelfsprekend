@@ -9,6 +9,7 @@ their colour names drop the technote's redundant scheme prefix, so the
 colour is `blue`, reached as `tol:dark.blue`, not `tol:dark.dark_blue`.
 """
 
+from cycler import Cycler, cycler
 from matplotlib.colors import get_named_colors_mapping
 
 BRIGHT = {
@@ -96,7 +97,30 @@ SCHEMES = {
 DATA_INK = "#333333"
 TEXT_INK = DARK["grey"]
 LINE_INK = "#999999"
-CYCLE = (DATA_INK, *VIBRANT.values())
+
+
+def cycle(scheme: str = "ink") -> Cycler:
+    """Build a colour cycle for `ax.set_prop_cycle`, keyed by drawing intent.
+
+    The default `"ink"` gives a one-colour cycle of `DATA_INK`, so every
+    mark drawn under it is neutral ink: reach for it when colour carries
+    nothing, as with a lone series. Any `SCHEMES` key gives that scheme's
+    colours in the technote's picking order, dropping its bad-data grey
+    (`grey`/`pale_grey`), which is not a series colour: reach for a scheme
+    only once colour distinguishes the series.
+    """
+    if scheme == "ink":
+        colours = [DATA_INK]
+    elif scheme in SCHEMES:
+        colours = [
+            hex_colour
+            for name, hex_colour in SCHEMES[scheme].items()
+            if name not in {"grey", "pale_grey"}
+        ]
+    else:
+        choices = ", ".join(["ink", *SCHEMES])
+        raise ValueError(f"unknown scheme {scheme!r}; choose one of {choices}")
+    return cycler(color=colours)
 
 
 def _register_named_colors() -> None:
