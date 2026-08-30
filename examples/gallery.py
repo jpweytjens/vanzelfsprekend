@@ -155,10 +155,10 @@ def waiting_times() -> None:
 # staggered durations instead of a single knot. The curves are the
 # model, not riders.
 ARCHETYPES = {
-    "sprinter": (300, 28000, 1800, "tol:bright.blue"),
-    "puncheur": (345, 33000, 1500, "tol:bright.red"),
-    "climber": (380, 9500, 1220, "tol:bright.green"),
-    "time-trialist": (415, 10000, 1080, "tol:bright.yellow"),
+    "sprinter": (300, 28000, 1800),
+    "puncheur": (345, 33000, 1500),
+    "climber": (380, 9500, 1220),
+    "time-trialist": (415, 10000, 1080),
 }
 
 
@@ -168,9 +168,12 @@ def power_profiles() -> None:
     fig, ax = plt.subplots(figsize=(7, 3.5))
     ax.set_xscale("log")
     vzs.distill(ax, frame=("data", "nice"))
-    for label, (cp, w_prime, p_max, color) in ARCHETYPES.items():
+    # Four peer series, so opt into colour: the muted scheme carries the
+    # distinction, and line_labels names each curve in its own colour.
+    ax.set_prop_cycle(vzs.palettes.cycle("muted"))
+    for label, (cp, w_prime, p_max) in ARCHETYPES.items():
         power = cp + w_prime / (seconds + w_prime / (p_max - cp))
-        ax.plot(seconds, power, color=color, linewidth=1.2, label=label)
+        ax.plot(seconds, power, linewidth=1.2, label=label)
     vzs.line_labels(ax)
     vzs.xlabel(ax, "duration (s)")
     vzs.ylabel(ax, "power (W)")
