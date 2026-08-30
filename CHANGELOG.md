@@ -17,6 +17,10 @@ Colour:
 - The three inks are named as roles, not a palette: DATA_INK for the marks, TEXT_INK for the text, LINE_INK for the frame, a grey value hierarchy
 - The CYCLE constant is gone, replaced by cycle() as the single source for the cycle distill installs and the one you install yourself
 
+Style:
+- Import registers a "vanzelfsprekend" matplotlib style, reached with plt.style.use("vanzelfsprekend") or plt.style.context: lighter lines, smaller marks and quieter titles for the plot you draw yourself, the geometry companion to distill's frame and cycle's colour
+- The style stays in its lane: it sets no colour cycle and no spine or grid property, so the frame, colour and geometry knobs compose without overlap
+
 ## 0.1.0
 
 First release.
