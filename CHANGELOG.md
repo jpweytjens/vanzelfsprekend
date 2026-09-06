@@ -1,52 +1,43 @@
 # Changelog
 
-## Unreleased
-
-Furniture:
-- Gridlines come off with the rest of the axis furniture, so a plot drawn under a grid theme like seaborn's whitegrid distills to a clean frame
-- The bottom and left tick marks are kept even when a theme has switched them off, so each tick label still has a mark to sit against
-
-Labels:
-- line_labels takes a labels= list to set the text itself, for plots where the drawing library keeps the legend text on a separate artist from the line, as seaborn does; with no line to label it now warns instead of doing nothing
-- line_labels hides the legend it replaces, rather than leaving both on the axes
-- On a date axis the shared year that ConciseDateFormatter prints once, the "2016" under the ticks, now sits at the right end of the bottom spine where the x label goes, and stacks above an x label when you set one
-
-Colour:
-- palettes.cycle(scheme="ink") builds a colour cycle for set_prop_cycle: the default "ink" keeps every mark on the neutral DATA_INK, while a scheme name cycles that scheme's colours without its bad-data grey, so colour is something you opt into once it tells series apart
-- distill installs that neutral ink cycle, so a series drawn after it stays near-black until you set a scheme cycle yourself; it no longer turns the second mark vibrant orange on its own
-- The three inks are named as roles, not a palette: DATA_INK for the marks, TEXT_INK for the text, LINE_INK for the frame, a grey value hierarchy
-- The CYCLE constant is gone, replaced by cycle() as the single source for the cycle distill installs and the one you install yourself
-
-Style:
-- Import registers a "vanzelfsprekend" matplotlib style, reached with plt.style.use("vanzelfsprekend") or plt.style.context: lighter lines, smaller marks and quieter titles for the plot you draw yourself, the geometry companion to distill's frame and cycle's colour
-- The style stays in its lane: it sets no colour cycle and no spine or grid property, so the frame, colour and geometry knobs compose without overlap
-
 ## 0.1.0
 
 First release.
 
 Range frame:
-- The top and right spines are gone, and the two that remain end at the data, so each spine shows its variable's span
-- Three ways to end them: at the outermost ticks (the default), at the exact data extremes, or at round numbers just beyond the data, settable per axis
-- The remaining spines can stand off the data by a chosen distance, set per axis, so a loose frame reads as a reference scale rather than the data's own edge
+- distill(ax) turns the box around a matplotlib plot into two spines that end at the data, so each spine shows its variable's span
+- The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis
+- A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view limits
-- Works on linear, log and date axes; any other scale is left alone with a warning
+- Linear, log and date axes are handled; anything else is left untouched with a warning
+- Gridlines come off with the rest of the furniture, so a plot drawn under a grid theme like seaborn's whitegrid distills to a clean frame, and the bottom and left tick marks stay even when the theme had switched them off
 
 Ticks:
-- Ticks can mark meaningful values instead of round numbers: the five-number summary (QuartileLocator), any reduction of one axis such as its mean (SummaryLocator), or a feature of the paired data such as a peak, x[argmax(y)] (FeatureLocator)
-- A feature or reduction is a callable or a fixed number, so a constant mark such as a baseline sits beside a computed one
+- Ticks can mark meaningful values instead of round numbers: the data's minimum, quartiles and maximum, a summary of one axis such as its mean, or a feature of the pair such as a peak
+- A feature or summary is a callable or a fixed number, so a constant mark such as a baseline sits beside a computed one
+- Tick labels that would crowd drift apart just far enough to stay readable; the marks stay at their values
+- Tick marks point in or out, or disappear
 
 Labels:
-- Axis labels sit at the ends of the spines, and the y label reads horizontally at the top instead of rotated along the side
-- The horizontal y label sits beside the top tick, or with place="above" stacks over it with left edges aligned, Doumont's good and better graphs
-- The x label ends at the spine, or with flush=True its right edge lines up with the last tick label instead, for a clean right margin
-- Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable
+- Axis labels sit at the ends of the spines, the y label horizontal at the top rather than rotated along the side
+- The y label sits beside the top tick, or stacks above it with left edges aligned, Doumont's good and better graphs
+- The x label ends at the spine, or lines up its right edge with the last tick label for a clean right margin
+- Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable, keeping their order
+- Lines can be labelled at their starts instead, slopegraph-style, and a labels= list names them when the drawing library keeps the legend text away from the line, as seaborn does
+- On a date axis the year the tick labels share sits at the right end of the bottom spine, and stacks above an x label when you set one
+
+Small multiples:
+- One call treats a grid of axes on a shared scale, per figure, row or column, and keeps spines, ticks and axis labels only on the left column and bottom row
 
 Colour:
 - The axis furniture fades to grey so the ink goes to the data
-- Paul Tol's colour schemes as the default cycle: a single line stays near-black, colour arrives with the second
+- Marks drawn after distill stay near-black; colour is opted into with a cycle of Paul Tol's colour-blind-safe schemes, minus each scheme's bad-data grey
 - The scheme colours work anywhere matplotlib takes a colour, as tol:orange and friends
+- The three greys are named by role: one for marks, one for text, one for the frame
+
+Style:
+- A "vanzelfsprekend" matplotlib style for the plot you draw yourself: lighter lines, smaller marks, quieter titles. It sets no colour or frame property, so it composes with distill and the colour cycle without overlap
 
 Undo:
-- restore(ax) puts the axes back exactly as they were before distill(ax)
-- register() adds a vzs accessor to every axes, so ax.vzs.distill(), ax.vzs.set_xlabel() and the other entry points work anywhere
+- restore(ax) puts the axes back exactly as they were
+- An ax.vzs accessor on every axes, so ax.vzs.distill(), ax.vzs.set_xlabel() and the other entry points work anywhere
