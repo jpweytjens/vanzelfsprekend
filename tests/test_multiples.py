@@ -467,3 +467,14 @@ def test_date_grid_ticks_span_the_union():
     labels = [t.get_text() for t in axes[0].xaxis.get_ticklabels()]
     assert any(labels)  # ConciseDateFormatter still renders
     plt.close(fig)
+
+
+def test_empty_panel_beside_date_panel_is_accepted():
+    import datetime as dt
+
+    fig, axes = plt.subplots(1, 2)
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(5)]
+    axes[0].plot(days, range(5))
+    vzs.small_multiples(axes)  # must not raise: the empty panel has no say
+    fig.canvas.draw()
+    plt.close(fig)

@@ -10,7 +10,13 @@ from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.compose import distill
 from vanzelfsprekend.frame import _is_date_converter
-from vanzelfsprekend.group import BreaksLocator, GroupLocator, data_union, view_union
+from vanzelfsprekend.group import (
+    BreaksLocator,
+    GroupLocator,
+    axis_kinds,
+    data_union,
+    view_union,
+)
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
@@ -429,30 +435,20 @@ def _scale_groups(
     return groups
 
 
-def _axis_kind(axis: Axis) -> tuple[str, bool, bool]:
-    scale = axis.get_scale()
-    converter = axis.get_converter()
-    is_date = converter is not None and _is_date_converter(converter)
-    supported = scale in ("linear", "log") and (converter is None or is_date)
-    return (scale, is_date, supported)
-
-
 def _check_group_agreement(
     groups: dict[str, dict[object, list[Axes]]],
 ) -> dict[tuple[str, object], bool]:
     treated: dict[tuple[str, object], bool] = {}
     for name, per_key in groups.items():
         for key, members in per_key.items():
-            kinds = {
-                _axis_kind(ax.xaxis if name == "x" else ax.yaxis) for ax in members
-            }
+            kinds = axis_kinds(members, name)
             if len(kinds) > 1:
                 raise ValueError(
                     f"panels in one {name} group disagree on scale or "
                     f"date-ness: {sorted(k[:2] for k in kinds)}; a common "
                     "scale across them means nothing"
                 )
-            treated[(name, key)] = kinds.pop()[2]
+            treated[(name, key)] = kinds.pop().supported
     return treated
 
 

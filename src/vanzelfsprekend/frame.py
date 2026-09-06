@@ -2,7 +2,7 @@
 
 import warnings
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any, NamedTuple, cast
 
 import matplotlib.dates as mdates
 import numpy as np
@@ -172,6 +172,23 @@ def _is_date_converter(converter: object) -> bool:
     if switchable is not None:
         date_converters += (switchable,)
     return isinstance(converter, date_converters)
+
+
+class AxisKind(NamedTuple):
+    """What a locator needs to know about an axis: scale, date-ness, support."""
+
+    scale: str
+    is_date: bool
+    supported: bool
+
+
+def axis_kind(axis: Axis) -> AxisKind:
+    """Read the kind of one axis: its scale, whether it holds dates, and support."""
+    scale = axis.get_scale()
+    converter = axis.get_converter()
+    is_date = converter is not None and _is_date_converter(converter)
+    supported = scale in ("linear", "log") and (converter is None or is_date)
+    return AxisKind(scale, is_date, supported)
 
 
 def _apply_frame(ax: Axes) -> bool:

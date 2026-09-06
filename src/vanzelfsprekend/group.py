@@ -12,6 +12,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.ticker import Locator
 
+from vanzelfsprekend.frame import AxisKind, axis_kind
 from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
 
 BreaksLocator = TalbotLocator | LogBreaksLocator | DateBreaksLocator
@@ -96,3 +97,16 @@ class GroupLocator(Locator):
         return self._inner.view_limits_over(
             vmin, vmax, data_union(self._members, self._name)
         )
+
+
+def axis_kinds(members: Sequence[Axes], name: str) -> set[AxisKind]:
+    """Kinds reported along `name` by the members that hold data.
+
+    A member with no finite data has no converter and no say, so it
+    follows the rest. When no member holds data, every member is heard,
+    which is one plain kind: shared axes share their scale, and no data
+    means no converter.
+    """
+    axes = [ax.xaxis if name == "x" else ax.yaxis for ax in members]
+    with_data = [axis for axis in axes if np.isfinite(axis.get_data_interval()).all()]
+    return {axis_kind(axis) for axis in (with_data or axes)}

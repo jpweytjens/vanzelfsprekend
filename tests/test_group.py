@@ -1,8 +1,11 @@
+import datetime as dt
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 import vanzelfsprekend as vzs
-from vanzelfsprekend.group import GroupLocator
+from vanzelfsprekend.frame import AxisKind
+from vanzelfsprekend.group import GroupLocator, axis_kinds
 
 
 def test_group_locator_computes_ticks_from_union():
@@ -39,4 +42,30 @@ def test_group_locator_view_limits_cover_the_union():
     grouped = GroupLocator(inner, list(axes), "x")
     assert grouped.view_limits(0, 1) == (0.0, 12.5)
     assert inner.view_limits(0, 1) == (0.0, 1.0)
+    plt.close(fig)
+
+
+def test_axis_kinds_ignores_members_without_data():
+    fig, axes = plt.subplots(1, 2)
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(5)]
+    axes[0].plot(days, range(5))
+    assert axis_kinds(list(axes), "x") == {AxisKind("linear", True, True)}
+    plt.close(fig)
+
+
+def test_axis_kinds_reports_a_real_disagreement():
+    fig, axes = plt.subplots(1, 2)
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(5)]
+    axes[0].plot(days, range(5))
+    axes[1].plot(range(5), range(5))
+    assert axis_kinds(list(axes), "x") == {
+        AxisKind("linear", True, True),
+        AxisKind("linear", False, True),
+    }
+    plt.close(fig)
+
+
+def test_axis_kinds_falls_back_to_all_members_when_none_has_data():
+    fig, axes = plt.subplots(1, 2)
+    assert axis_kinds(list(axes), "x") == {AxisKind("linear", False, True)}
     plt.close(fig)
