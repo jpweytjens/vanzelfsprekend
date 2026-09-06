@@ -3,87 +3,15 @@
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
-import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis, Ticker
 from matplotlib.gridspec import GridSpecBase, SubplotSpec
-from matplotlib.ticker import Locator
 
 from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.compose import distill
 from vanzelfsprekend.frame import _is_date_converter
+from vanzelfsprekend.group import GroupLocator, data_union, view_union
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-
-
-def _data_union(axes: Sequence[Axes], name: str) -> tuple[float, float] | None:
-    """Union of the members' data intervals along `name` (`'x'` or `'y'`).
-
-    Log axes substitute `minpos` for a nonpositive minimum, mirroring
-    the locators' own reading. Members with no finite data are skipped;
-    returns `None` when none remain or the union is degenerate.
-    """
-    lo, hi = np.inf, -np.inf
-    for ax in axes:
-        axis = ax.xaxis if name == "x" else ax.yaxis
-        dmin, dmax = axis.get_data_interval()
-        if axis.get_scale() == "log" and dmin <= 0:
-            dmin = axis.get_minpos()
-        if not np.isfinite([dmin, dmax]).all():
-            continue
-        lo, hi = min(lo, dmin), max(hi, dmax)
-    if not np.isfinite([lo, hi]).all() or lo == hi:
-        return None
-    return (lo, hi)
-
-
-class _GroupLocator(Locator):
-    """Delegate tick placement to `inner`, fed the group's data union.
-
-    Installed on a panel's axis in place of the locator `distill` chose,
-    so ticks are recomputed on every draw from the union of the group
-    members' data instead of the one panel's. Everything else defers to
-    `inner`, whose own axis binding is left in place so a formatter
-    constructed around it (`ConciseDateFormatter`) keeps working.
-    """
-
-    def __init__(self, inner: Locator, members: Sequence[Axes], name: str) -> None:
-        self._inner = inner
-        self._members = members
-        self._name = name
-
-    def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
-        union = _data_union(self._members, self._name)
-        if union is None:
-            return np.asarray(self._inner())
-        return np.asarray(self._inner.tick_values(*union))
-
-    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
-        return np.asarray(self._inner.tick_values(vmin, vmax))
-
-    def nonsingular(  # ty: ignore[invalid-method-override]
-        self, vmin: float, vmax: float
-    ) -> tuple[float, float]:
-        return self._inner.nonsingular(vmin, vmax)
-
-    def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
-        return self._inner.view_limits(vmin, vmax)
-
-
-def _view_union(members: Sequence[Axes], name: str) -> tuple[float, float] | None:
-    """Union of the members' view intervals along `name` (`'x'` or `'y'`).
-
-    Each member's interval is sorted first so an inverted axis doesn't
-    poison the union. Returns `None` when the result would be empty or
-    degenerate.
-    """
-    lo, hi = np.inf, -np.inf
-    for ax in members:
-        axis = ax.xaxis if name == "x" else ax.yaxis
-        vmin, vmax = sorted(axis.get_view_interval())
-        lo, hi = min(lo, vmin), max(hi, vmax)
-    if not np.isfinite([lo, hi]).all() or lo == hi:
-        return None
-    return (lo, hi)
 
 
 def _apply_multiples(ax: Axes) -> bool:
@@ -92,14 +20,14 @@ def _apply_multiples(ax: Axes) -> bool:
     Sets each treated axis' view limits to the union of its scale
     group's members, so every panel in the group converges to the same
     limits. Spine bounds stay with the frame applier; tick positions
-    with the wrapped `_GroupLocator`.
+    with the wrapped `GroupLocator`.
     """
     state = get_state(ax)
     if state is None or "multiples" not in state:
         return False
     changed = False
     for name, members in state["multiples"]["groups"].items():
-        union = _view_union(members, name)
+        union = view_union(members, name)
         if union is None:
             continue
         axis = ax.xaxis if name == "x" else ax.yaxis
@@ -329,7 +257,7 @@ def small_multiples(
             frame_state = ensure_state(ax)["frame"]
             if name in frame_state["active"]:
                 axis.set_major_locator(
-                    _GroupLocator(axis.get_major_locator(), members, name)
+                    GroupLocator(axis.get_major_locator(), members, name)
                 )
         state = ensure_state(ax)
         state["multiples"]["groups"] = panel_groups
@@ -354,7 +282,7 @@ def small_multiples(
                 # tick floating past a spine whose own row/column falls short.
                 members = panel_groups[name]
                 intervals = ensure_state(ax)["frame"].setdefault("intervals", {})
-                intervals[name] = lambda members=members, name=name: _data_union(
+                intervals[name] = lambda members=members, name=name: data_union(
                     members, name
                 )
             else:
@@ -408,7 +336,7 @@ def _teardown_grid(grid: dict) -> None:
         for name in state["multiples"]["groups"]:
             axis = ax.xaxis if name == "x" else ax.yaxis
             locator = axis.get_major_locator()
-            if isinstance(locator, _GroupLocator):
+            if isinstance(locator, GroupLocator):
                 axis.set_major_locator(locator._inner)
         ax.set_xlim(snap["limits"]["x"])
         ax.set_ylim(snap["limits"]["y"])
