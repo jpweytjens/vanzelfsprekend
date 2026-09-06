@@ -12,6 +12,10 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.ticker import Locator
 
+from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
+
+BreaksLocator = TalbotLocator | LogBreaksLocator | DateBreaksLocator
+
 
 def data_union(members: Sequence[Axes], name: str) -> tuple[float, float] | None:
     """Union of the members' data intervals along `name` (`'x'` or `'y'`).
@@ -58,10 +62,14 @@ class GroupLocator(Locator):
     so ticks are recomputed on every draw from the union of the group
     members' data instead of the one panel's. Everything else defers to
     `inner`, whose own axis binding is left in place so a formatter
-    constructed around it (`ConciseDateFormatter`) keeps working.
+    constructed around it (`ConciseDateFormatter`) keeps working. View
+    limits are computed over the union as well, so a loose group
+    autoscales to the union's covering breaks on the first draw.
     """
 
-    def __init__(self, inner: Locator, members: Sequence[Axes], name: str) -> None:
+    def __init__(
+        self, inner: BreaksLocator, members: Sequence[Axes], name: str
+    ) -> None:
         self._inner = inner
         self._members = members
         self._name = name
@@ -84,5 +92,7 @@ class GroupLocator(Locator):
         return self._inner.nonsingular(vmin, vmax)
 
     def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
-        """Delegate view limits to the inner locator."""
-        return self._inner.view_limits(vmin, vmax)
+        """View limits with the loose span covering the group's data union."""
+        return self._inner.view_limits_over(
+            vmin, vmax, data_union(self._members, self._name)
+        )

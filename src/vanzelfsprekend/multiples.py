@@ -1,7 +1,7 @@
 """Small multiples: one treatment for a grid of axes on a shared scale."""
 
 from collections.abc import Iterable, Sequence
-from typing import Literal
+from typing import Literal, cast
 
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis, Ticker
@@ -10,7 +10,7 @@ from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.compose import distill
 from vanzelfsprekend.frame import _is_date_converter
-from vanzelfsprekend.group import GroupLocator, data_union, view_union
+from vanzelfsprekend.group import BreaksLocator, GroupLocator, data_union, view_union
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
@@ -257,7 +257,11 @@ def small_multiples(
             frame_state = ensure_state(ax)["frame"]
             if name in frame_state["active"]:
                 axis.set_major_locator(
-                    GroupLocator(axis.get_major_locator(), members, name)
+                    GroupLocator(
+                        cast("BreaksLocator", axis.get_major_locator()),
+                        members,
+                        name,
+                    )
                 )
         state = ensure_state(ax)
         state["multiples"]["groups"] = panel_groups

@@ -154,11 +154,39 @@ class TalbotLocator(Locator):
         tuple of float
             Lower and upper view limits.
         """
+        interval = None
+        if self.axis is not None:
+            dmin, dmax = self.axis.get_data_interval()
+            interval = (float(dmin), float(dmax))
+        return self.view_limits_over(vmin, vmax, interval)
+
+    def view_limits_over(
+        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+    ) -> tuple[float, float]:
+        """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
+
+        The body of `view_limits` with the data interval passed in instead
+        of read from `self.axis`, so a group of axes can be covered as one:
+        `interval` is the data span the loose view must enclose, or `None`
+        when no data is known.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            The proposed view limits.
+        interval : tuple of float, optional
+            The data interval a loose locator covers edge to edge.
+
+        Returns
+        -------
+        tuple of float
+            Lower and upper view limits.
+        """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
 
-        if self._loose and self.axis is not None:
-            dmin, dmax = self.axis.get_data_interval()
+        if self._loose and interval is not None:
+            dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
                     ticks = self._cover((dmin, dmax))
@@ -285,13 +313,41 @@ class LogBreaksLocator(Locator):
         tuple of float
             Lower and upper view limits.
         """
-        if vmin > vmax:
-            vmin, vmax = vmax, vmin
-
-        if self._loose and self.axis is not None:
+        interval = None
+        if self.axis is not None:
             dmin, dmax = self.axis.get_data_interval()
             if dmin <= 0:
                 dmin = self.axis.get_minpos()
+            interval = (float(dmin), float(dmax))
+        return self.view_limits_over(vmin, vmax, interval)
+
+    def view_limits_over(
+        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+    ) -> tuple[float, float]:
+        """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
+
+        The body of `view_limits` with the data interval passed in instead
+        of read from `self.axis`, so a group of axes can be covered as one:
+        `interval` is the data span the loose view must enclose, or `None`
+        when no data is known.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            The proposed view limits.
+        interval : tuple of float, optional
+            The data interval a loose locator covers edge to edge.
+
+        Returns
+        -------
+        tuple of float
+            Lower and upper view limits.
+        """
+        if vmin > vmax:
+            vmin, vmax = vmax, vmin
+
+        if self._loose and interval is not None:
+            dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and 0 < dmin < dmax:
                 try:
                     ticks = np.asarray(self._breaks((dmin, dmax)), dtype=float)
@@ -405,11 +461,40 @@ class DateBreaksLocator(Locator):
         tuple of float
             Lower and upper view limits.
         """
+        interval = None
+        if self.axis is not None:
+            dmin, dmax = self.axis.get_data_interval()
+            interval = (float(dmin), float(dmax))
+        return self.view_limits_over(vmin, vmax, interval)
+
+    def view_limits_over(
+        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+    ) -> tuple[float, float]:
+        """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
+
+        The body of `view_limits` with the data interval passed in instead
+        of read from `self.axis`, so a group of axes can be covered as one:
+        `interval` is the data span the loose view must enclose, or `None`
+        when no data is known.
+
+        Parameters
+        ----------
+        vmin, vmax : float
+            The proposed view limits, in matplotlib date units.
+        interval : tuple of float, optional
+            The data interval a loose locator covers edge to edge, in
+            matplotlib date units.
+
+        Returns
+        -------
+        tuple of float
+            Lower and upper view limits.
+        """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
 
-        if self._loose and self.axis is not None:
-            dmin, dmax = self.axis.get_data_interval()
+        if self._loose and interval is not None:
+            dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
                     ticks = self._covering_breaks(dmin, dmax)

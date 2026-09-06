@@ -451,3 +451,11 @@ def test_summary_locator_without_finite_data_raises(values):
 def test_summary_locator_accepts_constant_positions():
     locator = SummaryLocator([1.0, 2.0, 3.0], [0, np.max])
     np.testing.assert_allclose(locator(), [0.0, 3.0])
+
+
+def test_view_limits_over_takes_the_interval_it_is_given():
+    loose = TalbotLocator(loose=True)
+    assert loose.view_limits_over(0, 1, (0, 11)) == (0.0, 12.5)
+    assert loose.view_limits_over(0, 1, None) == (0.0, 1.0)
+    plain = TalbotLocator()
+    assert plain.view_limits_over(0, 1, (0, 11)) == (0.0, 1.0)
