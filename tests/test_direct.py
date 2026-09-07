@@ -283,49 +283,50 @@ def resonance(figsize=(5, 4)):
 NONE = (None, "None", "", " ")
 
 
-def assert_no_marker_inside(boxes, pts, r, what):
-    for box in boxes:
-        grown = Bbox.from_extents(box.x0 - r, box.y0 - r, box.x1 + r, box.y1 + r)
+def assert_no_marker_inside(boxes, dxdy, pts, what):
+    for box, (dx, dy) in zip(boxes, dxdy, strict=True):
+        grown = Bbox.from_extents(box.x0 - dx, box.y0 - dy, box.x1 + dx, box.y1 + dy)
         hits = [p for p in pts if np.isfinite(p).all() and grown.contains(*p)]
         assert not hits, f"{box} covers a marker of {what}"
 
 
+# The solver's contract is directional: gap clearance along the sliding axis
+# only; across it the anchor sits on the ink, so only the physical extent applies.
 def assert_clear_of_ink(ax, texts):
     renderer = ax.figure.canvas.get_renderer()
     boxes = [t.get_window_extent(renderer) for t in texts]
     px_per_pt = ax.figure.dpi / 72.0
     gap_px = 2.0 * px_per_pt
     slack = 0.05  # px: exact-clearance placements are ties, decided by float noise
+    along_y = [t.get_va() == "baseline" for t in texts]
+
+    def margins(extent):
+        along = extent + gap_px - slack
+        across = extent - slack
+        return [(across, along) if y else (along, across) for y in along_y]
+
     state = get_state(ax)
     above_text = (state or {}).get("labels", {}).get("ylabel_above_text")
     for line in ax.get_lines():
         path = line.get_path().transformed(line.get_transform())
         if line.get_linestyle() not in NONE:
-            m = line.get_linewidth() / 2 * px_per_pt + gap_px - slack
-            for box in boxes:
+            half_lw = line.get_linewidth() / 2 * px_per_pt
+            for box, (dx, dy) in zip(boxes, margins(half_lw), strict=True):
                 grown = Bbox.from_extents(
-                    box.x0 - m, box.y0 - m, box.x1 + m, box.y1 + m
+                    box.x0 - dx, box.y0 - dy, box.x1 + dx, box.y1 + dy
                 )
                 assert not path.intersects_bbox(grown, filled=False), (
                     f"{box} crosses {line.get_label()}"
                 )
         if line.get_marker() not in NONE:
-            r = (
-                (line.get_markersize() + line.get_markeredgewidth()) / 2 * px_per_pt
-                + gap_px
-                - slack
-            )
-            assert_no_marker_inside(boxes, path.vertices, r, line.get_label())
+            r = (line.get_markersize() + line.get_markeredgewidth()) / 2 * px_per_pt
+            assert_no_marker_inside(boxes, margins(r), path.vertices, line.get_label())
     for collection in ax.collections:
         pts = collection.get_offset_transform().transform(collection.get_offsets())
         edges = np.asarray(collection.get_linewidths(), dtype=float)
         edge = edges.max() if edges.size else 0.0
-        r = (
-            (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt
-            + gap_px
-            - slack
-        )
-        assert_no_marker_inside(boxes, pts, r, collection.get_label())
+        r = (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt
+        assert_no_marker_inside(boxes, margins(r), pts, collection.get_label())
     for text in ax.texts:
         if text in texts or text is above_text:
             continue
