@@ -3,7 +3,7 @@
 `distill` reads a group from matplotlib's share groupers; `small_multiples`
 reads one from the gridspec and `compare`. Both hand their groups to this
 module, which unions the members' data so the frame and the locators span
-it. Nothing here is public.
+it. Nothing here is exported; `__init__` leaves this module alone.
 """
 
 import warnings
@@ -229,7 +229,7 @@ def treat(
         state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
         add_applier(ax, "tick_labels", _apply_tick_labels)
         add_applier(ax, "date_offset", _apply_date_offset)
-        add_applier(ax, "limits", apply_limits)
+        add_applier(ax, "limits", _apply_limits)
     for ax in unit:
         if ensure_state(ax)["group"]["members"]:
             ax.autoscale_view()
@@ -237,7 +237,7 @@ def treat(
         run_appliers(ax)
 
 
-def apply_limits(ax: Axes) -> bool:
+def _apply_limits(ax: Axes) -> bool:
     """Pin each pinned axis of `ax` to its group's view union; the sole writer.
 
     Only the axes recorded in `state["group"]["members"]` are pinned, so

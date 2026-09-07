@@ -174,7 +174,7 @@ class TalbotLocator(Locator):
         ----------
         vmin, vmax : float
             The proposed view limits.
-        interval : tuple of float, optional
+        interval : tuple of float or None
             The data interval a loose locator covers edge to edge.
 
         Returns
@@ -335,7 +335,7 @@ class LogBreaksLocator(Locator):
         ----------
         vmin, vmax : float
             The proposed view limits.
-        interval : tuple of float, optional
+        interval : tuple of float or None
             The data interval a loose locator covers edge to edge.
 
         Returns
@@ -481,7 +481,7 @@ class DateBreaksLocator(Locator):
         ----------
         vmin, vmax : float
             The proposed view limits, in matplotlib date units.
-        interval : tuple of float, optional
+        interval : tuple of float or None
             The data interval a loose locator covers edge to edge, in
             matplotlib date units.
 

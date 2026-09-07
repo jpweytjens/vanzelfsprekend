@@ -185,12 +185,26 @@ def install_frame(
 ) -> None:
     """Install the frame on `ax` given each axis's kind.
 
-    `kinds[name]` is `None` for an axis the caller decided to leave
-    alone (a group that disagrees on kind; the caller has warned or
-    raised). An unsupported kind warns here, as it always has, and is
-    left alone too; `stacklevel` is the depth of the caller the
-    warnings must point at, counted from this function. Registers the
-    frame applier but does not run it.
+    Registers the frame applier but does not run it; `snapshot_frame`
+    must have run on `ax` first.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to modify, in place.
+    mode, offsets : dict
+        Per-axis frame mode and spine offset, keyed `'x'` and `'y'`,
+        from `parse_frame_args`.
+    n, nice_numbers, weights
+        Locator settings; see `range_frame`.
+    kinds : dict
+        Per-axis `AxisKind`, or `None` for an axis the caller decided
+        to leave alone (a group that disagrees on kind; the caller has
+        warned or raised). An unsupported kind warns here, as it always
+        has, and is left alone too.
+    stacklevel : int
+        The depth of the caller the warnings must point at, counted
+        from this function.
     """
     frame_state = get_state(ax)["frame"]  # ty: ignore[not-subscriptable]
     frame_state["mode"] = mode
