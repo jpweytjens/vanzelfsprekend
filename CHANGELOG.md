@@ -9,6 +9,7 @@ Range frame:
 - The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis
 - A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view limits
+- How many ticks an axis carries follows its length and its labels' size, a gap in tick-label heights rather than a fixed count, so a small panel gets few and a poster's large labels thin them out; a count can still be asked for outright
 - Linear, log and date axes are handled; anything else is left untouched with a warning
 - Panels that share an axis are distilled together, so a sharey pair keeps one scale and every tick lands on a spine; a twin axes is left out with a warning
 - Gridlines come off with the rest of the furniture, so a plot drawn under a grid theme like seaborn's whitegrid distills to a clean frame, and the bottom and left tick marks stay even when the theme had switched them off

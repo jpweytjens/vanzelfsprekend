@@ -33,6 +33,7 @@ README_FIGURES = (
     "power_profiles.png",
     "resonance_peak.png",
     "small_multiples.png",
+    "tick_spacing.png",
     "palettes.png",
 )
 
@@ -144,6 +145,24 @@ def waiting_times() -> None:
     vzs.xlabel(ax, "minutes to the next eruption")
     vzs.ylabel(ax, "eruptions", labelpad=10)
     fig.savefig(OUTPUT / "waiting_times.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def tick_spacing() -> None:
+    """Render one warming record at two widths, the tick count following."""
+    table = load("hadcrut5_annual.csv")
+    fig = plt.figure(figsize=(9, 2.8))
+    grid = fig.add_gridspec(1, 2, width_ratios=[5, 1], wspace=0.4)
+    for spec in grid:
+        ax = fig.add_subplot(spec)
+        vzs.distill(ax)
+        ax.plot(table["year"], table["anomaly_c"])
+        width_cm = ax.get_position().width * fig.get_figwidth() * 2.54
+        ax.set_title(
+            f"{width_cm:.0f} cm wide", fontsize=10, color=vzs.palettes.TEXT_INK
+        )
+    vzs.ylabel(fig.axes[0], "warming (°C)")
+    fig.savefig(OUTPUT / "tick_spacing.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -345,6 +364,7 @@ def main() -> None:
     power_profiles()
     resonance_peak()
     small_multiples_grid()
+    tick_spacing()
     palette_swatches()
     seaborn_lineplot()
     for name in README_FIGURES:

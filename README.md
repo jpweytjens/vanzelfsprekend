@@ -63,6 +63,13 @@ Under `loose` the spines also stand off the plot by 8 points: a loose frame roun
 vzs.distill(ax, frame="loose", offset=(8, 2))  # bottom stands well off, left just clear
 ```
 
+How many ticks an axis carries follows its length. `distill` aims for a gap between ticks measured in tick-label heights, seven along x and four along y, so a postage-stamp panel gets two or three ticks, a full-width figure five or six, and a poster with 24 pt labels thins its ticks out without being told. `spacing` sets that gap, a number for both axes or a tuple `(x, y)`, and `n` asks for a count outright when you already know it:
+
+```python
+vzs.distill(ax, spacing=(10, 4))  # x ticks further apart, y as before
+vzs.distill(ax, n=3)  # three ticks per axis, whatever the size
+```
+
 `xlabel` sits below the right end of the bottom spine; `ylabel` sits horizontal at the top of the left spine. `place="beside"` (the default) anchors it level with the top tick label; `place="above"` stacks it over the top tick, its left edge aligned with the tick label's, Doumont's two y-labels, from his "good" and "better" graphs. `labelpad` widens the gap to the tick labels:
 
 ```python
@@ -147,6 +154,10 @@ Old Faithful's waiting times as a histogram under `frame="data"`, both spines fl
 
 ![Histogram of waiting times between Old Faithful eruptions, two-peaked, with spines running exactly along the bars' span](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/waiting_times.png)
 
+The global warming record twice under the same `distill(ax)`, at 12 cm and at 2 cm. The wide axes carries four year labels and the narrow one two, both on round years, and the two y axes agree because they are the same height: the tick count follows the axis's length in tick-label heights, not a fixed target. The data are HadCRUT5's annual global mean anomalies:
+
+![The same rising warming curve twice, a wide axes with year labels every fifty years and a narrow one with only the first and last, both with the same four temperature ticks](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/tick_spacing.png)
+
 The critical-power model for four rider archetypes on a log time axis. Four peer series, so it opts into colour the house way: `ax.set_prop_cycle(vzs.palettes.cycle("muted"))` before the loop, and no per-line colour strings — the scheme carries the distinction and `line_labels` names each curve in its own colour. The curves cross at staggered durations, then flatten toward the right to each rider's sustainable power and crowd within a few percent, which is where the end-of-line labels earn their keep; the parameters are illustrative, and the model is spelled out in the script:
 
 ![Four modelled power-duration curves on a log time axis in Tol's muted scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
@@ -176,7 +187,7 @@ The treatment compresses a few small books' worth of advice:
 
 - The range frame is Tufte's (*The Visual Display of Quantitative Information*): a frame that shows nothing becomes two spines that show each variable's minimum and maximum.
 - Direct labels are Doumont's (*Trees, maps and theorems*): a legend sends the reader on a round trip between line and key, and a label at the line's end deletes the detour. The label placement is the exact least-squares optimum under no-overlap constraints, re-solved on every draw via the pool-adjacent-violators algorithm.
-- The round-number ticks come from [Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), through [mizani](https://mizani.readthedocs.io/en/stable/)'s breaks, computed from the data rather than the view limits. The frame modes keep that literature's vocabulary: "nice" numbers (1, 2 or 5 times a power of ten) are [Heckbert's](https://dl.acm.org/doi/10.5555/90767.90783) (*Graphics Gems*, 1990), and "loose" is the paper's word for bounds that enclose the data.
+- The round-number ticks come from [Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), through [mizani](https://mizani.readthedocs.io/en/stable/)'s breaks, computed from the data rather than the view limits. How many of them an axis gets is the paper's density term, which mizani leaves out: a target gap between labels in physical units, here tick-label heights, so the count follows the axis's length and the labels' size. The frame modes keep that literature's vocabulary: "nice" numbers (1, 2 or 5 times a power of ten) are [Heckbert's](https://dl.acm.org/doi/10.5555/90767.90783) (*Graphics Gems*, 1990), and "loose" is the paper's word for bounds that enclose the data.
 - The colours are [Paul Tol's](https://sronpersonalpages.nl/~pault/) colour-blind-safe schemes, arranged ink-first: a single series stays near-black, and colour enters at series two of the same kind. `color="tol:orange"` works anywhere matplotlib takes a colour.
 
 vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neighbours deserve direct credit:
@@ -193,7 +204,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 | --- | --- |
 | `distill(ax, ...)` | the full treatment with defaults |
 | `restore(ax)` | put the axes back as they were, with every panel distilled with it |
-| `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
+| `range_frame(ax, frame, spacing, n, offset, ...)` | the range frame, with every knob |
 | `small_multiples(axes, compare, ...)` | one treatment for a grid of axes on a shared scale |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |
 | `tick_direction(ax, direction)` | point the tick marks `in` or `out`, or remove them with `none` |
@@ -211,9 +222,9 @@ Each works on its own, on any matplotlib axes:
 
 | Name | Does |
 | --- | --- |
-| `TalbotLocator(n, loose, ...)` | nice-number ticks inside the data range |
-| `LogBreaksLocator(n, loose, base)` | the same for log axes |
-| `DateBreaksLocator(n, loose)` | the same for date axes |
+| `TalbotLocator(spacing, n, loose, ...)` | nice-number ticks inside the data range, as many as the axis's length asks for |
+| `LogBreaksLocator(spacing, n, loose, base)` | the same for log axes |
+| `DateBreaksLocator(spacing, n, loose)` | the same for date axes |
 | `FeatureLocator(x, y, features)` | ticks at features of the pair, each a callable or a fixed number, such as a peak `x[argmax(y)]` |
 | `SummaryLocator(values, reducers)` | ticks at summaries of one axis, each a callable or a fixed number, such as its mean |
 | `QuartileLocator(data)` | ticks at the data's minimum, quartiles and maximum |
