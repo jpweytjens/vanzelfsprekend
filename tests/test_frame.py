@@ -3,6 +3,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.ticker import FixedLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
@@ -474,16 +475,16 @@ def test_nice_frame_under_cropped_view_refits_ticks_to_visible_data(scatter_ax):
     assert ax.spines["bottom"].get_bounds() == (ticks.min(), ticks.max())
 
 
-def test_loose_frame_under_cropped_view_brackets_visible_data(scatter_ax):
+def test_loose_frame_under_cropped_view_ends_at_the_ticks_it_shows(scatter_ax):
     ax = range_frame(scatter_ax, frame="loose")
     ax.set_xlim(3.5, 30.0)
     ax.figure.canvas.draw()
     ticks = sorted(ax.xaxis.get_majorticklocs())
     dmax = ax.xaxis.get_data_interval()[1]
-    lo = max(t for t in ticks if t <= 3.5)
+    assert ticks[0] <= 3.5  # the locator still brackets the visible data
     hi = min(t for t in ticks if t >= dmax)
-    assert (ticks[0], ticks[-1]) == (lo, hi)
-    assert ax.spines["bottom"].get_bounds() == (lo, hi)
+    shown = [t for t in ticks if 3.5 <= t <= 30.0]
+    assert ax.spines["bottom"].get_bounds() == (min(shown), hi)
 
 
 def test_log_frame_under_cropped_view_refits_ticks_to_visible_data(log_scatter_ax):
@@ -532,3 +533,32 @@ def test_loose_view_limits_still_cover_the_whole_data(scatter_ax):
     ax.autoscale(axis="x")
     ax.figure.canvas.draw()
     assert ax.get_xlim() == pytest.approx(full)
+
+
+def _two_values_ax():
+    fig, ax = plt.subplots()
+    ax.scatter([0, 1], [7680, 7938])
+    return fig, ax
+
+
+def test_loose_frame_view_covers_a_fixed_tick_outside_the_data():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame="loose")
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    lo, hi = ax.get_ylim()
+    assert lo <= 0.0
+    assert hi >= 7938.0
+    plt.close(fig)
+
+
+def test_loose_frame_under_pinned_view_drops_fixed_ticks_outside_it():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame="loose")
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    ax.set_ylim(7600, 8000)
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7680.0, 7938.0)
+    assert ax.get_ylim() == (7600.0, 8000.0)
+    plt.close(fig)

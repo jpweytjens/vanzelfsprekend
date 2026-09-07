@@ -318,6 +318,9 @@ def _apply_frame(ax: Axes) -> bool:
             frame_state["mode"][name],
             interval=override() if override is not None else None,
         )
+        if span is not None and frame_state["mode"][name] == "loose":
+            span, grew = _fit_loose_view(ax, name, span)
+            changed = changed or grew
         if span is None:
             continue
         spine = ax.spines[spine_name]
@@ -325,6 +328,37 @@ def _apply_frame(ax: Axes) -> bool:
             spine.set_bounds(*span)
             changed = True
     return changed
+
+
+def _fit_loose_view(
+    ax: Axes, name: str, span: tuple[float, float]
+) -> tuple[tuple[float, float] | None, bool]:
+    """Reconcile a loose spine with the view along `name`.
+
+    A loose spine ends at ticks bracketing the data, which a user's
+    fixed locator can put outside the autoscaled view; spines are not
+    clipped, so the spine would be drawn outside the axes. While the
+    axis autoscales, the view grows to cover the spine, as the default
+    locator's own view limits already do. A view the user pinned is a
+    crop, so the spine keeps only the ticks the view shows.
+
+    Returns the span to draw and whether the view was changed.
+    """
+    axis = ax.xaxis if name == "x" else ax.yaxis
+    view = axis.get_view_interval()
+    vmin, vmax = sorted(float(v) for v in view)
+    autoscaled = ax.get_autoscalex_on() if name == "x" else ax.get_autoscaley_on()
+    if autoscaled:
+        lo, hi = min(span[0], vmin), max(span[1], vmax)
+        if (lo, hi) == (vmin, vmax):
+            return span, False
+        limits = (hi, lo) if view[0] > view[1] else (lo, hi)
+        (ax.set_xlim if name == "x" else ax.set_ylim)(*limits, auto=None)
+        return span, True
+    ticks = [t for t in axis.get_majorticklocs() if vmin <= t <= vmax]
+    if not ticks:
+        return None, False
+    return (min(ticks), max(ticks)), False
 
 
 def _frame_span(
