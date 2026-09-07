@@ -10,6 +10,7 @@ Range frame:
 - A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view limits
 - Linear, log and date axes are handled; anything else is left untouched with a warning
+- Panels that share an axis are distilled together, so a sharey pair keeps one scale and every tick lands on a spine; a twin axes is left out with a warning
 - Gridlines come off with the rest of the furniture, so a plot drawn under a grid theme like seaborn's whitegrid distills to a clean frame, and the bottom and left tick marks stay even when the theme had switched them off
 
 Ticks:
@@ -39,5 +40,5 @@ Style:
 - A "vanzelfsprekend" matplotlib style for the plot you draw yourself: lighter lines, smaller marks, quieter titles. It sets no colour or frame property, so it composes with distill and the colour cycle without overlap
 
 Undo:
-- restore(ax) puts the axes back exactly as they were
+- restore(ax) puts the axes back exactly as they were, together with every panel that was distilled with it
 - An ax.vzs accessor on every axes, so ax.vzs.distill(), ax.vzs.set_xlabel() and the other entry points work anywhere

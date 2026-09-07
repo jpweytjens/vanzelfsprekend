@@ -28,15 +28,23 @@ def distill(
 ) -> Axes:
     """Distill `ax` to vanzelfsprekend's default treatment.
 
-    The top-level entry point. Today it applies `range_frame` with good
-    defaults; it is the seam where later styling and mark helpers will be
-    bundled. Takes the same arguments as `range_frame`. It also greys the
-    axis furniture and installs the neutral ink cycle, so a mark drawn
-    after `distill` is `DATA_INK` until you opt into colour with a scheme
-    cycle of your own (`palettes.cycle`). A custom per-axes cycle set
-    before `distill` is restored to the rc default, not recovered. Where
-    tick labels crowd, they drift apart just enough to stay readable,
-    keeping their order; the tick marks stay exactly at their values.
+    The top-level entry point: the range frame with its defaults, the
+    axis furniture greyed, and the neutral ink cycle installed, so a
+    mark drawn after `distill` is `DATA_INK` until you opt into colour
+    with a scheme cycle of your own (`palettes.cycle`). A custom
+    per-axes cycle set before `distill` is restored to the rc default,
+    not recovered. Where tick labels crowd, they drift apart just enough
+    to stay readable, keeping their order; the tick marks stay exactly
+    at their values. Takes the same arguments as `range_frame`.
+
+    Panels that share an axis (`sharex`, `sharey`, `ax.sharex(other)`)
+    are distilled together, whichever one you pass: each shared axis is
+    ticked and framed from the union of the panels' data, so the panels
+    stay comparable and every tick lands on a spine. `restore` undoes
+    them together, and a later `distill` on any of them updates them
+    all. A twin made with `twinx` or `twiny` is left out with a warning
+    and keeps its box. `small_multiples` is the same treatment for a
+    grid, with the inner furniture hidden.
 
     Returns
     -------

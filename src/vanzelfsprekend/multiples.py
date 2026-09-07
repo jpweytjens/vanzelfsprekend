@@ -81,6 +81,11 @@ def small_multiples(
     panel with a deliberately inverted axis is silently re-oriented on
     the first draw.
 
+    Panels already tied with `sharex` or `sharey` are fine as long as the
+    sharing does not cut across what `compare` scopes separately; pass
+    the whole shared set, since a sibling left out still shares the
+    others' ticks. Restoring any panel restores the grid.
+
     Parameters
     ----------
     axes : iterable of matplotlib.axes.Axes
