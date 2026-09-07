@@ -51,6 +51,16 @@ vzs.distill(ax, frame="data")  # spines end at the exact data min and max
 vzs.distill(ax, frame="loose")  # spines end at nice numbers bounding the data
 ```
 
+The ticks and the spine are two separate decisions. The ticks are the locator's, nice numbers inside the data whatever the mode. Where the spine ends is the frame mode's, and only `nice` and `loose` make it follow the ticks:
+
+| `frame` | ticks | spine ends at |
+|---|---|---|
+| `nice` | nice numbers inside the data | the outermost ticks |
+| `loose` | nice numbers bracketing the data | the outermost ticks |
+| `data` | nice numbers inside the data | the data's exact min and max |
+
+So under `data` the spine runs a little past its last tick at each end, and a tick sits at the data's extreme only when a locator you set puts one there, as `QuartileLocator` does in the Anscombe figure below.
+
 A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exactly where the data does while the value axis keeps nice bounds:
 
 ```python
