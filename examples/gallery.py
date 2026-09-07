@@ -221,7 +221,8 @@ def resonance_peak() -> None:
     `x[argmax(y)]`, which is not the mean. The calculated curve spills
     past the frame the way Doumont draws it, so the band edges are fixed
     constants, not the data's extent. The Lorentzian and its sampled
-    points are a construction, not measurements.
+    points are a construction, not measurements. The two labels sit where
+    Doumont puts them, beside the topmost point and beside the right flank.
     """
     rng = np.random.default_rng(0)
     frequency = np.linspace(15.6, 19.4, 500)
@@ -235,8 +236,17 @@ def resonance_peak() -> None:
     measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
     vzs.distill(ax, frame="loose", offset=(24, -6))
-    ax.plot(frequency, calculated, color="tol:orange", linewidth=1.2)
-    ax.scatter(random_sampled, measured, s=10, color=vzs.palettes.DATA_INK, zorder=3)
+    ax.plot(
+        frequency, calculated, color="tol:orange", linewidth=1.2, label="calculated"
+    )
+    ax.scatter(
+        random_sampled,
+        measured,
+        s=10,
+        color=vzs.palettes.DATA_INK,
+        zorder=3,
+        label="measured",
+    )
     # Output power has a true zero, so show the axis from the 0 baseline
     # up past the measured peak that pokes above the calculated curve.
     ax.set_ylim(0, measured.max() * 1.05)
@@ -254,6 +264,10 @@ def resonance_peak() -> None:
     vzs.tick_direction(ax, "in")
     vzs.xlabel(ax, "frequency (GHz)", flush=True)
     vzs.ylabel(ax, "output power (mW)", place="above")
+    # Doumont names the points beside the summit and the curve beside the
+    # flank under it; the anchors are his, the sliding is ours.
+    vzs.label(ax, "measured", x=17.2)
+    vzs.label(ax, "calculated", x=17.5)
     fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 

@@ -7,6 +7,7 @@ from vanzelfsprekend import (
     style,  # noqa: F401  (import registers the style)
 )
 from vanzelfsprekend.compose import distill, register, restore, unregister
+from vanzelfsprekend.direct import label
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
@@ -36,6 +37,7 @@ __all__ = [
     "SummaryLocator",
     "TalbotLocator",
     "distill",
+    "label",
     "line_labels",
     "mute",
     "palettes",

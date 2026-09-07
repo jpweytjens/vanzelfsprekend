@@ -1,13 +1,15 @@
 """The distill composer, teardown, and the `ax.vzs` accessor registration."""
 
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal
 
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
+from vanzelfsprekend.direct import Side, label
 from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.group import share_groups, treat
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
@@ -209,6 +211,12 @@ def _restore_member(ax: Axes) -> None:
             for text in side["texts"]:
                 text.remove()
 
+    direct_state = state.get("direct")
+    if direct_state is not None:
+        for group in direct_state:
+            for text in group["texts"]:
+                text.remove()
+
     date_offset_state = state.get("date_offset")
     if date_offset_state is not None:
         off = ax.xaxis.get_offset_text()
@@ -323,6 +331,22 @@ class _Accessor:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
         return line_labels(
             self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap, labels=labels
+        )
+
+    def label(
+        self,
+        name: str | Artist | Sequence[str | Artist],
+        *,
+        x: Any | None = None,
+        y: Any | None = None,
+        side: Side | None = None,
+        labelcolor: str | ColorType | list[ColorType] = "linecolor",
+        pad: float = 4.0,
+        gap: float = placement.GAP,
+    ) -> list[Annotation]:
+        """Put a label beside a named artist; see `vanzelfsprekend.label`."""
+        return label(
+            self._ax, name, x=x, y=y, side=side, labelcolor=labelcolor, pad=pad, gap=gap
         )
 
     def mute(

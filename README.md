@@ -86,6 +86,17 @@ vzs.line_labels(ax)  # label every line at its right end
 vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
+`label` puts one label beside a named artist, wherever the reader will look for it. The text is the artist's `label=`, the same string a legend would show, and the anchor is a spine coordinate: `vzs.label(ax, "calculated", x=17.5)` names the curve at 17.5 GHz, at its crossing for a line and at the nearest point for a scatter. From there the text slides along a helper line through the anchor, as little as needed, to clear every mark and text in its way. It goes right of the anchor by default and left, above or below when the right is blocked; `side=` chooses. Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist:
+
+```python
+vzs.label(ax, "measured", x=17.2)  # beside the point nearest 17.2
+vzs.label(ax, ["SSP1-1.9", "SSP2-4.5"], x=2060)  # a column at one year
+ax.scatter([x], [y], label="Belgium")
+vzs.label(ax, "Belgium")  # a named point
+```
+
+Labelling is deliberate: you name each label, the library decides only how far it moves. Naming many points of one cloud is a different problem, and [textalloc](https://github.com/ckjellson/textalloc) and [adjustText](https://github.com/Phlya/adjustText) solve it.
+
 Tick labels get the same care: ticks placed by the data, such as `QuartileLocator`'s, can land arbitrarily close, and where their labels crowd they shift apart just enough to stay readable, keeping their order. The tick marks stay exactly at their values.
 
 To place ticks yourself (`QuartileLocator`, `FeatureLocator`, or any matplotlib locator) set it *after* `distill`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the resonance figure below holds its spine at 16–19 while the curve spills past.
@@ -170,7 +181,7 @@ The critical-power model for four rider archetypes on a log time axis. Four peer
 
 ![Four modelled power-duration curves on a log time axis in Tol's muted scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` (the same idea reduced to one axis's own values) sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine, his "better graph":
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` (the same idea reduced to one axis's own values) sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine, his "better graph". The two labels are `label(ax, "measured", x=17.2)` and `label(ax, "calculated", x=17.5)`, Doumont's anchors, slid just clear of the ink:
 
 ```python
 ax.xaxis.set_major_locator(
@@ -197,6 +208,7 @@ The treatment compresses a few small books' worth of advice:
 - Direct labels are Doumont's (*Trees, maps and theorems*): a legend sends the reader on a round trip between line and key, and a label at the line's end deletes the detour. The label placement is the exact least-squares optimum under no-overlap constraints, re-solved on every draw via the pool-adjacent-violators algorithm.
 - The round-number ticks come from [Talbot, Lin and Hanrahan's extended Wilkinson algorithm](http://vis.stanford.edu/papers/tick-labels), through [mizani](https://mizani.readthedocs.io/en/stable/)'s breaks, computed from the data rather than the view limits. How many of them an axis gets is the paper's density term, which mizani leaves out: a target gap between labels in physical units, here tick-label heights, so the count follows the axis's length and the labels' size. The frame modes keep that literature's vocabulary: "nice" numbers (1, 2 or 5 times a power of ten) are [Heckbert's](https://dl.acm.org/doi/10.5555/90767.90783) (*Graphics Gems*, 1990), and "loose" is the paper's word for bounds that enclose the data.
 - The colours are [Paul Tol's](https://sronpersonalpages.nl/~pault/) colour-blind-safe schemes, arranged ink-first: a single series stays near-black, and colour enters at series two of the same kind. `color="tol:orange"` works anywhere matplotlib takes a colour.
+- The placement rule for `label`, a fixed side order with the first clear position taken, is cartography's. Imhof (1975) and Yoeli (1972) ranked the positions around a point, Christensen, Marks and Shieber (1995) made that ranking the standard objective, and Vega's label transform (Kittivorawong, Moritz, Wongsuphasawat and Heer, 2021) runs the same greedy model in production. R's [directlabels](https://github.com/tdhock/directlabels) stacks labels along a line with the quadratic programme that `placement.stack` solves, and its `far.from.others.borders` is the automatic anchor this library deliberately does not pick. [textalloc](https://github.com/ckjellson/textalloc) (MIT) ran the first experiment, and its overlap tests are the pattern the ink harvesting follows.
 
 vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neighbours deserve direct credit:
 
@@ -223,6 +235,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 | --- | --- |
 | `xlabel(ax, text)`, `ylabel(ax, text, place)` | end-of-spine axis labels |
 | `line_labels(ax, at, labelcolor, pad, gap)` | non-overlapping labels at the lines' ends |
+| `label(ax, name, x, y, side, labelcolor, pad, gap)` | a label beside a named line or scatter, or a column of them, slid clear of the ink |
 
 ### Locators
 
