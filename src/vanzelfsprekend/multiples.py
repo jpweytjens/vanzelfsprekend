@@ -1,132 +1,14 @@
 """Small multiples: one treatment for a grid of axes on a shared scale."""
 
 from collections.abc import Iterable, Sequence
-from typing import Literal, cast
+from typing import Literal
 
 from matplotlib.axes import Axes
-from matplotlib.axis import Axis, Ticker
 from matplotlib.gridspec import GridSpecBase, SubplotSpec
 
 from vanzelfsprekend import labels as labels_
-from vanzelfsprekend.compose import distill
-from vanzelfsprekend.frame import _is_date_converter
-from vanzelfsprekend.group import (
-    BreaksLocator,
-    GroupLocator,
-    axis_kinds,
-    data_union,
-    view_union,
-)
-from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-
-
-def _apply_multiples(ax: Axes) -> bool:
-    """Apply the `"multiples"` treatment: the sole writer of view limits.
-
-    Sets each treated axis' view limits to the union of its scale
-    group's members, so every panel in the group converges to the same
-    limits. Spine bounds stay with the frame applier; tick positions
-    with the wrapped `GroupLocator`.
-    """
-    state = get_state(ax)
-    if state is None or "multiples" not in state:
-        return False
-    changed = False
-    for name, members in state["multiples"]["groups"].items():
-        union = view_union(members, name)
-        if union is None:
-            continue
-        axis = ax.xaxis if name == "x" else ax.yaxis
-        if tuple(axis.get_view_interval()) != union:
-            (ax.set_xlim if name == "x" else ax.set_ylim)(union)
-            changed = True
-    return changed
-
-
-def _construct(cls: type, name: str, kind: str, *args: object) -> object:
-    """`cls(*args)`, with construction failures named for the caller."""
-    try:
-        return cls(*args)
-    except (TypeError, ValueError) as err:
-        raise ValueError(
-            f"cannot unshare {name}-axis: its {kind} {cls.__name__} is not "
-            "default-constructible; unshare it or drop the sharing before "
-            "small_multiples"
-        ) from err
-
-
-def _unshare_tickers(
-    panels: tuple[Axes, ...],
-) -> dict[int, dict[str, tuple[Ticker, Ticker]]]:
-    """Give each matplotlib-shared axis its own `Ticker` pair.
-
-    Must run before `distill`: shared panels hold one `Ticker` object, so
-    a locator installed through it lands in every sibling and the frame
-    snapshot records a sibling's locator as the original. The fresh
-    pair only needs to be functional; `distill` replaces it immediately
-    and restore re-attaches the saved originals.
-
-    Two-phase: every fresh locator/formatter is constructed first,
-    against a plan, with no axis touched; only once every construction
-    across every panel has succeeded does the second phase assign them.
-    A locator/formatter that isn't default-constructible therefore
-    raises before any axis is mutated, leaving the grid untouched.
-    """
-    plan: list[
-        tuple[Axes, str, Axis, Ticker, Ticker, object, object, object, object]
-    ] = []
-    for ax in panels:
-        for name, axis, grouper in (
-            ("x", ax.xaxis, ax.get_shared_x_axes()),
-            ("y", ax.yaxis, ax.get_shared_y_axes()),
-        ):
-            if len(grouper.get_siblings(ax)) <= 1:
-                continue
-            old_major, old_minor = axis.major, axis.minor
-            converter = axis.get_converter()
-            is_date = converter is not None and _is_date_converter(converter)
-            locator = _construct(type(old_major.locator), name, "locator")
-            formatter = (
-                _construct(type(old_major.formatter), name, "formatter", locator)
-                if is_date
-                else _construct(type(old_major.formatter), name, "formatter")
-            )
-            minor_locator = _construct(type(old_minor.locator), name, "locator")
-            minor_formatter = _construct(type(old_minor.formatter), name, "formatter")
-            plan.append(
-                (
-                    ax,
-                    name,
-                    axis,
-                    old_major,
-                    old_minor,
-                    locator,
-                    formatter,
-                    minor_locator,
-                    minor_formatter,
-                )
-            )
-
-    saved: dict[int, dict[str, tuple[Ticker, Ticker]]] = {}
-    for (
-        ax,
-        name,
-        axis,
-        old_major,
-        old_minor,
-        locator,
-        formatter,
-        minor_locator,
-        minor_formatter,
-    ) in plan:
-        axis.major = Ticker()
-        axis.minor = Ticker()
-        axis.set_major_locator(locator)  # ty: ignore[invalid-argument-type]
-        axis.set_major_formatter(formatter)  # ty: ignore[invalid-argument-type]
-        axis.set_minor_locator(minor_locator)  # ty: ignore[invalid-argument-type]
-        axis.set_minor_formatter(minor_formatter)  # ty: ignore[invalid-argument-type]
-        saved.setdefault(id(ax), {})[name] = (old_major, old_minor)
-    return saved
+from vanzelfsprekend.group import axis_kinds, treat
+from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
 
 
 def _carries_furniture(ss: SubplotSpec, gridspec: GridSpecBase) -> dict[str, bool]:
@@ -224,90 +106,51 @@ def small_multiples(
     specs = _subplotspecs_or_raise(panels)
     _check_spanning(specs, compare)
     groups = _scale_groups(panels, specs, compare)
-    treated = _check_group_agreement(groups)
+    _check_group_agreement(groups)
     _check_sharing(panels, groups)
     gridspec = specs[0].get_gridspec()
     _check_label(ylabel, "ylabel", scoped=compare == "row", count=gridspec.nrows)
     _check_label(xlabel, "xlabel", scoped=compare == "column", count=gridspec.ncols)
 
-    saved_tickers = _unshare_tickers(panels)
-    for ax in panels:
-        ensure_state(ax)["multiples"] = {
-            "snapshot": {"tickers": saved_tickers.get(id(ax), {})}
-        }
-    for ax in panels:
-        distill(
-            ax,
-            frame=frame,
-            n=n,
-            offset=offset,
-            nice_numbers=nice_numbers,
-            weights=weights,
-        )
-    grid = {"panels": panels, "torn_down": False}
     key_of = {
         (name, id(ax)): key
         for name, per_key in groups.items()
         for key, members in per_key.items()
         for ax in members
     }
+    treat(
+        {
+            ax: {name: groups[name][key_of[(name, id(ax))]] for name in ("x", "y")}
+            for ax in panels
+        },
+        frame=frame,
+        n=n,
+        offset=offset,
+        nice_numbers=nice_numbers,
+        weights=weights,
+    )
+    grid = {"panels": panels, "torn_down": False}
     for ax, ss in zip(panels, specs, strict=True):
-        panel_groups = {}
-        for name in ("x", "y"):
-            key = key_of[(name, id(ax))]
-            if not treated[(name, key)]:
-                continue
-            members = groups[name][key]
-            panel_groups[name] = members
-            axis = ax.xaxis if name == "x" else ax.yaxis
-            frame_state = ensure_state(ax)["frame"]
-            if name in frame_state["active"]:
-                axis.set_major_locator(
-                    GroupLocator(
-                        cast("BreaksLocator", axis.get_major_locator()),
-                        members,
-                        name,
-                    )
-                )
         state = ensure_state(ax)
-        state["multiples"]["groups"] = panel_groups
-        state["multiples"]["grid"] = grid
-        state["multiples"]["snapshot"].update(
-            limits={"x": ax.get_xlim(), "y": ax.get_ylim()},
-            autoscale={
-                "x": ax.get_autoscalex_on(),
-                "y": ax.get_autoscaley_on(),
-            },
-        )
+        state["multiples"] = {"grid": grid, "snapshot": {"furniture": {}}}
         carries = _carries_furniture(ss, gridspec)
-        snapshot = state["multiples"]["snapshot"]
-        snapshot["furniture"] = {}
-        for name in panel_groups:
+        active = state["frame"]["active"]
+        for name in ("x", "y"):
+            if name not in active or carries[name]:
+                continue
             axis = ax.xaxis if name == "x" else ax.yaxis
             side = "bottom" if name == "x" else "left"
-            if carries[name]:
-                # Trim to the axis's scale group (the same panels that set
-                # its shared ticks and limits) so every drawn tick lands on
-                # the spine. A narrower positional trim would leave a shared
-                # tick floating past a spine whose own row/column falls short.
-                members = panel_groups[name]
-                intervals = ensure_state(ax)["frame"].setdefault("intervals", {})
-                intervals[name] = lambda members=members, name=name: data_union(
-                    members, name
-                )
-            else:
-                params = axis.get_tick_params(which="major")
-                snapshot["furniture"][name] = {
-                    "spine": ax.spines[side].get_visible(),
-                    "tick": params.get(side, True),
-                    "label": params.get(f"label{side}", True),
-                }
-                ax.spines[side].set_visible(False)
-                axis.set_tick_params(
-                    which="both",
-                    **{side: False, f"label{side}": False},
-                )
-        add_applier(ax, "multiples", _apply_multiples)
+            params = axis.get_tick_params(which="major")
+            state["multiples"]["snapshot"]["furniture"][name] = {
+                "spine": ax.spines[side].get_visible(),
+                "tick": params.get(side, True),
+                "label": params.get(f"label{side}", True),
+            }
+            ax.spines[side].set_visible(False)
+            axis.set_tick_params(
+                which="both",
+                **{side: False, f"label{side}": False},
+            )
     prior_labels = _place_labels(panels, specs, gridspec, xlabel, ylabel)
     for ax in panels:
         ensure_state(ax)["multiples"]["snapshot"]["labels"] = prior_labels.get(
@@ -319,37 +162,19 @@ def small_multiples(
 
 
 def _teardown_grid(grid: dict) -> None:
-    """Tear the grid layer off every member; idempotent.
+    """Tear the grid layer (hidden furniture, labels) off every member; idempotent.
 
-    Everything figure-level comes off in one pass; the shared scale
-    cannot survive losing a member. Tickers stay: re-sharing here would
-    hand every still-treated sibling a shared container again, so each
-    panel's original `Ticker` waits for that panel's own restore.
+    Locators, spines, limits and autoscale are the group's, restored by
+    `compose.restore` for every member of the unit.
     """
     if grid["torn_down"]:
         return
     grid["torn_down"] = True
-    # Two passes: a matplotlib-shared `set_xlim`/`set_ylim` disables
-    # autoscale on every sibling sharing that axis, so restoring
-    # autoscale inline here would have a later panel's limits undo an
-    # earlier panel's autoscale. Limits land in the first pass;
-    # autoscale only after every panel's limits have settled.
     for ax in grid["panels"]:
         state = get_state(ax)
         if state is None or "multiples" not in state:
             continue
-        state["appliers"].pop("multiples", None)
         snap = state["multiples"]["snapshot"]
-        frame_state = state.get("frame")
-        if frame_state is not None:
-            frame_state.pop("intervals", None)
-        for name in state["multiples"]["groups"]:
-            axis = ax.xaxis if name == "x" else ax.yaxis
-            locator = axis.get_major_locator()
-            if isinstance(locator, GroupLocator):
-                axis.set_major_locator(locator._inner)
-        ax.set_xlim(snap["limits"]["x"])
-        ax.set_ylim(snap["limits"]["y"])
         for name, prior in snap["furniture"].items():
             side = "bottom" if name == "x" else "left"
             ax.spines[side].set_visible(prior["spine"])
@@ -360,34 +185,6 @@ def _teardown_grid(grid: dict) -> None:
             )
         for name, text in snap.get("labels", {}).items():
             (ax.set_xlabel if name == "x" else ax.set_ylabel)(text)
-    for ax in grid["panels"]:
-        state = get_state(ax)
-        if state is None or "multiples" not in state:
-            continue
-        snap = state["multiples"]["snapshot"]
-        ax.set_autoscalex_on(snap["autoscale"]["x"])
-        ax.set_autoscaley_on(snap["autoscale"]["y"])
-
-
-def _reattach_tickers(ax: Axes, snapshot: dict) -> None:
-    """Re-attach this panel's original shared tickers.
-
-    Runs from `compose.restore` after its frame block, so the pristine
-    locator has already been written into the fresh unshared ticker and
-    the shared container comes back untouched. Also clears the spine
-    bounds the frame block just stamped: `Spine.set_bounds(None, None)`
-    reads "leave unchanged", not "unset", so it always writes the
-    current view interval, never the `None` a panel this treatment
-    framed needs in order to end up as unbounded as one it never
-    touched.
-    """
-    for name, (major, minor) in snapshot["tickers"].items():
-        axis = ax.xaxis if name == "x" else ax.yaxis
-        axis.major = major
-        axis.minor = minor
-        axis.stale = True
-    for side in ("bottom", "left"):
-        ax.spines[side]._bounds = None  # ty: ignore[unresolved-attribute]
 
 
 def _subplotspecs_or_raise(panels: tuple[Axes, ...]) -> list[SubplotSpec]:
@@ -435,12 +232,9 @@ def _scale_groups(
     return groups
 
 
-def _check_group_agreement(
-    groups: dict[str, dict[object, list[Axes]]],
-) -> dict[tuple[str, object], bool]:
-    treated: dict[tuple[str, object], bool] = {}
+def _check_group_agreement(groups: dict[str, dict[object, list[Axes]]]) -> None:
     for name, per_key in groups.items():
-        for key, members in per_key.items():
+        for members in per_key.values():
             kinds = axis_kinds(members, name)
             if len(kinds) > 1:
                 raise ValueError(
@@ -448,8 +242,6 @@ def _check_group_agreement(
                     f"date-ness: {sorted(k[:2] for k in kinds)}; a common "
                     "scale across them means nothing"
                 )
-            treated[(name, key)] = kinds.pop().supported
-    return treated
 
 
 def _check_sharing(

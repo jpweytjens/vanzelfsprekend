@@ -245,3 +245,25 @@ def test_restore_reinstates_minor_locators():
     vzs.restore(ax)
     assert ax.yaxis.get_minor_locator() is minor_before
     plt.close(fig)
+
+
+def test_restore_clears_spine_bounds():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    vzs.distill(ax)
+    fig.canvas.draw()
+    vzs.restore(ax)
+    assert ax.spines["left"].get_bounds() is None
+    assert ax.spines["bottom"].get_bounds() is None
+    plt.close(fig)
+
+
+def test_distill_leaves_a_lone_inverted_axis_inverted():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    ax.invert_yaxis()
+    vzs.distill(ax)
+    fig.canvas.draw()
+    lo, hi = ax.get_ylim()
+    assert lo > hi
+    plt.close(fig)

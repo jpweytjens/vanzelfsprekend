@@ -6,14 +6,28 @@ module, which unions the members' data so the frame and the locators span
 it. Nothing here is public.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from functools import partial
+from typing import cast
 
+import matplotlib as mpl
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.ticker import Locator
 
-from vanzelfsprekend.frame import AxisKind, axis_kind
+from vanzelfsprekend import palettes
+from vanzelfsprekend.frame import (
+    AxisKind,
+    axis_kind,
+    install_frame,
+    parse_frame_args,
+    snapshot_frame,
+)
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
+from vanzelfsprekend.labels import _apply_date_offset
 from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
+from vanzelfsprekend.mute import mute
+from vanzelfsprekend.ticklabels import _apply_tick_labels
 
 BreaksLocator = TalbotLocator | LogBreaksLocator | DateBreaksLocator
 
@@ -110,3 +124,116 @@ def axis_kinds(members: Sequence[Axes], name: str) -> set[AxisKind]:
     axes = [ax.xaxis if name == "x" else ax.yaxis for ax in members]
     with_data = [axis for axis in axes if np.isfinite(axis.get_data_interval()).all()]
     return {axis_kind(axis) for axis in (with_data or axes)}
+
+
+def treat(
+    members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
+    *,
+    frame: str | tuple[str, str] = "nice",
+    n: int = 5,
+    offset: float | tuple[float | None, float | None] | None = None,
+    nice_numbers: Sequence[float] | None = None,
+    weights: dict[str, float] | None = None,
+) -> None:
+    """Distill every key of `members` as one unit.
+
+    `members[ax][name]` lists the axes whose data feed `ax`'s `name`
+    axis (`ax` itself for a lone axes), or is `None` to leave that axis
+    alone. Snapshots are taken for every member before any member is
+    modified, so axes that share a `Ticker` record their true original
+    once; then each member gets the frame for its group's kind, its
+    locators wrapped to read the group's data union, the spine ended at
+    that union, the muted furniture, the neutral ink cycle, and the
+    appliers. The keys together are what `restore` undoes.
+    """
+    mode, offsets = parse_frame_args(frame, offset)
+    unit = tuple(members)
+    for ax in unit:
+        snapshot_frame(ax)
+        state = ensure_state(ax)
+        if "group" not in state:
+            group_state: dict = {
+                "snapshot": {
+                    "limits": {"x": ax.get_xlim(), "y": ax.get_ylim()},
+                    "autoscale": {
+                        "x": ax.get_autoscalex_on(),
+                        "y": ax.get_autoscaley_on(),
+                    },
+                }
+            }
+            state["group"] = group_state
+        state["group"]["unit"] = unit
+        state["group"]["members"] = {
+            name: list(group)
+            for name, group in members[ax].items()
+            if group is not None
+        }
+
+    kind_of: dict[tuple[str, frozenset[int]], AxisKind | None] = {}
+    for ax in unit:
+        kinds: dict[str, AxisKind | None] = {}
+        for name in ("x", "y"):
+            group = members[ax].get(name)
+            if group is None:
+                kinds[name] = None
+                continue
+            key = (name, frozenset(id(member) for member in group))
+            if key not in kind_of:
+                found = axis_kinds(group, name)
+                kind_of[key] = found.pop() if len(found) == 1 else None
+            kinds[name] = kind_of[key]
+        install_frame(
+            ax,
+            mode,
+            offsets,
+            n=n,
+            nice_numbers=nice_numbers,
+            weights=weights,
+            kinds=kinds,
+        )
+        state = ensure_state(ax)
+        frame_state = state["frame"]
+        intervals = frame_state.setdefault("intervals", {})
+        for name in frame_state["active"]:
+            # The recorded list, not `members[ax][name]`: one authority for
+            # the group, shared by the locator, the applier and restore.
+            group = state["group"]["members"][name]
+            axis = ax.xaxis if name == "x" else ax.yaxis
+            inner = cast("BreaksLocator", axis.get_major_locator())
+            axis.set_major_locator(GroupLocator(inner, group, name))
+            intervals[name] = partial(data_union, group, name)
+        mute(ax)
+        if "cycle" not in state:
+            state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
+        ax.set_prop_cycle(palettes.cycle("ink"))
+        state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
+        add_applier(ax, "tick_labels", _apply_tick_labels)
+        add_applier(ax, "date_offset", _apply_date_offset)
+        add_applier(ax, "limits", apply_limits)
+    for ax in unit:
+        run_appliers(ax)
+
+
+def apply_limits(ax: Axes) -> bool:
+    """Pin each axis of `ax` to its group's view union; the sole writer of limits.
+
+    A group of one is left alone, so a lone axes keeps an inverted axis
+    or a hand-set view. Groups of two or more converge onto one
+    ascending scale on the first draw, and this applier then finds
+    nothing to change.
+    """
+    state = get_state(ax)
+    if state is None or "group" not in state:
+        return False
+    changed = False
+    for name, group in state["group"]["members"].items():
+        if len(group) < 2:
+            continue
+        union = view_union(group, name)
+        if union is None:
+            continue
+        axis = ax.xaxis if name == "x" else ax.yaxis
+        if tuple(axis.get_view_interval()) != union:
+            (ax.set_xlim if name == "x" else ax.set_ylim)(union)
+            changed = True
+    return changed

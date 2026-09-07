@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 import vanzelfsprekend as vzs
+from vanzelfsprekend.group import GroupLocator
 from vanzelfsprekend.hook import run_appliers
 
 
@@ -99,31 +100,6 @@ def test_rejects_label_sequence_length_mismatch():
     fig, axes = _grid22()
     with pytest.raises(ValueError, match=r"3.*2|2.*3"):
         vzs.small_multiples(axes.flat, compare="row", ylabel=["a", "b", "c"])
-    plt.close(fig)
-
-
-def test_sharex_panels_get_their_own_tickers():
-    fig, axes = plt.subplots(1, 2, sharex=True)
-    axes[0].plot([0, 4], [0, 1])
-    axes[1].plot([6, 10], [0, 1])
-    assert axes[0].xaxis.major is axes[1].xaxis.major  # matplotlib's sharing
-    vzs.small_multiples(axes)
-    assert axes[0].xaxis.major is not axes[1].xaxis.major
-    fig.canvas.draw()  # and the treatment survives a draw
-    plt.close(fig)
-
-
-def test_unshare_failure_leaves_grid_untouched():
-    from matplotlib.ticker import FormatStrFormatter
-
-    fig, axes = plt.subplots(1, 2, sharex=True)
-    axes[0].plot([0, 4], [0, 1])
-    axes[1].plot([6, 10], [0, 1])
-    axes[0].xaxis.set_major_formatter(FormatStrFormatter("%.1f"))
-    with pytest.raises(ValueError, match="not default-constructible"):
-        vzs.small_multiples(axes)
-    assert axes[0].xaxis.major is axes[1].xaxis.major
-    assert not hasattr(axes[0], "_vanzelfsprekend_state")
     plt.close(fig)
 
 
@@ -358,25 +334,19 @@ def test_ylabel_sequence_labels_each_row():
     plt.close(fig)
 
 
-def test_restore_one_panel_degrades_siblings_to_single_axes():
+def test_restore_one_panel_restores_grid():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat)
     fig.canvas.draw()
     vzs.restore(axes[0, 0])
     fig.canvas.draw()
-    # Restored panel: autoscaling back on, no vzs state left.
-    assert axes[0, 0].get_autoscalex_on()
-    assert not hasattr(axes[0, 0], "_vanzelfsprekend_state")
-    # Sibling: still treated, but panel-local — its own data, its own trim.
-    sibling = axes[1, 1]
-    assert sibling.get_autoscalex_on()
-    assert sibling.spines["bottom"].get_visible()  # furniture back
-    ticks = [
-        t
-        for t in sibling.xaxis.get_majorticklocs()
-        if 4 <= t <= 9  # sibling's own data range
-    ]
-    assert sibling.spines["bottom"].get_bounds() == (min(ticks), max(ticks))
+    for ax in axes.flat:
+        assert not hasattr(ax, "_vanzelfsprekend_state")
+        assert ax.get_autoscalex_on()
+        assert ax.spines["bottom"].get_visible()
+        assert ax.spines["top"].get_visible()
+        assert ax.spines["bottom"].get_bounds() is None
+    vzs.restore(axes[1, 1])  # already restored: a no-op, not an error
     plt.close(fig)
 
 
@@ -477,4 +447,19 @@ def test_empty_panel_beside_date_panel_is_accepted():
     axes[0].plot(days, range(5))
     vzs.small_multiples(axes)  # must not raise: the empty panel has no say
     fig.canvas.draw()
+    plt.close(fig)
+
+
+def test_empty_panel_takes_the_group_kind():
+    import datetime as dt
+
+    from matplotlib.dates import ConciseDateFormatter
+
+    fig, axes = plt.subplots(1, 2)
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(5)]
+    axes[0].plot(days, range(5))
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    assert isinstance(axes[1].xaxis.get_major_formatter(), ConciseDateFormatter)
+    assert isinstance(axes[1].xaxis.get_major_locator(), GroupLocator)
     plt.close(fig)

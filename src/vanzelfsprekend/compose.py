@@ -3,25 +3,18 @@
 from collections.abc import Sequence
 from typing import Literal
 
-import matplotlib as mpl
 from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
-from vanzelfsprekend import palettes, placement
+from vanzelfsprekend import placement
 from vanzelfsprekend.frame import range_frame
-from vanzelfsprekend.hook import (
-    add_applier,
-    clear_state,
-    disconnect,
-    ensure_state,
-    get_state,
-)
-from vanzelfsprekend.labels import _apply_date_offset, xlabel, ylabel
+from vanzelfsprekend.group import treat
+from vanzelfsprekend.hook import clear_state, disconnect, get_state
+from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
-from vanzelfsprekend.ticklabels import _apply_tick_labels
 from vanzelfsprekend.ticks import _rc, tick_direction
 
 
@@ -50,29 +43,54 @@ def distill(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    range_frame(
-        ax, frame=frame, n=n, offset=offset, nice_numbers=nice_numbers, weights=weights
+    treat(
+        {ax: {"x": [ax], "y": [ax]}},
+        frame=frame,
+        n=n,
+        offset=offset,
+        nice_numbers=nice_numbers,
+        weights=weights,
     )
-    mute(ax)
-    state = ensure_state(ax)
-    if "cycle" not in state:
-        state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
-    ax.set_prop_cycle(palettes.cycle("ink"))
-    state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
-    add_applier(ax, "tick_labels", _apply_tick_labels)
-    add_applier(ax, "date_offset", _apply_date_offset)
     return ax
 
 
 def restore(ax: Axes) -> None:
-    """Remove vanzelfsprekend's treatment from `ax`, restoring its prior state.
+    """Remove vanzelfsprekend's treatment from `ax` and every axes treated with it.
 
-    Disconnects the draw hook and restores exactly the properties vanzelfsprekend
-    changed (the original locators, spine visibility and positions,
-    label alignment, furniture colours, and the colour cycle) from the
-    snapshot taken at first application. A no-op on an axes vanzelfsprekend
-    never touched.
+    Panels that were distilled together, because they share an axis or
+    were passed to `small_multiples`, are restored together: the shared
+    scale cannot survive losing a member. Disconnects each draw hook and
+    restores exactly the properties vanzelfsprekend changed (the original
+    locators, spine visibility, positions and bounds, label alignment,
+    furniture colours, view limits and the colour cycle) from the
+    snapshots taken at first application. A no-op on an axes
+    vanzelfsprekend never touched.
     """
+    state = get_state(ax)
+    if state is None:
+        return
+    unit = state.get("group", {}).get("unit", (ax,))
+    autoscale = {}
+    for member in unit:
+        member_state = get_state(member)
+        if member_state is None:
+            continue
+        group_state = member_state.get("group")
+        if group_state is not None:
+            autoscale[member] = {
+                name: group_state["snapshot"]["autoscale"][name]
+                for name, group in group_state["members"].items()
+                if len(group) >= 2
+            }
+        _restore_member(member)
+    # Second pass: a shared `set_xlim`/`set_ylim` disables autoscale on
+    # every sibling, so the flags only land once every limit has settled.
+    for member, flags in autoscale.items():
+        for name, on in flags.items():
+            (member.set_autoscalex_on if name == "x" else member.set_autoscaley_on)(on)
+
+
+def _restore_member(ax: Axes) -> None:
     state = get_state(ax)
     if state is None:
         return
@@ -92,19 +110,26 @@ def restore(ax: Axes) -> None:
         ax.spines["right"].set_visible(snap["right_visible"])
         ax.spines["left"].set_position(snap["left_position"])
         ax.spines["bottom"].set_position(snap["bottom_position"])
-        ax.spines["left"].set_bounds(None, None)
-        ax.spines["bottom"].set_bounds(None, None)
+        for side in ("bottom", "left"):
+            # `Spine.set_bounds(None, None)` keeps the old bounds rather
+            # than unsetting them, so a pristine `None` needs the attribute.
+            ax.spines[side]._bounds = None  # ty: ignore[unresolved-attribute]
+
+    group_state = state.get("group")
+    if group_state is not None:
+        for name, group in group_state["members"].items():
+            if len(group) >= 2:
+                limits = group_state["snapshot"]["limits"][name]
+                (ax.set_xlim if name == "x" else ax.set_ylim)(limits)
 
     multiples_state = state.get("multiples")
     if multiples_state is not None:
-        # Imported here: multiples imports `distill` from this module, so a
-        # module-level import would be a cycle. Order matters: the frame
-        # block above must write its locators into the fresh unshared
-        # ticker before the original shared one is re-attached.
-        from vanzelfsprekend.multiples import _reattach_tickers, _teardown_grid
+        # Imported here: multiples imports from group, which compose also
+        # imports; a module-level import here would still be a cycle
+        # through the accessor's `small_multiples` reference.
+        from vanzelfsprekend.multiples import _teardown_grid
 
         _teardown_grid(multiples_state["grid"])
-        _reattach_tickers(ax, multiples_state["snapshot"])
 
     labels_state = state.get("labels")
     if labels_state is not None:
