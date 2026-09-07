@@ -464,3 +464,18 @@ def test_empty_panel_takes_the_group_kind():
     assert isinstance(axes[1].xaxis.get_major_formatter(), ConciseDateFormatter)
     assert isinstance(axes[1].xaxis.get_major_locator(), GroupLocator)
     plt.close(fig)
+
+
+def test_sibling_outside_the_grid_follows_the_shared_ticker():
+    fig, axes = plt.subplots(1, 3, sharex=True)
+    for ax, (lo, hi) in zip(axes, [(0, 1), (2, 5), (7, 9)], strict=True):
+        ax.plot([lo, hi], [lo, hi])
+    original = axes[2].xaxis.get_major_locator()
+    vzs.small_multiples(axes[:2])
+    fig.canvas.draw()
+    assert isinstance(axes[2].xaxis.get_major_locator(), GroupLocator)
+    assert axes[2].xaxis.get_major_locator() is axes[0].xaxis.get_major_locator()
+    assert not hasattr(axes[2], "_vanzelfsprekend_state")
+    vzs.restore(axes[0])
+    assert axes[2].xaxis.get_major_locator() is original
+    plt.close(fig)
