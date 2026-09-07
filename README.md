@@ -186,14 +186,14 @@ The critical-power model for four rider archetypes on a log time axis. Four peer
 
 ![Four modelled power-duration curves on a log time axis in Tol's muted scheme, crossing at staggered durations and labelled at their flat right ends](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/power_profiles.png)
 
-A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` (the same idea reduced to one axis's own values) sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine, his "better graph". The two labels are `label(ax, "measured", x=17.2)` and `label(ax, "calculated", x=17.5)`, Doumont's anchors, slid just clear of the ink:
+A resonance curve after Doumont, measured points over a calculated Lorentzian that spills past the frame. `FeatureLocator` marks the band edges and, between them, the one place the reader came to find; a feature is a callable or a fixed number, so the `16` and `19` edges sit beside the peak `x[argmax(y)]`, whose tick lands at 17.2 GHz whether or not that is the mean. `SummaryLocator` (the same idea reduced to one axis's own values) sets a minor tick at half power, the level the linewidth is read at. The y-label is stacked above the top tick with `ylabel(ax, ..., place="above")`, the one place Doumont raises his y-label over the spine, his "better graph". The two labels are Doumont's anchors, slid just clear of the ink: `label` takes the same features as `FeatureLocator`, so "measured" anchors at the summit point with the peak's own `x[argmax(y)]`, and "calculated" at a fixed `x=17.5` on the flank:
 
 ```python
 ax.xaxis.set_major_locator(
     vzs.FeatureLocator(x, y, [16, lambda x, y: x[np.argmax(y)], 19])
 )
 ax.yaxis.set_minor_locator(vzs.SummaryLocator(y, [lambda y: y.max() / 2]))
-ax.vzs.label("measured", x=17.2)  # beside the summit point
+ax.vzs.label("measured", x=lambda x, y: x[np.argmax(y)])  # beside the summit point
 ax.vzs.label("calculated", x=17.5)  # beside the right flank
 ```
 

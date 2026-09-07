@@ -265,8 +265,9 @@ def resonance_peak() -> None:
     vzs.xlabel(ax, "frequency (GHz)", flush=True)
     vzs.ylabel(ax, "output power (mW)", place="above")
     # Doumont names the points beside the summit and the curve beside the
-    # flank under it; the anchors are his, the sliding is ours.
-    vzs.label(ax, "measured", x=17.2)
+    # flank under it; the anchors are his, the sliding is ours. The summit
+    # is a feature of the points, the same one the x tick reads.
+    vzs.label(ax, "measured", x=lambda x, y: x[np.argmax(y)])
     vzs.label(ax, "calculated", x=17.5)
     fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
     plt.close(fig)

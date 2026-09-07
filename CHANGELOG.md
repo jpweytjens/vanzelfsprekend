@@ -28,6 +28,7 @@ Labels:
 - Lines can be labelled at their starts instead, slopegraph-style, and a labels= list names them when the drawing library keeps the legend text away from the line, as seaborn does
 - On a date axis the year the tick labels share sits at the right end of the bottom spine, and stacks above an x label when you set one
 - label puts one label beside a named line or scatter at a chosen x or y, the text sliding just far enough along a helper line through the anchor to clear every mark and text in its way; right of the anchor by default, and left, above or below when the right is blocked
+- The x or y can be a feature of the artist's own points, a callable as the tick locators take, so a label anchors at a peak with the same x[argmax(y)] that marks its tick, and follows the data when it changes
 - Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist; labelling is deliberate, one name per label, never automatic
 
 Small multiples:
