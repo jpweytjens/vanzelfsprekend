@@ -52,15 +52,15 @@ class BreaksLocator(Locator):
 
     Parameters
     ----------
-    n : int, optional
-        The number of ticks to aim for. `None` derives it from the
-        axis's length and `spacing` at tick time.
     spacing : float, optional
         The gap to aim for between ticks, in tick-label heights.
         `None` takes `SPACING` for the axis the locator lands on.
+    n : int, optional
+        The number of ticks to aim for, overriding `spacing`. `None`
+        derives it from the axis's length and `spacing` at tick time.
     """
 
-    def __init__(self, n: int | None, spacing: float | None) -> None:
+    def __init__(self, spacing: float | None, n: int | None) -> None:
         self._n = n
         self._spacing = spacing
 
@@ -105,11 +105,11 @@ class TalbotLocator(BreaksLocator):
 
     Parameters
     ----------
-    n : int, optional
-        The number of ticks to aim for; `None` follows the axis's
-        length. See `BreaksLocator`.
     spacing : float, optional
         The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
+    n : int, optional
+        The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
     loose : bool
         If True, extend the tick grid outward by whole steps so the
@@ -133,13 +133,13 @@ class TalbotLocator(BreaksLocator):
 
     def __init__(
         self,
-        n: int | None = None,
         spacing: float | None = None,
+        n: int | None = None,
         loose: bool = False,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> None:
-        super().__init__(n, spacing)
+        super().__init__(spacing, n)
         valid_keys = set(_DEFAULT_WEIGHTS)
         if weights is not None:
             bad_keys = set(weights) - valid_keys
@@ -319,11 +319,11 @@ class LogBreaksLocator(BreaksLocator):
 
     Parameters
     ----------
-    n : int, optional
-        The number of ticks to aim for; `None` follows the axis's
-        length. See `BreaksLocator`.
     spacing : float, optional
         The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
+    n : int, optional
+        The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
     loose : bool
         If True, extend the tick grid outward by whole multiplicative
@@ -335,12 +335,12 @@ class LogBreaksLocator(BreaksLocator):
 
     def __init__(
         self,
-        n: int | None = None,
         spacing: float | None = None,
+        n: int | None = None,
         loose: bool = False,
         base: float = 10,
     ) -> None:
-        super().__init__(n, spacing)
+        super().__init__(spacing, n)
         self._loose = loose
         self._base = base
 
@@ -513,11 +513,11 @@ class DateBreaksLocator(BreaksLocator):
 
     Parameters
     ----------
-    n : int, optional
-        The number of ticks to aim for; `None` follows the axis's
-        length. See `BreaksLocator`.
     spacing : float, optional
         The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
+    n : int, optional
+        The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
     loose : bool
         If True, keep the covering breaks so the outermost ticks bound
@@ -525,9 +525,9 @@ class DateBreaksLocator(BreaksLocator):
     """
 
     def __init__(
-        self, n: int | None = None, spacing: float | None = None, loose: bool = False
+        self, spacing: float | None = None, n: int | None = None, loose: bool = False
     ) -> None:
-        super().__init__(n, spacing)
+        super().__init__(spacing, n)
         self._loose = loose
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
