@@ -89,10 +89,10 @@ vzs.line_labels(ax, at="start")  # and/or at its left end
 `label` puts one label beside a named artist, wherever the reader will look for it. The text is the artist's `label=`, the same string a legend would show, and the anchor is a spine coordinate: `vzs.label(ax, "calculated", x=17.5)` names the curve at 17.5 GHz, at its crossing for a line and at the nearest point for a scatter. From there the text slides along a helper line through the anchor, as little as needed, to clear every mark and text in its way. It goes right of the anchor by default and left, above or below when the right is blocked; `side=` chooses. Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist:
 
 ```python
-vzs.label(ax, "measured", x=17.2)  # beside the point nearest 17.2
-vzs.label(ax, ["SSP1-1.9", "SSP2-4.5"], x=2060)  # a column at one year
-ax.scatter([x], [y], label="Belgium")
-vzs.label(ax, "Belgium")  # a named point
+vzs.label(ax, "measured", x=17.2)  # resonance figure: beside the nearest point
+vzs.label(ax, ["SSP1-1.9", "SSP2-4.5"], x=2060)  # warming figure: a column at one year
+ax.scatter([x], [y], label="Belgium")  # any scatter: draw the point you want to name
+vzs.label(ax, "Belgium")  # then name it; a one-point artist needs no anchor
 ax.vzs.label("Belgium")  # the same through the accessor
 ```
 
