@@ -351,10 +351,11 @@ def label(
     crossing, a scatter's nearest point. From there the text slides along
     a helper line through the anchor, as little as needed, to clear every
     mark and text in its way. It goes right of the anchor by default and
-    left, above or below when the right is blocked; `side=` chooses. A
-    one-point artist needs no anchor. Several names with one coordinate
-    form a column on the same helper, stacked in order; a column takes
-    only the sides perpendicular to its helper.
+    left, above or below when the right is blocked; `side=` chooses.
+    Lines, scatters, texts and patches count as ink; fills and other
+    collections do not. A one-point artist needs no anchor. Several
+    names with one coordinate form a column on the same helper, stacked
+    in order; a column takes only the sides perpendicular to its helper.
 
     An existing legend is hidden, since the labels replace it, and
     `restore` brings it back. Calling again with the same artists rebuilds
@@ -532,6 +533,8 @@ def _solve_side(
     # the pin matches where a baseline-aligned label sits; tried first, and
     # only if that traps a label between its own pin and the next one does
     # the other direction get a look, since it may open onto a bigger gap.
+    # The retry is attempt-wide: every label that sits on a pin is re-tied
+    # below it together, not one label at a time.
     along = anchors[:, axis]
     n = len(desired)
 
@@ -585,6 +588,7 @@ def _attempt(
     ink: Ink,
     px_per_pt: float,
 ) -> _Attempt:
+    """Measure `group` for `side`, solve it against `ink`, and return the attempt."""
     texts = group["texts"]
     sizes, centres = _measure(texts, side)
     offsets = np.array([text.get_position() for text in texts]) * px_per_pt
@@ -662,6 +666,7 @@ def _place(
 
 
 def _apply_direct(ax: Axes) -> bool:
+    """Re-solve every label group on ax in call order; return whether anything moved."""
     state = get_state(ax)
     groups: list[dict] = (state or {}).get("direct") or []
     # The managed y-label of `ylabel(place="above")` is an `ax.text` child,

@@ -10,6 +10,8 @@ Labels:
 - line_labels takes a labels= list to set the text itself, for plots where the drawing library keeps the legend text on a separate artist from the line, as seaborn does; with no line to label it now warns instead of doing nothing
 - line_labels hides the legend it replaces, rather than leaving both on the axes
 - On a date axis the shared year that ConciseDateFormatter prints once, the "2016" under the ticks, now sits at the right end of the bottom spine where the x label goes, and stacks above an x label when you set one
+- label puts one label beside a named line or scatter at a chosen x or y, the text sliding just far enough along a helper line through the anchor to clear every mark and text in its way; right of the anchor by default, and left, above or below when the right is blocked
+- Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist; labelling is deliberate, one name per label, never automatic
 
 Colour:
 - palettes.cycle(scheme="ink") builds a colour cycle for set_prop_cycle: the default "ink" keeps every mark on the neutral DATA_INK, while a scheme name cycles that scheme's colours without its bad-data grey, so colour is something you opt into once it tells series apart
@@ -41,8 +43,6 @@ Labels:
 - The horizontal y label sits beside the top tick, or with place="above" stacks over it with left edges aligned, Doumont's good and better graphs
 - The x label ends at the spine, or with flush=True its right edge lines up with the last tick label instead, for a clean right margin
 - Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable
-- label puts one label beside a named line or scatter at a chosen x or y, the text sliding just far enough along the anchor to clear every mark and text in its way; right of the anchor by default, and left, above or below when the right is blocked
-- Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist; labelling is deliberate, one name per label, never automatic
 
 Colour:
 - The axis furniture fades to grey so the ink goes to the data
