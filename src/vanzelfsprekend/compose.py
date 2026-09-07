@@ -1,7 +1,7 @@
 """The distill composer, teardown, and the `ax.vzs` accessor registration."""
 
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal
 
 import matplotlib as mpl
 from matplotlib.artist import Artist
@@ -301,8 +301,8 @@ class _Accessor:
         self,
         name: str | Artist | Sequence[str | Artist],
         *,
-        x: float | None = None,
-        y: float | None = None,
+        x: Any | None = None,
+        y: Any | None = None,
         side: Side | None = None,
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,

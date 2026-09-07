@@ -11,7 +11,7 @@ cannot move.
 import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, NamedTuple, cast
+from typing import Any, Literal, NamedTuple, cast
 
 import numpy as np
 from matplotlib import rcParams
@@ -337,8 +337,8 @@ def label(
     ax: Axes,
     name: str | Artist | Sequence[str | Artist],
     *,
-    x: float | None = None,
-    y: float | None = None,
+    x: Any | None = None,
+    y: Any | None = None,
     side: Side | None = None,
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
