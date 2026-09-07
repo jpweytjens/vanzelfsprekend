@@ -353,3 +353,24 @@ def test_distill_on_a_grid_panel_updates_the_whole_grid():
     vzs.restore(axes[1, 1])
     assert not any(hasattr(ax, "_vanzelfsprekend_state") for ax in axes.flat)
     plt.close(fig)
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        lambda ax, **kw: vzs.distill(ax, **kw),
+        lambda ax, **kw: ax.vzs.distill(**kw),
+        lambda ax, **kw: ax.vzs.range_frame(**kw),
+    ],
+)
+def test_spacing_reaches_the_locator_from_every_entry_point(entry):
+    vzs.register()
+    counts = []
+    for spacing in (2, 14):
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.plot([0, 100], [0, 100])
+        entry(ax, spacing=spacing)
+        fig.canvas.draw()
+        counts.append(len(ax.xaxis.get_majorticklocs()))
+        plt.close(fig)
+    assert counts[1] < counts[0]

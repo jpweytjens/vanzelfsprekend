@@ -9,6 +9,7 @@ from matplotlib.gridspec import GridSpecBase, SubplotSpec
 from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.group import axis_kinds, treat
 from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
+from vanzelfsprekend.locator import SPACING
 
 
 def _carries_furniture(ss: SubplotSpec, gridspec: GridSpecBase) -> dict[str, bool]:
@@ -62,7 +63,8 @@ def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
     frame: str | tuple[str, str] = "nice",
-    n: int = 5,
+    spacing: float | tuple[float, float] = SPACING,
+    n: int | None = None,
     offset: float | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -92,7 +94,7 @@ def small_multiples(
         The grid's panels, all from one figure and one gridspec.
     compare : {'figure', 'row', 'column'}
         The smallest set of panels that are fully comparable.
-    frame, n, offset, nice_numbers, weights
+    frame, spacing, n, offset, nice_numbers, weights
         Forwarded to `distill` per panel; see `vanzelfsprekend.distill`.
     xlabel, ylabel : str or sequence of str, optional
         Axis labels. A sequence is accepted only for an axis `compare`
@@ -129,6 +131,7 @@ def small_multiples(
             for ax in panels
         },
         frame=frame,
+        spacing=spacing,
         n=n,
         offset=offset,
         nice_numbers=nice_numbers,

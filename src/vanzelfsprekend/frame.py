@@ -11,13 +11,19 @@ from matplotlib.axis import Axis
 from matplotlib.ticker import NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
+from vanzelfsprekend.locator import (
+    SPACING,
+    DateBreaksLocator,
+    LogBreaksLocator,
+    TalbotLocator,
+)
 
 
 def range_frame(
     ax: Axes,
     frame: str | tuple[str, str] = "nice",
-    n: int = 5,
+    spacing: float | tuple[float, float] = SPACING,
+    n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -41,8 +47,17 @@ def range_frame(
         at nice numbers bounding the data (frame may extend up to one
         tick step beyond the data). A tuple `(x_mode, y_mode)` sets
         the bottom and left spine independently.
-    n : int
-        Desired number of ticks per axis.
+    spacing : float or tuple of two floats
+        The gap to aim for between ticks, in tick-label heights, so the
+        number of ticks follows the axis's length and the labels' size:
+        a small panel gets few, a poster's large labels thin them out.
+        A tuple `(x_spacing, y_spacing)` sets the axes independently;
+        the default `(7, 4)` is 70 pt and 40 pt at 10 pt labels, about
+        2.5 cm and 1.4 cm, since an x label is three to five heights
+        wide along its axis and a y label one. Halving the spacing
+        doubles the ticks.
+    n : int, optional
+        The number of ticks to aim for per axis, overriding `spacing`.
     offset : float or tuple of (float or None), optional
         Outward displacement of the left and bottom spines, in points.
         A single number moves both spines; a tuple `(x_offset,
@@ -62,6 +77,7 @@ def range_frame(
         The same axes, for chaining.
     """
     mode, offsets = parse_frame_args(frame, offset)
+    spacings = parse_spacing(spacing)
     snapshot_frame(ax)
     kinds: dict[str, AxisKind | None] = {
         "x": axis_kind(ax.xaxis),
@@ -72,6 +88,7 @@ def range_frame(
         mode,
         offsets,
         n=n,
+        spacing=spacings,
         nice_numbers=nice_numbers,
         weights=weights,
         kinds=kinds,
@@ -108,6 +125,18 @@ def parse_frame_args(
         value = per_offset[name]
         offsets[name] = (8 if mode[name] == "loose" else 0) if value is None else value
     return mode, offsets
+
+
+def parse_spacing(spacing: float | tuple[float, float]) -> dict[str, float]:
+    """Resolve `spacing` into per-axis gaps, keyed `'x'` and `'y'`."""
+    if isinstance(spacing, (int, float)):
+        return {"x": spacing, "y": spacing}
+    pair = tuple(spacing)
+    if len(pair) != 2 or not all(isinstance(s, (int, float)) for s in pair):
+        raise ValueError(
+            f"spacing must be a number or a tuple of two numbers, got {spacing!r}"
+        )
+    return {"x": pair[0], "y": pair[1]}
 
 
 def snapshot_frame(ax: Axes) -> None:
@@ -177,7 +206,8 @@ def install_frame(
     ax: Axes,
     mode: dict[str, str],
     offsets: dict[str, float],
-    n: int,
+    n: int | None,
+    spacing: dict[str, float],
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
     kinds: dict[str, AxisKind | None],
@@ -192,9 +222,9 @@ def install_frame(
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    mode, offsets : dict
-        Per-axis frame mode and spine offset, keyed `'x'` and `'y'`,
-        from `parse_frame_args`.
+    mode, offsets, spacing : dict
+        Per-axis frame mode, spine offset and tick spacing, keyed
+        `'x'` and `'y'`, from `parse_frame_args` and `parse_spacing`.
     n, nice_numbers, weights
         Locator settings; see `range_frame`.
     kinds : dict
@@ -228,7 +258,9 @@ def install_frame(
             )
             continue
         if kind.is_date:
-            locator = DateBreaksLocator(n=n, loose=mode[name] == "loose")
+            locator = DateBreaksLocator(
+                n=n, spacing=spacing[name], loose=mode[name] == "loose"
+            )
             axis.set_major_locator(locator)
             axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
             frame_state["formatted"].add(name)
@@ -236,6 +268,7 @@ def install_frame(
             axis.set_major_locator(
                 LogBreaksLocator(
                     n=n,
+                    spacing=spacing[name],
                     loose=mode[name] == "loose",
                     base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
                 )
@@ -245,6 +278,7 @@ def install_frame(
             axis.set_major_locator(
                 TalbotLocator(
                     n=n,
+                    spacing=spacing[name],
                     loose=mode[name] == "loose",
                     nice_numbers=nice_numbers,
                     weights=weights,

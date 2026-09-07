@@ -154,9 +154,9 @@ def test_ticks_come_from_group_union():
     fig, axes = plt.subplots(1, 2)
     axes[0].plot([0, 4], [0, 1])
     axes[1].plot([6, 10], [0, 1])
-    vzs.small_multiples(axes)
+    vzs.small_multiples(axes, n=5)
     fig.canvas.draw()
-    expected = vzs.TalbotLocator().tick_values(0, 10)
+    expected = vzs.TalbotLocator(n=5).tick_values(0, 10)
     np.testing.assert_allclose(axes[0].xaxis.get_majorticklocs(), expected)
     plt.close(fig)
 
@@ -479,3 +479,30 @@ def test_sibling_outside_the_grid_follows_the_shared_ticker():
     vzs.restore(axes[0])
     assert axes[2].xaxis.get_major_locator() is original
     plt.close(fig)
+
+
+def test_unequal_panels_share_the_narrower_count():
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3), gridspec_kw={"width_ratios": [5, 1]})
+    for ax in axes:
+        ax.plot([0, 100], [0, 100])
+    vzs.small_multiples(axes)
+    fig.canvas.draw()
+    probe = vzs.TalbotLocator()
+    assert probe.target(axes[1].xaxis) < probe.target(axes[0].xaxis)
+    expected = probe.tick_values(0, 100, n=probe.target(axes[1].xaxis))
+    for ax in axes:
+        np.testing.assert_allclose(ax.xaxis.get_majorticklocs(), expected)
+    plt.close(fig)
+
+
+def test_spacing_reaches_the_grid():
+    counts = []
+    for spacing in (2, 14):
+        fig, axes = plt.subplots(1, 2, figsize=(8, 3))
+        for ax in axes:
+            ax.plot([0, 100], [0, 100])
+        vzs.small_multiples(axes, spacing=spacing)
+        fig.canvas.draw()
+        counts.append(len(axes[0].xaxis.get_majorticklocs()))
+        plt.close(fig)
+    assert counts[1] < counts[0]

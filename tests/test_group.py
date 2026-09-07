@@ -15,11 +15,11 @@ def test_group_locator_computes_ticks_from_union():
     fig, axes = plt.subplots(1, 2)
     axes[0].plot([0, 4], [0, 1])
     axes[1].plot([6, 10], [0, 1])
-    vzs.range_frame(axes[0])
+    vzs.range_frame(axes[0], n=5)
     inner = axes[0].xaxis.get_major_locator()
     axes[0].xaxis.set_major_locator(GroupLocator(inner, list(axes), "x"))
     fig.canvas.draw()
-    expected = vzs.TalbotLocator().tick_values(0, 10)
+    expected = vzs.TalbotLocator(n=5).tick_values(0, 10)
     np.testing.assert_allclose(axes[0].xaxis.get_majorticklocs(), expected)
     plt.close(fig)
 
@@ -40,7 +40,7 @@ def test_group_locator_view_limits_cover_the_union():
     fig, axes = plt.subplots(1, 2)
     axes[0].plot([0, 1], [0, 1])
     axes[1].plot([10, 11], [0, 1])
-    vzs.range_frame(axes[0], frame="loose")
+    vzs.range_frame(axes[0], frame="loose", n=5)
     inner = axes[0].xaxis.get_major_locator()
     grouped = GroupLocator(inner, list(axes), "x")
     assert grouped.view_limits(0, 1) == (0.0, 12.5)
@@ -197,7 +197,7 @@ def test_loose_shared_pair_autoscales_to_the_union_span():
     fig, (a, b) = plt.subplots(1, 2, sharex=True)
     a.plot([0, 1], [0, 1])
     b.plot([10, 11], [0, 1])
-    vzs.distill(a, frame="loose")
+    vzs.distill(a, frame="loose", n=5)
     fig.canvas.draw()
     assert a.get_xlim() == (0.0, 12.5)
     assert b.get_xlim() == (0.0, 12.5)
@@ -210,7 +210,7 @@ def test_loose_compare_grid_autoscales_to_the_union_span():
     fig, (a, b) = plt.subplots(1, 2)
     a.plot([0, 1], [0, 1])
     b.plot([10, 11], [0, 1])
-    vzs.small_multiples((a, b), frame="loose")
+    vzs.small_multiples((a, b), frame="loose", n=5)
     fig.canvas.draw()
     assert a.get_xlim() == (0.0, 12.5)
     assert b.get_xlim() == (0.0, 12.5)
@@ -288,4 +288,31 @@ def test_unsupported_scale_warns_at_the_call_site_for_every_entry_point():
         vzs.small_multiples([axes[2]])
     assert len(record) == 3
     assert [w.filename for w in record] == [__file__] * 3
+    plt.close(fig)
+
+
+def test_group_locator_targets_the_narrowest_member():
+    fig, axes = plt.subplots(1, 2, figsize=(8, 3), gridspec_kw={"width_ratios": [5, 1]})
+    axes[0].plot([0, 4], [0, 1])
+    axes[1].plot([6, 10], [0, 1])
+    vzs.range_frame(axes[0])
+    inner = axes[0].xaxis.get_major_locator()
+    axes[0].xaxis.set_major_locator(GroupLocator(inner, list(axes), "x"))
+    fig.canvas.draw()
+    expected = inner.tick_values(0, 10, n=inner.target(axes[1].xaxis))
+    np.testing.assert_allclose(axes[0].xaxis.get_majorticklocs(), expected)
+    plt.close(fig)
+
+
+def test_loose_unequal_pair_view_matches_its_ticks():
+    fig, axes = plt.subplots(
+        1, 2, figsize=(8, 3), sharex=True, gridspec_kw={"width_ratios": [5, 1]}
+    )
+    axes[0].plot([0.3, 4.1], [0, 1])
+    axes[1].plot([6.2, 9.7], [0, 1])
+    vzs.distill(axes[0], frame="loose")
+    fig.canvas.draw()
+    for ax in axes:
+        ticks = ax.xaxis.get_majorticklocs()
+        assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
     plt.close(fig)

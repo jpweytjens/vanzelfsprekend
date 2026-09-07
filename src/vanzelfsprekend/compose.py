@@ -13,6 +13,7 @@ from vanzelfsprekend.group import share_groups, treat
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
+from vanzelfsprekend.locator import SPACING
 from vanzelfsprekend.multiples import _teardown_grid
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
@@ -22,7 +23,8 @@ from vanzelfsprekend.ticks import _rc, tick_direction
 def distill(
     ax: Axes,
     frame: str | tuple[str, str] = "nice",
-    n: int = 5,
+    spacing: float | tuple[float, float] = SPACING,
+    n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -57,6 +59,7 @@ def distill(
     treat(
         share_groups(ax) if recorded is None else recorded,
         frame=frame,
+        spacing=spacing,
         n=n,
         offset=offset,
         nice_numbers=nice_numbers,
@@ -256,7 +259,8 @@ class _Accessor:
     def distill(
         self,
         frame: str | tuple[str, str] = "nice",
-        n: int = 5,
+        spacing: float | tuple[float, float] = SPACING,
+        n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
@@ -265,6 +269,7 @@ class _Accessor:
         return distill(
             self._ax,
             frame=frame,
+            spacing=spacing,
             n=n,
             offset=offset,
             nice_numbers=nice_numbers,
@@ -278,7 +283,8 @@ class _Accessor:
     def range_frame(
         self,
         frame: str | tuple[str, str] = "nice",
-        n: int = 5,
+        spacing: float | tuple[float, float] = SPACING,
+        n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
@@ -287,6 +293,7 @@ class _Accessor:
         return range_frame(
             self._ax,
             frame=frame,
+            spacing=spacing,
             n=n,
             offset=offset,
             nice_numbers=nice_numbers,

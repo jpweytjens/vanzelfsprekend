@@ -22,11 +22,17 @@ from vanzelfsprekend.frame import (
     axis_kind,
     install_frame,
     parse_frame_args,
+    parse_spacing,
     snapshot_frame,
 )
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 from vanzelfsprekend.labels import _apply_date_offset
-from vanzelfsprekend.locator import DateBreaksLocator, LogBreaksLocator, TalbotLocator
+from vanzelfsprekend.locator import (
+    SPACING,
+    DateBreaksLocator,
+    LogBreaksLocator,
+    TalbotLocator,
+)
 from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticklabels import _apply_tick_labels
 
@@ -76,11 +82,13 @@ class GroupLocator(Locator):
 
     Installed on a panel's axis in place of the locator the frame chose,
     so ticks are recomputed on every draw from the union of the group
-    members' data instead of the one panel's. Everything else defers to
-    `inner`, whose own axis binding is left in place so a formatter
-    constructed around it (`ConciseDateFormatter`) keeps working. View
-    limits are computed over the union as well, so a loose group
-    autoscales to the union's covering breaks on the first draw.
+    members' data instead of the one panel's, and aimed at the count
+    the narrowest member can carry, so panels of unequal width agree.
+    Everything else defers to `inner`, whose own axis binding is left
+    in place so a formatter constructed around it
+    (`ConciseDateFormatter`) keeps working. View limits are computed
+    over the union as well, so a loose group autoscales to the union's
+    covering breaks on the first draw.
     """
 
     def __init__(
@@ -90,16 +98,23 @@ class GroupLocator(Locator):
         self._members = members
         self._name = name
 
+    def target(self) -> int:
+        """Return the tick count the narrowest member can carry."""
+        return min(
+            self._inner.target(ax.xaxis if self._name == "x" else ax.yaxis)
+            for ax in self._members
+        )
+
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Compute tick positions from the union of the group's data."""
         union = data_union(self._members, self._name)
         if union is None:
             return np.asarray(self._inner())
-        return np.asarray(self._inner.tick_values(*union))
+        return np.asarray(self._inner.tick_values(*union, n=self.target()))
 
     def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
         """Delegate tick value computation to the inner locator."""
-        return np.asarray(self._inner.tick_values(vmin, vmax))
+        return np.asarray(self._inner.tick_values(vmin, vmax, n=self.target()))
 
     def nonsingular(  # ty: ignore[invalid-method-override]
         self, vmin: float, vmax: float
@@ -110,7 +125,7 @@ class GroupLocator(Locator):
     def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
         """View limits with the loose span covering the group's data union."""
         return self._inner.view_limits_over(
-            vmin, vmax, data_union(self._members, self._name)
+            vmin, vmax, data_union(self._members, self._name), n=self.target()
         )
 
 
@@ -131,7 +146,8 @@ def treat(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
     frame: str | tuple[str, str] = "nice",
-    n: int = 5,
+    spacing: float | tuple[float, float] = SPACING,
+    n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -158,6 +174,7 @@ def treat(
     treats the same unit again with the new settings.
     """
     mode, offsets = parse_frame_args(frame, offset)
+    spacings = parse_spacing(spacing)
     unit = tuple(members)
     for ax in unit:
         snapshot_frame(ax)
@@ -203,6 +220,7 @@ def treat(
             mode,
             offsets,
             n=n,
+            spacing=spacings,
             nice_numbers=nice_numbers,
             weights=weights,
             kinds=kinds,

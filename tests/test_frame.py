@@ -417,3 +417,39 @@ def test_frame_span_loose_interval_with_no_ticks_does_not_raise():
     get_state(ax)["frame"]["intervals"] = {"x": lambda: (3.1, 6.9)}
     fig.canvas.draw()  # must not raise
     plt.close(fig)
+
+
+def _framed_ticks(figsize, name="x", **kwargs):
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot([0, 100], [0, 100])
+    range_frame(ax, **kwargs)
+    fig.canvas.draw()
+    ticks = (ax.xaxis if name == "x" else ax.yaxis).get_majorticklocs()
+    plt.close(fig)
+    return ticks
+
+
+def test_count_follows_figure_size():
+    assert len(_framed_ticks((2, 3))) < len(_framed_ticks((10, 3)))
+
+
+def test_spacing_tuple_sets_each_axis():
+    x = _framed_ticks((4, 4), "x", spacing=(2, 14))
+    y = _framed_ticks((4, 4), "y", spacing=(2, 14))
+    assert len(y) < len(x)
+
+
+def test_scalar_spacing_applies_to_both_axes():
+    x = _framed_ticks((4, 4), "x", spacing=3)
+    y = _framed_ticks((4, 4), "y", spacing=3)
+    assert len(x) == len(y)
+
+
+def test_n_overrides_spacing():
+    ticks = _framed_ticks((10, 3), n=3, spacing=1)
+    np.testing.assert_allclose(ticks, vzs.TalbotLocator(n=3).tick_values(0, 100))
+
+
+def test_rejects_malformed_spacing(scatter_ax):
+    with pytest.raises(ValueError, match="spacing"):
+        range_frame(scatter_ax, spacing=(1, 2, 3))
