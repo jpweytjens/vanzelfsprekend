@@ -378,6 +378,49 @@ def test_label_x_converts_through_the_axis_units():
     plt.close(fig)
 
 
+def test_label_feature_anchors_on_the_point_it_picks():
+    fig, ax = resonance()
+    (text,) = vzs.label(ax, "measured", x=lambda x, y: x[np.argmax(y)], side="right")
+    offsets = np.asarray(ax.collections[0].get_offsets())
+    summit = offsets[np.argmax(offsets[:, 1])]
+    assert text.xy == pytest.approx(tuple(summit))
+    plt.close(fig)
+
+
+def test_label_feature_bypasses_the_axis_units():
+    fig, ax = plt.subplots()
+    dates = [datetime.date(2020, 1, d) for d in range(1, 11)]
+    ax.plot(dates, [0, 1, 2, 9, 4, 5, 6, 7, 8, 3], label="series")
+    (text,) = vzs.label(ax, "series", x=lambda x, y: x[np.argmax(y)], side="right")
+    fig.canvas.draw()
+    assert text.xy[0] == pytest.approx(
+        matplotlib.dates.date2num(datetime.date(2020, 1, 4))
+    )
+    assert text.xy[1] == pytest.approx(9.0)
+    plt.close(fig)
+
+
+def test_label_feature_re_resolves_on_every_draw():
+    fig, ax = plt.subplots()
+    x = np.arange(10.0)
+    (line,) = ax.plot(x, np.where(x == 3, 5.0, 1.0), label="series")
+    (text,) = vzs.label(ax, "series", x=lambda x, y: x[np.argmax(y)], side="right")
+    fig.canvas.draw()
+    assert text.xy == pytest.approx((3.0, 5.0))
+    line.set_ydata(np.where(x == 7, 5.0, 1.0))
+    fig.canvas.draw()
+    assert text.xy == pytest.approx((7.0, 5.0))
+    plt.close(fig)
+
+
+def test_column_rejects_a_feature_anchor():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    with pytest.raises(ValueError, match="a column of labels needs a fixed x= or y="):
+        vzs.label(ax, ["low", "mid"], x=lambda x, y: x.mean())
+    plt.close(fig)
+
+
 def test_label_on_the_right_clears_the_curve_and_the_points():
     fig, ax = resonance()
     texts = vzs.label(ax, "calculated", x=17.5, side="right")
@@ -833,5 +876,7 @@ def test_accessor_label_matches_the_function():
     fig, ax = resonance()
     (text,) = ax.vzs.label("calculated", x=17.5, side="right")
     assert text.get_text() == "calculated"
+    (peak,) = ax.vzs.label("measured", x=lambda x, y: x[np.argmax(y)])
+    assert peak.get_text() == "measured"
     assert "label" in vzs.__all__
     plt.close(fig)

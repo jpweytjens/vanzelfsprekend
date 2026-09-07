@@ -9,7 +9,7 @@ cannot move.
 """
 
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, NamedTuple, cast
 
@@ -28,7 +28,12 @@ from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appli
 from vanzelfsprekend.lines import _ink_rise, _resolve_colors
 
 Side = Literal["right", "left", "above", "below"]
-Helper = tuple[Literal["x", "y"], float]
+Feature = Callable[[np.ndarray, np.ndarray], float]
+"""A feature of an artist's finite `(x, y)`, one coordinate, as in `FeatureLocator`."""
+Fixed = tuple[Literal["x", "y"], float]
+"""An axis and the fixed coordinate on it that picks the anchor."""
+Helper = tuple[Literal["x", "y"], float | Feature]
+"""A `Fixed` helper, or one whose coordinate is a feature still to be evaluated."""
 
 SIDES: tuple[Side, ...] = ("right", "left", "above", "below")
 """Priority order for an unchosen side (Imhof's ranking and Doumont's practice)."""
@@ -125,7 +130,25 @@ def _points(artist: Artist) -> np.ndarray:
     raise ValueError(f"cannot label a {type(artist).__name__}; lines and scatters only")
 
 
-def _anchor(ax: Axes, artist: Artist, helper: Helper | None) -> tuple[float, float]:
+def _resolve(helper: Helper | None, artist: Artist) -> Fixed | None:
+    """Return `helper` with a feature evaluated on `artist`'s finite points.
+
+    An artist without a finite point resolves to NaN, so `_anchor` can
+    raise its own message for it.
+    """
+    if helper is None:
+        return None
+    which, feature = helper
+    if isinstance(feature, float | int):
+        return (which, feature)
+    points = _points(artist)
+    finite = points[np.isfinite(points).all(axis=1)]
+    if not len(finite):
+        return (which, np.nan)
+    return (which, float(feature(finite[:, 0], finite[:, 1])))
+
+
+def _anchor(ax: Axes, artist: Artist, helper: Fixed | None) -> tuple[float, float]:
     """Return the data-space point on `artist` that `helper` picks.
 
     `("x", v)` is the crossing of a line with the vertical at `v`,
@@ -377,10 +400,14 @@ def label(
         lines `_child0`, `_child1`, ...) is handled by naming the drawn
         line first, `line.set_label("A")`: a drawn artist wins the name
         over an empty proxy.
-    x, y : float, optional
+    x, y : float or callable, optional
         The spine coordinate of the anchor; give one, not both. Required
         for a multi-point artist and for a column. In the axis's own
-        units, so a date works on a date axis.
+        units, so a date works on a date axis. A callable is a feature
+        as in `FeatureLocator`, `(x, y) -> float` over the artist's
+        finite points in data units, evaluated on every draw, so
+        `x=lambda x, y: x[np.argmax(y)]` anchors at the peak. A column
+        needs a fixed number.
     side : {'right', 'left', 'above', 'below'}, optional
         Where the text goes. `None` tries the sides in that order and
         takes the first that fits.
@@ -404,13 +431,15 @@ def label(
         raise ValueError("give x= or y=, not both")
     helper: Helper | None
     if x is not None:
-        helper = ("x", float(ax.convert_xunits(x)))
+        helper = ("x", x if callable(x) else float(ax.convert_xunits(x)))
     elif y is not None:
-        helper = ("y", float(ax.convert_yunits(y)))
+        helper = ("y", y if callable(y) else float(ax.convert_yunits(y)))
     else:
         helper = None
     if column and helper is None:
         raise ValueError("a column of labels needs x= or y=")
+    if column and helper is not None and callable(helper[1]):
+        raise ValueError("a column of labels needs a fixed x= or y=, not a feature")
     if side is not None and side not in SIDES:
         raise ValueError(f"side must be one of {SIDES}, got {side!r}")
     if (
@@ -426,7 +455,7 @@ def label(
     if not names:
         raise ValueError("no names given")
     artists = [_find(ax, n) for n in names]
-    anchors = [_anchor(ax, artist, helper) for artist in artists]
+    anchors = [_anchor(ax, artist, _resolve(helper, artist)) for artist in artists]
     state = ensure_state(ax)
     legend = ax.get_legend()
     if legend is not None:
@@ -681,8 +710,10 @@ def _apply_direct(ax: Axes) -> bool:
     changed = False
     for i, group in enumerate(groups):
         try:
+            helpers = [_resolve(group["helper"], artist) for artist in group["artists"]]
             anchors_data = [
-                _anchor(ax, artist, group["helper"]) for artist in group["artists"]
+                _anchor(ax, artist, helper)
+                for artist, helper in zip(group["artists"], helpers, strict=True)
             ]
         except ValueError:
             continue
@@ -693,10 +724,10 @@ def _apply_direct(ax: Axes) -> bool:
                 changed = True
         anchors = ax.transData.transform(anchors_data)
         helper_px = None
-        if group["helper"] is not None:
-            axis = 0 if group["helper"][0] == "x" else 1
+        if helpers[0] is not None:
+            axis = 0 if helpers[0][0] == "x" else 1
             probe = list(anchors_data[0])
-            probe[axis] = group["helper"][1]
+            probe[axis] = helpers[0][1]
             helper_px = float(ax.transData.transform(probe)[axis])
         pending = {text for later in groups[i:] for text in later["texts"]}
         try:
