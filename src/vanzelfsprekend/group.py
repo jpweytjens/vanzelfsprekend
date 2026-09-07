@@ -153,7 +153,9 @@ def treat(
     appliers. Once every member has its locator installed, each member
     with a pinned axis is autoscaled once so a loose frame lands edge
     to edge. `stacklevel` is the caller's depth for the warnings
-    `install_frame` raises. The keys together are what `restore` undoes.
+    `install_frame` raises. The keys together are what `restore` undoes,
+    and `members` itself is recorded so a later `distill` on any key
+    treats the same unit again with the new settings.
     """
     mode, offsets = parse_frame_args(frame, offset)
     unit = tuple(members)
@@ -164,6 +166,7 @@ def treat(
             group_state: dict = {"snapshot": {"limits": {}, "autoscale": {}}}
             state["group"] = group_state
         state["group"]["unit"] = unit
+        state["group"]["groups"] = members
         # A group of one pins nothing, so it is left out here and the
         # axis keeps whatever the frame alone would have given it.
         state["group"]["members"] = {

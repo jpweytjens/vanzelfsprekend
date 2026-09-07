@@ -52,8 +52,10 @@ def distill(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    state = get_state(ax)
+    recorded = state["group"]["groups"] if state and "group" in state else None
     treat(
-        share_groups(ax),
+        share_groups(ax) if recorded is None else recorded,
         frame=frame,
         n=n,
         offset=offset,

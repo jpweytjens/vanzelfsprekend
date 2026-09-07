@@ -338,3 +338,18 @@ def test_only_the_shared_axis_is_pinned_to_a_group():
     ] == before_autoscale
     assert (upper.get_xlim(), lower.get_xlim()) == before_xlim
     plt.close(fig)
+
+
+def test_distill_on_a_grid_panel_updates_the_whole_grid():
+    fig, axes = plt.subplots(2, 2)
+    for ax, (lo, hi) in zip(axes.flat, [(0, 1), (2, 5), (-3, 0), (4, 9)], strict=True):
+        ax.plot([lo, hi], [lo, hi])
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    vzs.distill(axes[0, 0], frame="data")
+    fig.canvas.draw()
+    for ax in axes.flat:
+        assert ax.spines["left"].get_bounds() == (-3.0, 9.0)
+    vzs.restore(axes[1, 1])
+    assert not any(hasattr(ax, "_vanzelfsprekend_state") for ax in axes.flat)
+    plt.close(fig)
