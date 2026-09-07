@@ -439,7 +439,7 @@ def label(
     )
     add_applier(ax, "direct", _apply_direct)
     run_appliers(ax)
-    return texts
+    return list(texts)
 
 
 @dataclass

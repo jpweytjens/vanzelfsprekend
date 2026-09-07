@@ -7,6 +7,7 @@ from matplotlib.transforms import Bbox
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import direct, lines
+from vanzelfsprekend.hook import get_state
 
 
 @pytest.fixture
@@ -380,6 +381,19 @@ def test_label_re_solves_on_resize():
     fig.set_size_inches(8, 2.5)
     fig.canvas.draw()
     assert_clear_of_ink(ax, texts)
+    plt.close(fig)
+
+
+def test_label_returns_a_copy_so_callers_cannot_grow_the_group():
+    fig, ax = resonance()
+    first = vzs.label(ax, "calculated", x=17.5, side="right")
+    first += vzs.label(ax, "measured", x=17.2, side="right")
+    groups = get_state(ax)["direct"]
+    assert [len(g["texts"]) for g in groups] == [1, 1]
+    fig.canvas.draw()
+    fig.set_size_inches(8, 2.5)
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, first)
     plt.close(fig)
 
 
