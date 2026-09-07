@@ -89,6 +89,22 @@ def test_anchor_on_scatter_is_nearest_point(ax):
         direct._anchor(ax, cloud, ("x", 5.0))
 
 
+def test_anchor_on_masked_scatter_skips_masked_points(ax):
+    x = np.ma.array([0.0, 1.0, 2.0], mask=[False, True, False])
+    cloud = ax.scatter(x, [5.0, 6.0, 7.0], label="cloud")
+    assert direct._anchor(ax, cloud, ("y", 6.0)) == pytest.approx((2.0, 7.0))
+    anchor = direct._anchor(ax, cloud, ("x", 1.0))
+    assert anchor == pytest.approx((0.0, 5.0)) or anchor == pytest.approx((2.0, 7.0))
+
+
+def test_anchor_on_fully_masked_scatter_raises(ax):
+    x = np.ma.array([0.0, 1.0], mask=[True, True])
+    cloud = ax.scatter(x, [5.0, 6.0], label="cloud")
+    assert not direct._drawn(cloud)
+    with pytest.raises(ValueError, match="'cloud' has no finite point"):
+        direct._anchor(ax, cloud, ("x", 0.0))
+
+
 def test_anchor_without_helper_needs_a_single_point(ax):
     dot = ax.scatter([3.0], [4.0], label="dot")
     (line,) = ax.plot([0, 1], [0, 1], label="alpha")

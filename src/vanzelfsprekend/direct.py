@@ -83,7 +83,10 @@ def _find(ax: Axes, name: str | Artist) -> Artist:
 
 
 def _points(artist: Artist) -> np.ndarray:
-    """Return `artist`'s points as an (n, 2) float array in data space, NaN kept."""
+    """Return `artist`'s points as an (n, 2) float array in data space.
+
+    Masked offsets become NaN.
+    """
     if isinstance(artist, Line2D):
         return np.column_stack(
             [
@@ -92,7 +95,8 @@ def _points(artist: Artist) -> np.ndarray:
             ]
         )
     if isinstance(artist, PathCollection):
-        return np.asarray(artist.get_offsets(), dtype=float).reshape(-1, 2)
+        offsets = np.ma.asarray(artist.get_offsets(), dtype=float)
+        return np.ma.filled(offsets, np.nan).reshape(-1, 2)
     raise ValueError(f"cannot label a {type(artist).__name__}; lines and scatters only")
 
 
