@@ -91,13 +91,16 @@ def grand_tours() -> None:
     # arrives, and distill detects date-ness at call time.
     vzs.small_multiples(
         axes,
+        compare="column",
         frame="data",
         spacing=(5, 4),
         ylabel="winner's average\nspeed (km/h)",
     )
     for ax, speeds in speeds_of.items():
-        ax.yaxis.set_major_locator(vzs.SummaryLocator(speeds, [np.nanmin, np.nanmax]))
-        ax.yaxis.set_major_formatter("{x:.0f}")
+        ax.yaxis.set_major_locator(
+            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+        )
+        ax.yaxis.set_major_formatter("{x:.1f}")
         vzs.line_labels(ax)
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
     plt.close(fig)

@@ -131,16 +131,17 @@ ax.xaxis.set_major_formatter("{x:.0f}")
 
 ![Four scatter panels of Anscombe's quartet, each with spines trimmed to its own data and ticks at its own quartiles, differing where the shared statistics cannot](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/anscombe.png)
 
-A century of grand tour winners' average speeds, one race per panel on a shared scale, each line in a nod to its jersey and named at its end. The y spines share one scale across the three, and `SummaryLocator` ticks each at that race's slowest and fastest winning speed, so the Tour's 24 to 43 km/h reads against the Giro's 23 to 42 without a round number in between. The time spine ends exactly at the first and last editions, the two world wars stay visible as holes in every record, and the Vuelta's broken start in the 1930s is its own story:
+A century of grand tour winners' average speeds, one race per panel, each line in a nod to its jersey and named at its end. `compare="column"` shares the time axis down the column and gives each race its own y scale, so under `frame="data"` every y spine is that race's range frame: `SummaryLocator` ticks it at the slowest winner, the median and the fastest, and the spine runs exactly between the two extremes. The three triplets read straight down the column, 24.1, 35.9 and 43.4 km/h for the Tour against 23.4, 36.0 and 41.9 for the Giro, without a round number in between. The two world wars stay visible as holes in every record, and the Vuelta's broken start in the 1930s is its own story:
 
 ```python
-vzs.small_multiples(
-    axes, frame="data", spacing=(5, 4), ylabel="winner's average\nspeed (km/h)"
+vzs.small_multiples(axes, compare="column", frame="data", spacing=(5, 4), ylabel=...)
+ax.yaxis.set_major_locator(
+    vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
 )
-ax.yaxis.set_major_locator(vzs.SummaryLocator(speeds, [np.nanmin, np.nanmax]))
+ax.yaxis.set_major_formatter("{x:.1f}")
 ```
 
-![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, gold, pink and red, each named at its line's end, each y spine ticked at that race's slowest and fastest winner, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
+![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, gold, pink and red, each named at its line's end, each y spine running from that race's slowest to its fastest winner with the median marked between, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
 
 A wide-form line chart that seaborn drew, distilled by the same one call: the treatment reads an axes, not the library that filled it, so it reaches a seaborn plot as readily as a bare matplotlib one. The four series are a constructed random walk under seaborn's `whitegrid` theme; `distill` trims the box to two spines, drops the grid, and keeps the tick marks the theme had switched off, while `line_labels` stands in for the legend. seaborn keeps each legend entry's text on a proxy artist away from the drawn line, so the labels come from `labels=` rather than the lines' own names:
 
