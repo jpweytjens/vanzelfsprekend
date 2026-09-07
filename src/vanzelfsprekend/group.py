@@ -268,6 +268,7 @@ def _drop_twins(entry: Axes, unit: list[Axes]) -> list[Axes]:
     twin; the twin's own axis and spines are untouched, and its box
     stays, hence the warning.
     """
+    # `_component` puts `ax` first, so `unit[1:]` is every sibling but it.
     kept = [entry]
     dropped = False
     for member in unit[1:]:
@@ -299,7 +300,6 @@ def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
     set that axis to `None` for every member, which leaves it untouched.
     """
     unit = _drop_twins(ax, _component(ax))
-    unit_ids = {id(member) for member in unit}
     groups: dict[Axes, dict[str, list[Axes] | None]] = {}
     for member in unit:
         per_axis: dict[str, list[Axes] | None] = {}
@@ -308,16 +308,14 @@ def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
             ("y", member.get_shared_y_axes()),
         ):
             sibling_ids = {id(s) for s in grouper.get_siblings(member)}
-            per_axis[name] = [
-                s for s in unit if id(s) in sibling_ids and id(s) in unit_ids
-            ]
+            per_axis[name] = [s for s in unit if id(s) in sibling_ids]
         groups[member] = per_axis
     agree: dict[tuple[str, frozenset[int]], bool] = {}
     for per_axis in groups.values():
         for name in ("x", "y"):
-            siblings = per_axis[name]
-            if siblings is None:
-                continue
+            # Only the assignment below writes `None`, and it never
+            # revisits a pair, so every read here is a real list.
+            siblings = cast("list[Axes]", per_axis[name])
             key = (name, frozenset(id(s) for s in siblings))
             if key not in agree:
                 agree[key] = len(axis_kinds(siblings, name)) <= 1

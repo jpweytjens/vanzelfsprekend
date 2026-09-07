@@ -192,7 +192,7 @@ vanzelfsprekend also joins a long line of Tufte-in-matplotlib work, and its neig
 | Name | Does |
 | --- | --- |
 | `distill(ax, ...)` | the full treatment with defaults |
-| `restore(ax)` | put the axes back as they were |
+| `restore(ax)` | put the axes back as they were, with every panel distilled with it |
 | `range_frame(ax, frame, n, offset, ...)` | the range frame, with every knob |
 | `small_multiples(axes, compare, ...)` | one treatment for a grid of axes on a shared scale |
 | `mute(ax, text_ink, line_ink, line_width)` | grey the axis furniture, leaving the data ink alone |

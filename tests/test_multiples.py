@@ -111,7 +111,8 @@ def test_sharex_date_grid_draws():
     axes[0].plot(days[:5], range(5))
     axes[1].plot(days[4:], range(5))
     vzs.small_multiples(axes)
-    fig.canvas.draw()  # fresh date locator/formatter pair must be functional
+    # the shared Ticker carries one date locator and formatter for both panels
+    fig.canvas.draw()
     plt.close(fig)
 
 
@@ -381,7 +382,7 @@ def test_restore_every_panel_matches_pristine_grid(sharex):
     plt.close(fig_b)
 
 
-def test_restore_reattaches_original_shared_tickers():
+def test_restore_keeps_the_shared_ticker_object():
     fig, axes = plt.subplots(1, 2, sharex=True)
     axes[0].plot([0, 4], [0, 1])
     axes[1].plot([6, 10], [0, 1])

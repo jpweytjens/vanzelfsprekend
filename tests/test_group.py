@@ -214,6 +214,8 @@ def test_loose_compare_grid_autoscales_to_the_union_span():
     fig.canvas.draw()
     assert a.get_xlim() == (0.0, 12.5)
     assert b.get_xlim() == (0.0, 12.5)
+    fig.canvas.draw()
+    assert a.get_xlim() == (0.0, 12.5)
     plt.close(fig)
 
 
@@ -237,8 +239,9 @@ def test_shared_axis_that_mixes_dates_and_floats_warns_and_is_left_alone():
     days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(5)]
     a.plot(days, range(5))
     b.plot(range(5), range(5))
-    with pytest.warns(UserWarning, match="shared x-axis"):
+    with pytest.warns(UserWarning, match="shared x-axis") as record:
         vzs.distill(a)
+    assert len(record) == 1
     fig.canvas.draw()
     assert a.spines["bottom"].get_bounds() is None
     assert b.spines["bottom"].get_bounds() is None

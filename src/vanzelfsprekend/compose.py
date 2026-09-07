@@ -13,6 +13,7 @@ from vanzelfsprekend.group import share_groups, treat
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
+from vanzelfsprekend.multiples import _teardown_grid
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
 from vanzelfsprekend.ticks import _rc, tick_direction
@@ -130,11 +131,6 @@ def _restore_member(ax: Axes) -> None:
 
     multiples_state = state.get("multiples")
     if multiples_state is not None:
-        # Imported here: multiples imports from group, which compose also
-        # imports; a module-level import here would still be a cycle
-        # through the accessor's `small_multiples` reference.
-        from vanzelfsprekend.multiples import _teardown_grid
-
         _teardown_grid(multiples_state["grid"])
 
     labels_state = state.get("labels")
