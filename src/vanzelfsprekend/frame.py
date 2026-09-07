@@ -2,7 +2,7 @@
 
 import warnings
 from collections.abc import Sequence
-from typing import Any, NamedTuple, cast
+from typing import NamedTuple
 
 import matplotlib.dates as mdates
 import numpy as np
@@ -61,6 +61,24 @@ def range_frame(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    mode, offsets = parse_frame_args(frame, offset)
+    snapshot_frame(ax)
+    kinds: dict[str, AxisKind | None] = {
+        "x": axis_kind(ax.xaxis),
+        "y": axis_kind(ax.yaxis),
+    }
+    install_frame(
+        ax, mode, offsets, n=n, nice_numbers=nice_numbers, weights=weights, kinds=kinds
+    )
+    run_appliers(ax)
+    return ax
+
+
+def parse_frame_args(
+    frame: str | tuple[str, str],
+    offset: float | tuple[float | None, float | None] | None,
+) -> tuple[dict[str, str], dict[str, float]]:
+    """Resolve `frame` and `offset` into per-axis modes and spine offsets."""
     modes = (frame, frame) if isinstance(frame, str) else tuple(frame)
     if len(modes) != 2 or any(m not in ("nice", "data", "loose") for m in modes):
         raise ValueError(
@@ -82,85 +100,42 @@ def range_frame(
     for name in ("x", "y"):
         value = per_offset[name]
         offsets[name] = (8 if mode[name] == "loose" else 0) if value is None else value
+    return mode, offsets
 
+
+def snapshot_frame(ax: Axes) -> None:
+    """Record what the frame will change on `ax`, once.
+
+    Taken before any locator is replaced. On axes that share a `Ticker`
+    the snapshot of every sibling must exist before any sibling installs,
+    or a later sibling records the first one's locator as its original;
+    `group.treat` orders the calls that way.
+    """
     state = ensure_state(ax)
-    frame_state: dict[str, Any] | None = state.get("frame")
-    if frame_state is None:
-        frame_state = {
-            "active": set(),
-            "snapshot": {
-                "locators": {
-                    "x": ax.xaxis.get_major_locator(),
-                    "y": ax.yaxis.get_major_locator(),
-                },
-                "minor_locators": {
-                    "x": ax.xaxis.get_minor_locator(),
-                    "y": ax.yaxis.get_minor_locator(),
-                },
-                "formatters": {},
-                "top_visible": ax.spines["top"].get_visible(),
-                "right_visible": ax.spines["right"].get_visible(),
-                "left_position": ax.spines["left"].get_position(),
-                "bottom_position": ax.spines["bottom"].get_position(),
+    if "frame" in state:
+        return
+    state["frame"] = {
+        "active": set(),
+        "formatted": set(),
+        "snapshot": {
+            "locators": {
+                "x": ax.xaxis.get_major_locator(),
+                "y": ax.yaxis.get_major_locator(),
             },
-        }
-        state["frame"] = frame_state
-    frame_state["mode"] = mode
-
-    active = set()
-    for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
-        scale = axis.get_scale()
-        if scale not in ("linear", "log"):
-            warnings.warn(
-                f"vanzelfsprekend: {name}-axis has scale {scale!r}; "
-                "only linear and log axes are supported, leaving it untouched",
-                stacklevel=2,
-            )
-            continue
-        converter = axis.get_converter()
-        if converter is not None and not _is_date_converter(converter):
-            warnings.warn(
-                f"vanzelfsprekend: {name}-axis has a units converter; "
-                "only plain and date axes are supported, leaving it untouched",
-                stacklevel=2,
-            )
-            continue
-        if converter is not None:
-            locator = DateBreaksLocator(n=n, loose=mode[name] == "loose")
-            axis.set_major_locator(locator)
-            formatters = cast(dict[str, Any], frame_state["snapshot"]["formatters"])
-            if name not in formatters:
-                formatters[name] = axis.get_major_formatter()
-            axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
-        elif scale == "log":
-            axis.set_major_locator(
-                LogBreaksLocator(
-                    n=n,
-                    loose=mode[name] == "loose",
-                    base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
-                )
-            )
-            axis.set_minor_locator(NullLocator())
-        else:
-            axis.set_major_locator(
-                TalbotLocator(
-                    n=n,
-                    loose=mode[name] == "loose",
-                    nice_numbers=nice_numbers,
-                    weights=weights,
-                )
-            )
-        active.add(name)
-    frame_state["active"] = active
-
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_position(("outward", offsets["y"]))
-    ax.spines["bottom"].set_position(("outward", offsets["x"]))
-
-    add_applier(ax, "frame", _apply_frame)
-    run_appliers(ax)
-    return ax
+            "minor_locators": {
+                "x": ax.xaxis.get_minor_locator(),
+                "y": ax.yaxis.get_minor_locator(),
+            },
+            "formatters": {
+                "x": ax.xaxis.get_major_formatter(),
+                "y": ax.yaxis.get_major_formatter(),
+            },
+            "top_visible": ax.spines["top"].get_visible(),
+            "right_visible": ax.spines["right"].get_visible(),
+            "left_position": ax.spines["left"].get_position(),
+            "bottom_position": ax.spines["bottom"].get_position(),
+        },
+    }
 
 
 def _is_date_converter(converter: object) -> bool:
@@ -189,6 +164,77 @@ def axis_kind(axis: Axis) -> AxisKind:
     is_date = converter is not None and _is_date_converter(converter)
     supported = scale in ("linear", "log") and (converter is None or is_date)
     return AxisKind(scale, is_date, supported)
+
+
+def install_frame(
+    ax: Axes,
+    mode: dict[str, str],
+    offsets: dict[str, float],
+    n: int,
+    nice_numbers: Sequence[float] | None,
+    weights: dict[str, float] | None,
+    kinds: dict[str, AxisKind | None],
+) -> None:
+    """Install the frame on `ax` given each axis's kind.
+
+    `kinds[name]` is `None` for an axis the caller decided to leave
+    alone (a group that disagrees on kind; the caller has warned or
+    raised). An unsupported kind warns here, as it always has, and is
+    left alone too. Registers the frame applier but does not run it.
+    """
+    frame_state = get_state(ax)["frame"]  # ty: ignore[not-subscriptable]
+    frame_state["mode"] = mode
+    active = set()
+    for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
+        kind = kinds[name]
+        if kind is None:
+            continue
+        if kind.scale not in ("linear", "log"):
+            warnings.warn(
+                f"vanzelfsprekend: {name}-axis has scale {kind.scale!r}; "
+                "only linear and log axes are supported, leaving it untouched",
+                stacklevel=2,
+            )
+            continue
+        if not kind.supported:
+            warnings.warn(
+                f"vanzelfsprekend: {name}-axis has a units converter; "
+                "only plain and date axes are supported, leaving it untouched",
+                stacklevel=2,
+            )
+            continue
+        if kind.is_date:
+            locator = DateBreaksLocator(n=n, loose=mode[name] == "loose")
+            axis.set_major_locator(locator)
+            axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+            frame_state["formatted"].add(name)
+        elif kind.scale == "log":
+            axis.set_major_locator(
+                LogBreaksLocator(
+                    n=n,
+                    loose=mode[name] == "loose",
+                    base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
+                )
+            )
+            axis.set_minor_locator(NullLocator())
+        else:
+            axis.set_major_locator(
+                TalbotLocator(
+                    n=n,
+                    loose=mode[name] == "loose",
+                    nice_numbers=nice_numbers,
+                    weights=weights,
+                )
+            )
+        active.add(name)
+    frame_state["active"] = active
+
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_position(("outward", offsets["y"]))
+    ax.spines["bottom"].set_position(("outward", offsets["x"]))
+
+    add_applier(ax, "frame", _apply_frame)
 
 
 def _apply_frame(ax: Axes) -> bool:

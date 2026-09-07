@@ -86,7 +86,7 @@ def restore(ax: Axes) -> None:
         ax.xaxis.set_minor_locator(snap["minor_locators"]["x"])
         ax.yaxis.set_minor_locator(snap["minor_locators"]["y"])
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
-            if key in snap["formatters"]:
+            if key in frame_state["formatted"]:
                 axis.set_major_formatter(snap["formatters"][key])
         ax.spines["top"].set_visible(snap["top_visible"])
         ax.spines["right"].set_visible(snap["right_visible"])
