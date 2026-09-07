@@ -72,7 +72,7 @@ def main() -> None:
 
     vzs.distill(treated, frame=("data", "loose"))
     draw_data(treated)
-    treated.text(1905, 0.8, "observed", color=vzs.palettes.DATA_INK)
+    vzs.label(treated, "observed", x=1905)
     vzs.line_labels(treated)
     vzs.ylabel(treated, "warming\n(°C vs 1850–1900)")  # noqa: RUF001
     treated.set_title("vanzelfsprekend")
