@@ -131,9 +131,16 @@ ax.xaxis.set_major_formatter("{x:.0f}")
 
 ![Four scatter panels of Anscombe's quartet, each with spines trimmed to its own data and ticks at its own quartiles, differing where the shared statistics cannot](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/anscombe.png)
 
-A century of grand tour winners' average speeds, each race in its jersey's colour, labelled at the lines' ends. The Tour and the Vuelta arrive too close together for unaided text, so the labels shift just apart; the time spine ends exactly at the first and last editions, and the world wars stay visible as holes in the record:
+A century of grand tour winners' average speeds, one race per panel on a shared scale, each line in a nod to its jersey and named at its end. The y spines share one scale across the three, and `SummaryLocator` ticks each at that race's slowest and fastest winning speed, so the Tour's 24 to 43 km/h reads against the Giro's 23 to 42 without a round number in between. The time spine ends exactly at the first and last editions, the two world wars stay visible as holes in every record, and the Vuelta's broken start in the 1930s is its own story:
 
-![Line chart of winners' average speeds at the Tour, Giro and Vuelta since 1903, each line labelled at its right end, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
+```python
+vzs.small_multiples(
+    axes, frame="data", spacing=(5, 4), ylabel="winner's average\nspeed (km/h)"
+)
+ax.yaxis.set_major_locator(vzs.SummaryLocator(speeds, [np.nanmin, np.nanmax]))
+```
+
+![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, gold, pink and red, each named at its line's end, each y spine ticked at that race's slowest and fastest winner, with gaps during the world wars](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/grand_tours.png)
 
 A wide-form line chart that seaborn drew, distilled by the same one call: the treatment reads an axes, not the library that filled it, so it reaches a seaborn plot as readily as a bare matplotlib one. The four series are a constructed random walk under seaborn's `whitegrid` theme; `distill` trims the box to two spines, drops the grid, and keeps the tick marks the theme had switched off, while `line_labels` stands in for the legend. seaborn keeps each legend entry's text on a proxy artist away from the drawn line, so the labels come from `labels=` rather than the lines' own names:
 

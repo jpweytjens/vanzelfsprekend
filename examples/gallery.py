@@ -69,26 +69,36 @@ def anscombe() -> None:
 
 
 def grand_tours() -> None:
-    """Render a century of grand tour winners' speeds with direct labels."""
+    """Render a century of grand tour winners' speeds, one race per panel."""
     table = load("grand_tour_speeds.csv")
     first, last = int(table["year"][0]), int(table["year"][-1])
     years = np.arange(first, last + 1)
     dates = [dt.date(year, 7, 1) for year in years]
-    fig, ax = plt.subplots(figsize=(7, 3.5))
+    fig, axes = plt.subplots(3, 1, figsize=(5, 4.5), sharex=True)
+    fig.subplots_adjust(hspace=0.45)
     jerseys = {
-        "tour": ("Tour", "#FFCC00"),  # maillot jaune
-        "giro": ("Giro", "#EE2A7B"),  # maglia rosa
-        "vuelta": ("Vuelta", "#E4002B"),  # maillot rojo
+        "tour": ("Tour", "tol:high_contrast.yellow"),  # maillot jaune
+        "giro": ("Giro", "tol:medium_contrast.light_red"),  # maglia rosa
+        "vuelta": ("Vuelta", "tol:red"),  # maillot rojo
     }
-    for column, (label, color) in jerseys.items():
+    speeds_of = {}
+    for ax, (column, (label, color)) in zip(axes, jerseys.items(), strict=True):
         speeds = np.full(years.size, np.nan)
         speeds[table["year"].astype(int) - first] = table[column]
+        speeds_of[ax] = speeds
         ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
     # Plot before distill: the axis becomes a date axis when date data
     # arrives, and distill detects date-ness at call time.
-    vzs.distill(ax, frame=("data", "loose"))
-    vzs.line_labels(ax)
-    vzs.ylabel(ax, "winner's\naverage speed (km/h)", place="above")
+    vzs.small_multiples(
+        axes,
+        frame="data",
+        spacing=(5, 4),
+        ylabel="winner's average\nspeed (km/h)",
+    )
+    for ax, speeds in speeds_of.items():
+        ax.yaxis.set_major_locator(vzs.SummaryLocator(speeds, [np.nanmin, np.nanmax]))
+        ax.yaxis.set_major_formatter("{x:.0f}")
+        vzs.line_labels(ax)
     fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
