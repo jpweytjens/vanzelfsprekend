@@ -41,6 +41,8 @@ Labels:
 - The horizontal y label sits beside the top tick, or with place="above" stacks over it with left edges aligned, Doumont's good and better graphs
 - The x label ends at the spine, or with flush=True its right edge lines up with the last tick label instead, for a clean right margin
 - Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable
+- label puts one label beside a named line or scatter at a chosen x or y, the text sliding just far enough along the anchor to clear every mark and text in its way; right of the anchor by default, and left, above or below when the right is blocked
+- Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist; labelling is deliberate, one name per label, never automatic
 
 Colour:
 - The axis furniture fades to grey so the ink goes to the data
