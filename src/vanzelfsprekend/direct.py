@@ -8,6 +8,7 @@ coordinate form a column on the same helper. One weighted stack
 cannot move.
 """
 
+import warnings
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal, NamedTuple, cast
@@ -181,6 +182,10 @@ class Ink(NamedTuple):
     """(k,) marker radii."""
     boxes: list[Bbox]
     """Window extents of texts and patches."""
+
+
+_NO_INK = Ink(np.zeros((0, 2, 2)), np.zeros(0), np.zeros((0, 2)), np.zeros(0), [])
+"""An empty `Ink`, for the fallback that draws over everything."""
 
 
 _NONE = (None, "None", "", " ")
@@ -589,11 +594,41 @@ def _place(
     ink: Ink,
     px_per_pt: float,
 ) -> tuple[np.ndarray, tuple[str, str]]:
-    """Return per-label offsets in points and the text alignment for `group`."""
-    side: Side = group["side"] or "right"
-    chosen = _attempt(side, group, anchors, helper_px, ink, px_per_pt)
-    offsets = _offsets(chosen, anchors, group["pad"] * px_per_pt) / px_per_pt
-    return offsets, _ALIGNMENT[chosen.side]
+    """Return per-label offsets in points and the text alignment for `group`.
+
+    Tries the sides in priority order and keeps the first whose
+    displacement stays within `SIDE_TOLERANCE` label heights; failing
+    that, the smallest displacement among the sides that are not over
+    capacity; failing that, warns once and places on the least bad side
+    with the ink ignored, so a label is drawn over ink rather than lost.
+    """
+    if group["side"] is not None:
+        sides: tuple[Side, ...] = (group["side"],)
+    elif len(group["texts"]) > 1:
+        sides = _perpendicular(group["helper"])
+    else:
+        sides = SIDES
+    attempts = [
+        _attempt(side, group, anchors, helper_px, ink, px_per_pt) for side in sides
+    ]
+    tolerance = SIDE_TOLERANCE * max(a.sizes[:, 1].max() for a in attempts)
+    feasible = [a for a in attempts if not a.over]
+    chosen = next((a for a in feasible if a.displacement <= tolerance), None)
+    if chosen is None and feasible:
+        chosen = min(feasible, key=lambda a: a.displacement)
+    if chosen is None:
+        if not group["warned"]:
+            names = [text.get_text() for text in group["texts"]]
+            warnings.warn(
+                f"vanzelfsprekend: labels {names} do not fit on any side; drawn over "
+                "the ink, move the anchor or pass side=",
+                stacklevel=2,
+            )
+            group["warned"] = True
+        least_bad = min(attempts, key=lambda a: a.displacement).side
+        chosen = _attempt(least_bad, group, anchors, helper_px, _NO_INK, px_per_pt)
+    pad_px = group["pad"] * px_per_pt
+    return _offsets(chosen, anchors, pad_px) / px_per_pt, _ALIGNMENT[chosen.side]
 
 
 def _apply_direct(ax: Axes) -> bool:
@@ -628,6 +663,9 @@ def _apply_direct(ax: Axes) -> bool:
             ink = _ink(ax, pending | furniture)
             offsets, (ha, va) = _place(group, anchors, helper_px, ink, px_per_pt)
         except RuntimeError:
+            for text, previous in zip(group["texts"], before, strict=True):
+                text.set_ha(previous[1])
+                text.set_va(previous[2])
             return changed
         for text, offset, previous in zip(group["texts"], offsets, before, strict=True):
             position = (float(offset[0]), float(offset[1]))

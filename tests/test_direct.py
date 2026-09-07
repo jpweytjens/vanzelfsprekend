@@ -1,4 +1,5 @@
 import itertools
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -422,8 +423,6 @@ def test_label_validates_arguments():
 
 
 def test_label_composes_with_axis_labels_in_both_orders():
-    from vanzelfsprekend.hook import get_state
-
     for first in ("axis", "direct"):
         fig, ax = resonance()
         vzs.distill(ax, frame="loose")
@@ -556,4 +555,85 @@ def test_label_on_a_single_point_needs_no_anchor():
     fig.canvas.draw()
     assert text.xy == (0.5, 0.5)
     assert_clear_of_ink(ax, [text])
+    plt.close(fig)
+
+
+def wall(ax, x0, x1, y0, y1, n=40):
+    xs = np.linspace(x0, x1, n)
+    ys = np.linspace(y0, y1, n)
+    gx, gy = np.meshgrid(xs, ys)
+    ax.scatter(gx.ravel(), gy.ravel(), s=6, color="0.6", label="_wall")
+
+
+def test_side_defaults_to_right_when_it_fits():
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 0.0], label="flat")
+    (text,) = vzs.label(ax, "flat", x=5.0)
+    fig.canvas.draw()
+    assert text.get_ha() == "left"
+    assert text.get_window_extent().x0 > ax.transData.transform(text.xy)[0]
+    plt.close(fig)
+
+
+def test_side_falls_to_left_when_right_is_blocked():
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 0.0], label="flat")
+    wall(ax, 5.05, 8.0, -3.0, 3.0)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(-5, 5)
+    (text,) = vzs.label(ax, "flat", x=5.0)
+    fig.canvas.draw()
+    assert text.get_ha() == "right"
+    assert text.get_window_extent().x1 < ax.transData.transform(text.xy)[0]
+    assert_clear_of_ink(ax, [text])
+    plt.close(fig)
+
+
+def test_side_takes_smallest_displacement_when_none_is_within_tolerance():
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 0.0], label="flat")
+    wall(ax, 5.05, 8.0, -0.6, 0.6)  # right: the label must climb over a short wall
+    wall(ax, 2.0, 4.95, -3.0, 3.0)  # left: a tall one
+    ax.set_xlim(0, 10)
+    ax.set_ylim(-5, 5)
+    (text,) = vzs.label(ax, "flat", x=5.0)
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, [text])
+    assert text.get_ha() in ("left", "center")  # right or above, both beat left
+    plt.close(fig)
+
+
+def test_all_sides_over_capacity_warns_once_and_still_draws():
+    # Over capacity means trapped between two pins, not merely blocked: a
+    # single wall is slid past. The guards sit about 11 px from the anchor,
+    # inside the above and below bands and too close for a label on the
+    # right and left, while the 0.2 unit gap between their halves is about
+    # 7 px, narrower than the word.
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 0.0], label="flat")
+    for level in (0.3, -0.3):
+        ax.plot([0.0, 4.9], [level, level], color="0.6")
+        ax.plot([5.1, 10.0], [level, level], color="0.6")
+    ax.set_xlim(0, 10)
+    ax.set_ylim(-5, 5)
+    with pytest.warns(UserWarning, match="do not fit on any side"):
+        (text,) = vzs.label(ax, "flat", x=5.0)
+    fig.canvas.draw()
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        fig.canvas.draw()  # warned once, not on every draw
+    assert text in ax.texts
+    plt.close(fig)
+
+
+def test_explicit_side_is_kept_even_when_blocked():
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 0.0], label="flat")
+    wall(ax, 5.05, 8.0, -3.0, 3.0)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(-5, 5)
+    (text,) = vzs.label(ax, "flat", x=5.0, side="right")
+    fig.canvas.draw()
+    assert text.get_ha() == "left"
+    assert_clear_of_ink(ax, [text])  # slid above the wall, still on the right
     plt.close(fig)
