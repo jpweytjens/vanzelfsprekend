@@ -173,10 +173,10 @@ ax.yaxis.set_minor_locator(vzs.SummaryLocator(y, [lambda y: y.max() / 2]))
 
 ![A sharp resonance peak, black measured points over an orange calculated Lorentzian, x ticks at the band's 16 and 19 GHz edges and the peak's 17.2 GHz](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/resonance_peak.png)
 
-Monthly CO₂ at four NOAA stations from the Arctic to the South Pole in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the seasonal swing shrinking toward the pole reads on equal terms without repeating furniture:
+Monthly CO₂ at four NOAA stations from the Arctic to the South Pole in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the seasonal swing shrinking toward the pole reads on equal terms without repeating furniture. The panels are 7 cm wide, which the default spacing reads as two year labels; a tighter x spacing asks for a label every two years instead:
 
 ```python
-vzs.small_multiples(axes.flat, ylabel="CO₂ (ppm)")
+vzs.small_multiples(axes.flat, spacing=(5, 4), ylabel="CO₂ (ppm)")
 ```
 
 ![A 2x2 grid of monthly CO2 at Barrow, Mauna Loa, Samoa and the South Pole on a shared scale, the seasonal sawtooth shrinking toward the pole, spines and ticks only on the left column and bottom row](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/small_multiples.png)
