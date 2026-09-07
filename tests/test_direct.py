@@ -295,12 +295,13 @@ def assert_clear_of_ink(ax, texts):
     boxes = [t.get_window_extent(renderer) for t in texts]
     px_per_pt = ax.figure.dpi / 72.0
     gap_px = 2.0 * px_per_pt
+    slack = 0.05  # px: exact-clearance placements are ties, decided by float noise
     state = get_state(ax)
     above_text = (state or {}).get("labels", {}).get("ylabel_above_text")
     for line in ax.get_lines():
         path = line.get_path().transformed(line.get_transform())
         if line.get_linestyle() not in NONE:
-            m = line.get_linewidth() / 2 * px_per_pt + gap_px
+            m = line.get_linewidth() / 2 * px_per_pt + gap_px - slack
             for box in boxes:
                 grown = Bbox.from_extents(
                     box.x0 - m, box.y0 - m, box.x1 + m, box.y1 + m
@@ -310,14 +311,20 @@ def assert_clear_of_ink(ax, texts):
                 )
         if line.get_marker() not in NONE:
             r = (
-                line.get_markersize() + line.get_markeredgewidth()
-            ) / 2 * px_per_pt + gap_px
+                (line.get_markersize() + line.get_markeredgewidth()) / 2 * px_per_pt
+                + gap_px
+                - slack
+            )
             assert_no_marker_inside(boxes, path.vertices, r, line.get_label())
     for collection in ax.collections:
         pts = collection.get_offset_transform().transform(collection.get_offsets())
         edges = np.asarray(collection.get_linewidths(), dtype=float)
         edge = edges.max() if edges.size else 0.0
-        r = (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt + gap_px
+        r = (
+            (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt
+            + gap_px
+            - slack
+        )
         assert_no_marker_inside(boxes, pts, r, collection.get_label())
     for text in ax.texts:
         if text in texts or text is above_text:
