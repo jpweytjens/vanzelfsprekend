@@ -179,6 +179,12 @@ def restore(ax: Axes) -> None:
             for text in side["texts"]:
                 text.remove()
 
+    direct_state = state.get("direct")
+    if direct_state is not None:
+        for group in direct_state:
+            for text in group["texts"]:
+                text.remove()
+
     date_offset_state = state.get("date_offset")
     if date_offset_state is not None:
         off = ax.xaxis.get_offset_text()

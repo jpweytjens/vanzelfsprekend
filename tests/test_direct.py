@@ -619,9 +619,10 @@ def test_all_sides_over_capacity_warns_once_and_still_draws():
     with pytest.warns(UserWarning, match="do not fit on any side"):
         (text,) = vzs.label(ax, "flat", x=5.0)
     fig.canvas.draw()
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
         fig.canvas.draw()  # warned once, not on every draw
+    assert not [w for w in caught if "do not fit" in str(w.message)]
     assert text in ax.texts
     plt.close(fig)
 
@@ -636,4 +637,138 @@ def test_explicit_side_is_kept_even_when_blocked():
     fig.canvas.draw()
     assert text.get_ha() == "left"
     assert_clear_of_ink(ax, [text])  # slid above the wall, still on the right
+    plt.close(fig)
+
+
+def three_flat_lines(ax):
+    x = np.linspace(0.0, 10.0, 50)
+    for level, name in [(1.0, "low"), (2.0, "mid"), (3.0, "high")]:
+        ax.plot(x, np.full_like(x, level), label=name)
+
+
+def test_column_stacks_in_order_beside_a_shared_helper():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    texts = vzs.label(ax, ["low", "mid", "high"], x=5.0)
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, texts)
+    renderer = fig.canvas.get_renderer()
+    boxes = [t.get_window_extent(renderer) for t in texts]
+    centres = [(b.y0 + b.y1) / 2 for b in boxes]
+    assert centres == sorted(centres)
+    helper_x = ax.transData.transform((5.0, 0.0))[0]
+    pad_px = 4.0 * fig.dpi / 72.0
+    for box in boxes:
+        # left edges share the helper
+        assert box.x0 == pytest.approx(helper_x + pad_px, abs=1.0)
+    plt.close(fig)
+
+
+def test_column_keeps_order_across_a_crossing_curve():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    # through the middle label's strip, above it
+    ax.plot([4.0, 6.0], [2.15, 2.6], label="_cross")
+    texts = vzs.label(ax, ["low", "mid", "high"], x=5.0, side="right")
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, texts)
+    renderer = fig.canvas.get_renderer()
+    boxes = [t.get_window_extent(renderer) for t in texts]
+    centres = [(box.y0 + box.y1) / 2 for box in boxes]
+    assert centres == sorted(centres)
+    mid_anchor = ax.transData.transform((5.0, 2.0))[1]
+    cross_low = ax.transData.transform((5.0, 2.15))[1]
+    # parked under the crossing, above its own line
+    assert mid_anchor < centres[1] < cross_low
+    plt.close(fig)
+
+
+def test_column_takes_the_left_when_told():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    texts = vzs.label(ax, ["low", "mid", "high"], x=5.0, side="left")
+    fig.canvas.draw()
+    helper_x = ax.transData.transform((5.0, 0.0))[0]
+    for text in texts:
+        assert text.get_ha() == "right"
+        assert text.get_window_extent().x1 < helper_x
+    plt.close(fig)
+
+
+def test_column_on_y_slides_in_x():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, x, label="rising")
+    ax.plot(x, 10 - x, label="falling")
+    texts = vzs.label(ax, ["falling", "rising"], y=7.0)
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, texts)
+    assert {t.get_va() for t in texts} <= {"bottom", "top"}
+    xs = [t.get_window_extent().x0 for t in texts]
+    assert xs[0] < xs[1]  # falling crosses y=7 at x=3, rising at x=7
+    plt.close(fig)
+
+
+def test_column_rejects_a_side_parallel_to_its_helper_and_a_missing_helper():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    with pytest.raises(ValueError, match="a column on x= can only go right or left"):
+        vzs.label(ax, ["low", "mid"], x=5.0, side="above")
+    with pytest.raises(ValueError, match="a column of labels needs x= or y="):
+        vzs.label(ax, ["low", "mid"])
+    with pytest.raises(ValueError, match="no names given"):
+        vzs.label(ax, [], x=5.0)
+    plt.close(fig)
+
+
+def test_second_group_sees_the_first_as_ink():
+    fig, ax = plt.subplots()
+    three_flat_lines(ax)
+    first = vzs.label(ax, "mid", x=5.0, side="right")
+    ax.plot([0.0, 10.0], [2.05, 2.05], label="twin", color="0.5")
+    second = vzs.label(ax, "twin", x=5.0, side="right")
+    fig.canvas.draw()
+    assert_clear_of_ink(ax, first + second)
+    plt.close(fig)
+
+
+def test_restore_removes_labels_and_brings_the_legend_back():
+    fig, ax = resonance()
+    ax.legend()
+    texts = vzs.label(ax, "calculated", x=17.5)
+    texts += vzs.label(ax, ["calculated", "measured"], x=18.5)
+    vzs.restore(ax)
+    assert all(text not in ax.texts for text in texts)
+    assert ax.get_legend().get_visible()
+    plt.close(fig)
+
+
+def test_restore_after_axis_and_direct_labels_in_both_orders():
+    for first in ("axis", "direct"):
+        fig, ax = resonance()
+        vzs.distill(ax)
+        calls = [
+            lambda ax=ax: vzs.ylabel(ax, "output power (mW)", place="above"),
+            lambda ax=ax: vzs.label(ax, "calculated", x=17.5),
+        ]
+        if first == "direct":
+            calls.reverse()
+        for call in calls:
+            call()
+        fig.canvas.draw()
+        vzs.restore(ax)
+        remaining = {t.get_text() for t in ax.texts}
+        assert "calculated" not in remaining
+        assert "output power (mW)" not in remaining
+        assert get_state(ax) is None
+        fig.canvas.draw()  # nothing re-applies after restore
+        plt.close(fig)
+
+
+def test_accessor_label_matches_the_function():
+    vzs.register()
+    fig, ax = resonance()
+    (text,) = ax.vzs.label("calculated", x=17.5, side="right")
+    assert text.get_text() == "calculated"
+    assert "label" in vzs.__all__
     plt.close(fig)

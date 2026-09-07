@@ -513,25 +513,40 @@ def _solve_side(
     width = pins[:, 1] - pins[:, 0]
     # The tie rule reads the anchor, not the box-centre target: the target
     # sits a fraction of a pixel off the anchor (ink centring, descender
-    # space) and would miss a thin pin the anchor is on.
+    # space) and would miss a thin pin the anchor is on. Preferring after
+    # the pin matches where a baseline-aligned label sits; tried first, and
+    # only if that traps a label between its own pin and the next one does
+    # the other direction get a look, since it may open onto a bigger gap.
     along = anchors[:, axis]
-    key = desired.copy()
-    for lo, hi, mid in zip(pins[:, 0], pins[:, 1], centre, strict=True):
-        inside = (along >= lo) & (along <= hi)
-        key[inside] = np.maximum(key[inside], mid + 1e-9)
     n = len(desired)
-    placed = placement.stack(
-        np.concatenate([desired, centre]),
-        np.concatenate([sizes[:, axis], width]),
-        gap_px,
-        weights=np.concatenate(
-            [np.ones(n), np.full(len(centre), placement.PIN_WEIGHT)]
-        ),
-        key=np.concatenate([key, centre]),
-    )
-    label_move = float(np.abs(placed[:n] - desired).max())
-    pin_move = float(np.abs(placed[n:] - centre).max()) if len(centre) else 0.0
-    return placed[:n], label_move + pin_move, pin_move > placement.PIN_TOLERANCE
+
+    def solve(prefer_after: bool) -> tuple[np.ndarray, float, bool]:
+        key = desired.copy()
+        for lo, hi, mid in zip(pins[:, 0], pins[:, 1], centre, strict=True):
+            inside = (along >= lo) & (along <= hi)
+            if prefer_after:
+                key[inside] = np.maximum(key[inside], mid + 1e-9)
+            else:
+                key[inside] = np.minimum(key[inside], mid - 1e-9)
+        placed = placement.stack(
+            np.concatenate([desired, centre]),
+            np.concatenate([sizes[:, axis], width]),
+            gap_px,
+            weights=np.concatenate(
+                [np.ones(n), np.full(len(centre), placement.PIN_WEIGHT)]
+            ),
+            key=np.concatenate([key, centre]),
+        )
+        label_move = float(np.abs(placed[:n] - desired).max())
+        pin_move = float(np.abs(placed[n:] - centre).max()) if len(centre) else 0.0
+        return placed[:n], label_move + pin_move, pin_move > placement.PIN_TOLERANCE
+
+    placed, displacement, over = solve(prefer_after=True)
+    if over:
+        alt_placed, alt_displacement, alt_over = solve(prefer_after=False)
+        if not alt_over:
+            return alt_placed, alt_displacement, alt_over
+    return placed, displacement, over
 
 
 def _offsets(attempt: _Attempt, anchors: np.ndarray, pad_px: float) -> np.ndarray:
