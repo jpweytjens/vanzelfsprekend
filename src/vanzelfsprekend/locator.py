@@ -5,11 +5,24 @@ from collections.abc import Callable, Sequence
 
 import matplotlib as mpl
 import numpy as np
+from matplotlib.axis import Axis
 from matplotlib.dates import date2num, num2date
+from matplotlib.font_manager import FontProperties
 from matplotlib.ticker import AutoLocator, FixedLocator, Locator, LogLocator
+from matplotlib.transforms import Bbox
 from mizani.breaks import breaks_date, breaks_extended, breaks_log
 from numpy.typing import ArrayLike
 
+from vanzelfsprekend.ticks import _rc
+
+SPACING = (7.0, 4.0)
+"""Default gap between ticks along x and y, in tick-label heights.
+
+A y label is one label height long along its axis; an x label is
+three to five, so x asks for the wider gap. At 10 pt labels the pair
+is 70 pt and 40 pt, about 2.5 cm and 1.4 cm.
+"""
+_UNBOUND_N = 5
 _DEFAULT_Q = (1, 5, 2, 2.5, 4, 3)
 _DEFAULT_WEIGHTS = {
     "simplicity": 0.25,
@@ -19,7 +32,65 @@ _DEFAULT_WEIGHTS = {
 }
 
 
-class TalbotLocator(Locator):
+def _label_height(axis: Axis) -> float:
+    """Read the axis's major tick-label font size in points."""
+    name = axis.axis_name  # ty: ignore[unresolved-attribute]
+    size = axis.get_tick_params(which="major").get(
+        "labelsize", _rc(f"{name}tick.labelsize")
+    )
+    return FontProperties(size=size).get_size_in_points()
+
+
+class BreaksLocator(Locator):
+    """What the three mizani-backed locators share: the target count.
+
+    Talbot's density term wants the number of labels to follow the
+    physical length of the axis; mizani takes a count. This base
+    resolves the count at tick time: `n` when given, otherwise the
+    axis's length in tick-label heights divided by `spacing`, so a
+    poster's large labels thin the ticks and a small panel gets few.
+
+    Parameters
+    ----------
+    n : int, optional
+        The number of ticks to aim for. `None` derives it from the
+        axis's length and `spacing` at tick time.
+    spacing : float, optional
+        The gap to aim for between ticks, in tick-label heights.
+        `None` takes `SPACING` for the axis the locator lands on.
+    """
+
+    def __init__(self, n: int | None, spacing: float | None) -> None:
+        self._n = n
+        self._spacing = spacing
+
+    def target(self, axis: Axis | None = None) -> int:
+        """Return the number of ticks to aim for on `axis`.
+
+        `n` when it was given. Otherwise the axis's length in
+        tick-label heights divided by `spacing`, rounded, at least two.
+        `axis` defaults to the axis the locator is bound to; a group
+        passes a sibling's to size the ticks for its narrowest panel.
+        Without an axis (`tick_values` called by hand) there is no
+        length, and the target is five.
+        """
+        if self._n is not None:
+            return self._n
+        if axis is None:
+            axis = self.axis  # ty: ignore[invalid-assignment]
+        if axis is None:
+            return _UNBOUND_N
+        name = axis.axis_name  # ty: ignore[unresolved-attribute]
+        spacing = self._spacing
+        if spacing is None:
+            spacing = SPACING[0] if name == "x" else SPACING[1]
+        axes = axis.axes
+        ends = Bbox.unit().transformed(axes.transAxes - axes.figure.dpi_scale_trans)
+        length = (ends.width if name == "x" else ends.height) * 72
+        return max(2, round(length / (spacing * _label_height(axis))))
+
+
+class TalbotLocator(BreaksLocator):
     """Place ticks on nice numbers inside the data range.
 
     Delegates to `mizani.breaks.breaks_extended` (Talbot's extended
@@ -34,8 +105,12 @@ class TalbotLocator(Locator):
 
     Parameters
     ----------
-    n : int
-        Desired number of ticks.
+    n : int, optional
+        The number of ticks to aim for; `None` follows the axis's
+        length. See `BreaksLocator`.
+    spacing : float, optional
+        The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
     loose : bool
         If True, extend the tick grid outward by whole steps so the
         outermost ticks bound the data interval. Default is False.
@@ -58,11 +133,13 @@ class TalbotLocator(Locator):
 
     def __init__(
         self,
-        n: int = 5,
+        n: int | None = None,
+        spacing: float | None = None,
         loose: bool = False,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> None:
+        super().__init__(n, spacing)
         valid_keys = set(_DEFAULT_WEIGHTS)
         if weights is not None:
             bad_keys = set(weights) - valid_keys
@@ -72,19 +149,17 @@ class TalbotLocator(Locator):
                     f"{sorted(valid_keys)}"
                 )
         merged_weights = {**_DEFAULT_WEIGHTS, **(weights or {})}
-        q = tuple(nice_numbers) if nice_numbers is not None else _DEFAULT_Q
-        w = (
+        self._q = tuple(nice_numbers) if nice_numbers is not None else _DEFAULT_Q
+        self._w = (
             merged_weights["simplicity"],
             merged_weights["coverage"],
             merged_weights["density"],
             merged_weights["legibility"],
         )
-
         self._loose = loose
-        self._breaks = breaks_extended(n=n, Q=q, only_inside=not loose, w=w)
-        self._cover = (
-            self._breaks if loose else breaks_extended(n=n, Q=q, only_inside=False, w=w)
-        )
+
+    def _breaks(self, n: int, only_inside: bool) -> Callable:
+        return breaks_extended(n=n, Q=self._q, only_inside=only_inside, w=self._w)
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis data interval."""
@@ -94,7 +169,9 @@ class TalbotLocator(Locator):
             return np.asarray(AutoLocator().tick_values(*view))
         return self.tick_values(dmin, dmax)
 
-    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
+    def tick_values(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float, n: int | None = None
+    ) -> np.ndarray:
         """Return tick locations inside `[vmin, vmax]`.
 
         Parameters
@@ -102,6 +179,9 @@ class TalbotLocator(Locator):
         vmin, vmax : float
             Interval bounds. Swapped if given in reverse order;
             degenerate values fall back to `AutoLocator`.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -112,8 +192,10 @@ class TalbotLocator(Locator):
             vmin, vmax = vmax, vmin
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return np.asarray(AutoLocator().tick_values(*self.nonsingular(vmin, vmax)))
+        if n is None:
+            n = self.target()
         try:
-            ticks = self._breaks((vmin, vmax))
+            ticks = self._breaks(n, only_inside=not self._loose)((vmin, vmax))
             if self._loose and ticks.size >= 2:
                 ticks = _extend_to_cover(ticks, vmin, vmax)
         except (OverflowError, ValueError, FloatingPointError):
@@ -161,7 +243,11 @@ class TalbotLocator(Locator):
         return self.view_limits_over(vmin, vmax, interval)
 
     def view_limits_over(
-        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+        self,
+        vmin: float,
+        vmax: float,
+        interval: tuple[float, float] | None,
+        n: int | None = None,
     ) -> tuple[float, float]:
         """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
 
@@ -176,6 +262,9 @@ class TalbotLocator(Locator):
             The proposed view limits.
         interval : tuple of float or None
             The data interval a loose locator covers edge to edge.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -184,12 +273,15 @@ class TalbotLocator(Locator):
         """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
+        if n is None:
+            n = self.target()
+        cover = self._breaks(n, only_inside=False)
 
         if self._loose and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
-                    ticks = self._cover((dmin, dmax))
+                    ticks = cover((dmin, dmax))
                     if ticks.size >= 2:
                         ticks = _extend_to_cover(ticks, dmin, dmax)
                         return float(ticks[0]), float(ticks[-1])
@@ -202,7 +294,7 @@ class TalbotLocator(Locator):
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:
-            ticks = self._cover((vmin, vmax))
+            ticks = cover((vmin, vmax))
             if ticks.size >= 2:
                 ticks = _extend_to_cover(ticks, vmin, vmax)
                 return float(ticks[0]), float(ticks[-1])
@@ -211,7 +303,7 @@ class TalbotLocator(Locator):
         return super().view_limits(vmin, vmax)
 
 
-class LogBreaksLocator(Locator):
+class LogBreaksLocator(BreaksLocator):
     """Place ticks on integer powers inside the data range of a log axis.
 
     Delegates to `mizani.breaks.breaks_log`, which returns breaks at
@@ -227,8 +319,12 @@ class LogBreaksLocator(Locator):
 
     Parameters
     ----------
-    n : int
-        Desired number of ticks.
+    n : int, optional
+        The number of ticks to aim for; `None` follows the axis's
+        length. See `BreaksLocator`.
+    spacing : float, optional
+        The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
     loose : bool
         If True, extend the tick grid outward by whole multiplicative
         steps so the outermost ticks bound the data interval. Default
@@ -237,10 +333,19 @@ class LogBreaksLocator(Locator):
         Base of the logarithm, matching the axis scale's base.
     """
 
-    def __init__(self, n: int = 5, loose: bool = False, base: float = 10) -> None:
+    def __init__(
+        self,
+        n: int | None = None,
+        spacing: float | None = None,
+        loose: bool = False,
+        base: float = 10,
+    ) -> None:
+        super().__init__(n, spacing)
         self._loose = loose
         self._base = base
-        self._breaks = breaks_log(n=n, base=base)
+
+    def _breaks(self, n: int) -> Callable:
+        return breaks_log(n=n, base=self._base)
 
     def nonsingular(  # ty: ignore[invalid-method-override]
         self, vmin: float, vmax: float
@@ -258,7 +363,9 @@ class LogBreaksLocator(Locator):
             return _log_fallback(view[0], view[1], self._base)
         return self.tick_values(dmin, dmax)
 
-    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
+    def tick_values(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float, n: int | None = None
+    ) -> np.ndarray:
         """Return tick locations inside `[vmin, vmax]`.
 
         Parameters
@@ -267,6 +374,9 @@ class LogBreaksLocator(Locator):
             Interval bounds. Swapped if given in reverse order;
             degenerate or nonpositive values fall back to decade ticks
             from `LogLocator` on a sanitized interval.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -277,8 +387,10 @@ class LogBreaksLocator(Locator):
             vmin, vmax = vmax, vmin
         if not np.isfinite([vmin, vmax]).all() or vmin <= 0 or vmin == vmax:
             return _log_fallback(vmin, vmax, self._base)
+        if n is None:
+            n = self.target()
         try:
-            ticks = np.asarray(self._breaks((vmin, vmax)), dtype=float)
+            ticks = np.asarray(self._breaks(n)((vmin, vmax)), dtype=float)
             ticks = ticks[ticks > 0]
             if self._loose:
                 ticks = _extend_to_cover_log(ticks, vmin, vmax)
@@ -322,7 +434,11 @@ class LogBreaksLocator(Locator):
         return self.view_limits_over(vmin, vmax, interval)
 
     def view_limits_over(
-        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+        self,
+        vmin: float,
+        vmax: float,
+        interval: tuple[float, float] | None,
+        n: int | None = None,
     ) -> tuple[float, float]:
         """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
 
@@ -337,6 +453,9 @@ class LogBreaksLocator(Locator):
             The proposed view limits.
         interval : tuple of float or None
             The data interval a loose locator covers edge to edge.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -345,12 +464,15 @@ class LogBreaksLocator(Locator):
         """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
+        if n is None:
+            n = self.target()
+        breaks = self._breaks(n)
 
         if self._loose and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and 0 < dmin < dmax:
                 try:
-                    ticks = np.asarray(self._breaks((dmin, dmax)), dtype=float)
+                    ticks = np.asarray(breaks((dmin, dmax)), dtype=float)
                     if ticks.size >= 2:
                         ticks = _extend_to_cover_log(ticks, dmin, dmax)
                         return float(ticks[0]), float(ticks[-1])
@@ -363,7 +485,7 @@ class LogBreaksLocator(Locator):
         if not np.isfinite([vmin, vmax]).all() or vmin <= 0 or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:
-            ticks = np.asarray(self._breaks((vmin, vmax)), dtype=float)
+            ticks = np.asarray(breaks((vmin, vmax)), dtype=float)
             if ticks.size >= 2:
                 ticks = _extend_to_cover_log(ticks, vmin, vmax)
                 return float(ticks[0]), float(ticks[-1])
@@ -372,7 +494,7 @@ class LogBreaksLocator(Locator):
         return super().view_limits(vmin, vmax)
 
 
-class DateBreaksLocator(Locator):
+class DateBreaksLocator(BreaksLocator):
     """Place ticks on calendar-nice dates inside the data range of a date axis.
 
     Delegates to `mizani.breaks.breaks_date`, which returns breaks at
@@ -391,16 +513,22 @@ class DateBreaksLocator(Locator):
 
     Parameters
     ----------
-    n : int
-        Desired number of ticks.
+    n : int, optional
+        The number of ticks to aim for; `None` follows the axis's
+        length. See `BreaksLocator`.
+    spacing : float, optional
+        The gap to aim for between ticks, in tick-label heights. See
+        `BreaksLocator`.
     loose : bool
         If True, keep the covering breaks so the outermost ticks bound
         the data interval. Default is False.
     """
 
-    def __init__(self, n: int = 5, loose: bool = False) -> None:
+    def __init__(
+        self, n: int | None = None, spacing: float | None = None, loose: bool = False
+    ) -> None:
+        super().__init__(n, spacing)
         self._loose = loose
-        self._breaks = breaks_date(n=n)
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis data interval."""
@@ -410,7 +538,9 @@ class DateBreaksLocator(Locator):
             return _date_fallback(view[0], view[1])
         return self.tick_values(dmin, dmax)
 
-    def tick_values(self, vmin: float, vmax: float) -> np.ndarray:  # ty: ignore
+    def tick_values(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float, n: int | None = None
+    ) -> np.ndarray:
         """Return tick locations inside `[vmin, vmax]`.
 
         Parameters
@@ -419,6 +549,9 @@ class DateBreaksLocator(Locator):
             Interval bounds in matplotlib date units. Swapped if given
             in reverse order; degenerate or out-of-calendar values fall
             back to `AutoDateLocator` on a sanitized interval.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -429,8 +562,10 @@ class DateBreaksLocator(Locator):
             vmin, vmax = vmax, vmin
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return _date_fallback(vmin, vmax)
+        if n is None:
+            n = self.target()
         try:
-            ticks = self._covering_breaks(vmin, vmax)
+            ticks = self._covering_breaks(vmin, vmax, n)
             if not self._loose:
                 tol = 1e-9 * (vmax - vmin)
                 ticks = ticks[(ticks >= vmin - tol) & (ticks <= vmax + tol)]
@@ -468,7 +603,11 @@ class DateBreaksLocator(Locator):
         return self.view_limits_over(vmin, vmax, interval)
 
     def view_limits_over(
-        self, vmin: float, vmax: float, interval: tuple[float, float] | None
+        self,
+        vmin: float,
+        vmax: float,
+        interval: tuple[float, float] | None,
+        n: int | None = None,
     ) -> tuple[float, float]:
         """Return view limits for `vmin`..`vmax`, covering `interval` when loose.
 
@@ -484,6 +623,9 @@ class DateBreaksLocator(Locator):
         interval : tuple of float or None
             The data interval a loose locator covers edge to edge, in
             matplotlib date units.
+        n : int, optional
+            The number of ticks to aim for; `None` resolves it with
+            `target` from the bound axis.
 
         Returns
         -------
@@ -492,12 +634,14 @@ class DateBreaksLocator(Locator):
         """
         if vmin > vmax:
             vmin, vmax = vmax, vmin
+        if n is None:
+            n = self.target()
 
         if self._loose and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
-                    ticks = self._covering_breaks(dmin, dmax)
+                    ticks = self._covering_breaks(dmin, dmax, n)
                     if ticks.size >= 2:
                         return float(ticks[0]), float(ticks[-1])
                 except (OverflowError, ValueError, FloatingPointError):
@@ -509,15 +653,15 @@ class DateBreaksLocator(Locator):
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:
-            ticks = self._covering_breaks(vmin, vmax)
+            ticks = self._covering_breaks(vmin, vmax, n)
             if ticks.size >= 2:
                 return float(ticks[0]), float(ticks[-1])
         except (OverflowError, ValueError, FloatingPointError):
             pass
         return super().view_limits(vmin, vmax)
 
-    def _covering_breaks(self, vmin: float, vmax: float) -> np.ndarray:
-        dates = self._breaks((num2date(vmin), num2date(vmax)))
+    def _covering_breaks(self, vmin: float, vmax: float, n: int) -> np.ndarray:
+        dates = breaks_date(n=n)((num2date(vmin), num2date(vmax)))
         return np.asarray(date2num(dates), dtype=float)
 
 

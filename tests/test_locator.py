@@ -459,3 +459,84 @@ def test_view_limits_over_takes_the_interval_it_is_given():
     assert loose.view_limits_over(0, 1, None) == (0.0, 1.0)
     plain = TalbotLocator()
     assert plain.view_limits_over(0, 1, (0, 11)) == (0.0, 1.0)
+
+
+def _drawn_ticks(figsize, locator, name="x", scale="linear", labelsize=None):
+    fig, ax = plt.subplots(figsize=figsize)
+    axis = ax.xaxis if name == "x" else ax.yaxis
+    if scale == "log":
+        ax.set_xscale("log") if name == "x" else ax.set_yscale("log")
+        ax.plot([1, 1e6], [1, 1e6])
+    elif scale == "date":
+        span = [dt.datetime(2000, 1, 1), dt.datetime(2024, 1, 1)]
+        ax.plot(span, span)
+    else:
+        ax.plot([0, 100], [0, 100])
+    if labelsize is not None:
+        ax.tick_params(axis=name, labelsize=labelsize)
+    axis.set_major_locator(locator)
+    fig.canvas.draw()
+    ticks = axis.get_majorticklocs()
+    plt.close(fig)
+    return ticks
+
+
+def test_count_follows_axis_length():
+    wide = _drawn_ticks((10, 3), TalbotLocator())
+    narrow = _drawn_ticks((2, 3), TalbotLocator())
+    assert len(narrow) < len(wide)
+
+
+def test_count_follows_label_size():
+    small = _drawn_ticks((6, 3), TalbotLocator(), labelsize=6)
+    large = _drawn_ticks((6, 3), TalbotLocator(), labelsize=24)
+    assert len(large) < len(small)
+
+
+def test_y_spaces_denser_than_x_by_default():
+    x = _drawn_ticks((4, 4), TalbotLocator(), name="x")
+    y = _drawn_ticks((4, 4), TalbotLocator(), name="y")
+    assert len(x) < len(y)
+
+
+def test_spacing_sets_the_gap_in_label_heights():
+    tight = _drawn_ticks((6, 3), TalbotLocator(spacing=2))
+    loose = _drawn_ticks((6, 3), TalbotLocator(spacing=14))
+    assert len(loose) < len(tight)
+
+
+def test_n_overrides_spacing():
+    ticks = _drawn_ticks((10, 3), TalbotLocator(n=3, spacing=2))
+    np.testing.assert_allclose(ticks, TalbotLocator(n=3).tick_values(0, 100))
+
+
+def test_narrow_axis_keeps_two_ticks():
+    ticks = _drawn_ticks((0.6, 3), TalbotLocator())
+    assert len(ticks) >= 2
+
+
+def test_unbound_default_targets_five():
+    expected = breaks_extended(n=5, only_inside=True)((0.3, 9.7))
+    np.testing.assert_allclose(TalbotLocator().tick_values(0.3, 9.7), expected)
+
+
+def test_loose_view_follows_axis_length():
+    fig, ax = plt.subplots(figsize=(1.5, 3))
+    ax.plot([0.3, 9.7], [0, 1])
+    ax.xaxis.set_major_locator(TalbotLocator(loose=True))
+    fig.canvas.draw()
+    ticks = ax.get_xticks()
+    assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
+    plt.close(fig)
+
+
+def test_log_count_follows_axis_length():
+    wide = _drawn_ticks((10, 3), LogBreaksLocator(), scale="log")
+    narrow = _drawn_ticks((1.5, 3), LogBreaksLocator(), scale="log")
+    assert len(narrow) < len(wide)
+
+
+def test_date_count_follows_axis_length():
+    wide = _drawn_ticks((10, 3), DateBreaksLocator(), scale="date")
+    narrow = _drawn_ticks((1.5, 3), DateBreaksLocator(), scale="date")
+    assert len(narrow) < len(wide)
