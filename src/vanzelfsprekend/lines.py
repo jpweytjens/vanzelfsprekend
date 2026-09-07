@@ -142,7 +142,7 @@ def line_labels(
     sides[at] = {"lines": lines, "texts": texts, "pad": pad, "gap": gap}
     add_applier(ax, f"line_labels.{at}", partial(_apply_line_labels, at=at))
     run_appliers(ax)
-    return texts
+    return list(texts)
 
 
 def _labeled(line: Line2D) -> str | None:

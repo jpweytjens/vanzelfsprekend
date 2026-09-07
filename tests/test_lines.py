@@ -8,6 +8,7 @@ import pytest
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import placement
+from vanzelfsprekend.hook import get_state
 
 
 def test_stack_passthrough_when_separated():
@@ -82,6 +83,20 @@ def test_end_labels_do_not_overlap(converging_ax):
     boxes = label_bboxes(ax, texts)
     assert len(boxes) == 3
     assert all(not a.overlaps(b) for a, b in itertools.combinations(boxes, 2))
+
+
+def test_line_labels_returns_a_copy_so_callers_cannot_grow_the_group():
+    fig, ax = plt.subplots()
+    converging_lines(ax)
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax)
+    texts.append(ax.text(0, 0, "x"))
+    assert len(get_state(ax)["line_labels"]["end"]["texts"]) == 3
+    fig.set_size_inches(8, 2.5)
+    fig.canvas.draw()
+    boxes = label_bboxes(ax, texts[:3])
+    assert all(not a.overlaps(b) for a, b in itertools.combinations(boxes, 2))
+    plt.close(fig)
 
 
 def test_end_labels_keep_end_value_order(converging_ax):
