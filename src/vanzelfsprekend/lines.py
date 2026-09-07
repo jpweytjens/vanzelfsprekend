@@ -211,6 +211,45 @@ def _ink_rise(text: Annotation) -> float:
     return float(bounds.y0 + bounds.y1) / 2
 
 
+def _stack_inside(
+    ax: Axes, desired: np.ndarray, heights: np.ndarray, gap: float
+) -> np.ndarray:
+    """Stack the labels apart, held between the axes' top and bottom.
+
+    The axes' edges join the stack as two pinned boxes of no height, so a
+    stack that fits slides inside them, and one that cannot fit spills
+    past both edges by the same amount rather than running off one end.
+    """
+    box = ax.get_window_extent()
+    walls = np.array([box.y0, box.y1])
+    placed = placement.stack(
+        np.concatenate((desired, walls)),
+        np.concatenate((heights, [0.0, 0.0])),
+        gap,
+        weights=np.concatenate((np.ones(desired.size), [placement.PIN_WEIGHT] * 2)),
+        key=np.concatenate((np.clip(desired, box.y0, box.y1), [-np.inf, np.inf])),
+    )
+    return placed[:-2]
+
+
+def _warn_if_outside(
+    ax: Axes, side: dict, placed: np.ndarray, heights: np.ndarray
+) -> None:
+    box = ax.get_window_extent()
+    outside = [
+        text.get_text()
+        for text, y, h in zip(side["texts"], placed, heights, strict=True)
+        if y - h / 2 < box.y0 - 0.5 or y + h / 2 > box.y1 + 0.5
+    ]
+    if outside and not side.get("warned"):
+        side["warned"] = True
+        warnings.warn(
+            f"vanzelfsprekend: line labels {outside} do not fit inside the "
+            "axes; make it taller, or pass labels= to name fewer lines",
+            stacklevel=2,
+        )
+
+
 def _apply_line_labels(ax: Axes, at: str) -> bool:
     state = get_state(ax)
     side = (state or {}).get("line_labels", {}).get(at)
@@ -228,7 +267,8 @@ def _apply_line_labels(ax: Axes, at: str) -> bool:
             changed = True
     desired = ax.transData.transform([t.xy for t in side["texts"]])[:, 1]
     px_per_pt = ax.figure.dpi / 72.0
-    placed = placement.stack(desired, heights, side["gap"] * px_per_pt)
+    placed = _stack_inside(ax, desired, heights, side["gap"] * px_per_pt)
+    _warn_if_outside(ax, side, placed, heights)
     sign = 1.0 if at == "end" else -1.0
     for text, dy in zip(side["texts"], (placed - desired) / px_per_pt, strict=True):
         position = (sign * side["pad"], dy - _ink_rise(text))

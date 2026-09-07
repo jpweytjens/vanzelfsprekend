@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import warnings
 
 import matplotlib.dates
 import matplotlib.pyplot as plt
@@ -384,4 +385,40 @@ def test_labels_all_none_is_silent(recwarn):
     texts = vzs.line_labels(ax, labels=[None, None])
     assert texts == []
     assert not any("labels=" in str(w.message) for w in recwarn)
+    plt.close(fig)
+
+
+def _label_boxes_inside(ax, texts):
+    box = ax.get_window_extent()
+    return all(
+        box.y0 - 0.5 <= t.get_window_extent().y0
+        and t.get_window_extent().y1 <= box.y1 + 0.5
+        for t in texts
+    )
+
+
+def test_end_labels_that_fit_stay_inside_the_axes():
+    # Six lines converging at the top edge: stacked apart they still fit
+    # in the axes, so the stack slides down instead of spilling over.
+    fig, ax = plt.subplots(figsize=(4, 3))
+    for i in range(6):
+        ax.plot([0, 1], [0, 0.99 + i * 0.002], label=f"line {i}")
+    ax.set_ylim(0, 1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        texts = vzs.line_labels(ax)
+        fig.canvas.draw()
+    assert _label_boxes_inside(ax, texts)
+    plt.close(fig)
+
+
+def test_end_labels_that_cannot_fit_warn_once():
+    fig, ax = plt.subplots(figsize=(4, 2))
+    for i in range(12):
+        ax.plot([0, 1], [i * 0.05, i * 0.05], label=f"line {i}")
+    with pytest.warns(UserWarning, match="inside the axes"):
+        vzs.line_labels(ax)
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        fig.canvas.draw()  # warned once, not on every draw
     plt.close(fig)
