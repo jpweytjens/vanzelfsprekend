@@ -39,14 +39,15 @@ SIDE_TOLERANCE = 3.0
 Swept on 2026-09-07 over a resonance figure (anchors 16.6, 17.2, 17.5,
 18.5 GHz on a Lorentzian peak) and a three-line column with a crossing
 curve, at 0.5, 1, 1.5, 2, 3 and 4: below 3.0 the 17.2 GHz summit label
-flipped left, climbing over its own peak, although the right is where
+flipped left, above and left of the summit, although the right is where
 Doumont places it; at 3.0 and 4.0 it moved right instead. The 17.5 GHz
 label stayed right at every value, and the three-line labels stayed
 right from 1.0 up, only going above at 0.5. The 16.6 GHz label, on the
-rising flank, stayed right and climbed that flank at every value swept;
-no tolerance in this range gives it the left side it wants. 3.0 is the
-smallest value that puts both Doumont anchors, 17.2 and 17.5 GHz, on
-the right; it does not fix 16.6 GHz.
+rising left flank, stayed right at every value with no displacement at
+all: the flank rises past the label's top, so the right strip is clear
+and the selector has no reason to deviate; it sits inside the peak,
+which is the anchor's doing, not the tolerance's. 3.0 is the smallest
+value that puts both Doumont anchors, 17.2 and 17.5 GHz, on the right.
 """
 
 _ALIGNMENT: dict[str, tuple[str, str]] = {
