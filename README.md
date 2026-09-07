@@ -93,6 +93,7 @@ vzs.label(ax, "measured", x=17.2)  # beside the point nearest 17.2
 vzs.label(ax, ["SSP1-1.9", "SSP2-4.5"], x=2060)  # a column at one year
 ax.scatter([x], [y], label="Belgium")
 vzs.label(ax, "Belgium")  # a named point
+ax.vzs.label("Belgium")  # the same through the accessor
 ```
 
 Labelling is deliberate: you name each label, the library decides only how far it moves. Naming many points of one cloud is a different problem, and [textalloc](https://github.com/ckjellson/textalloc) and [adjustText](https://github.com/Phlya/adjustText) solve it.
@@ -188,6 +189,8 @@ ax.xaxis.set_major_locator(
     vzs.FeatureLocator(x, y, [16, lambda x, y: x[np.argmax(y)], 19])
 )
 ax.yaxis.set_minor_locator(vzs.SummaryLocator(y, [lambda y: y.max() / 2]))
+ax.vzs.label("measured", x=17.2)  # beside the summit point
+ax.vzs.label("calculated", x=17.5)  # beside the right flank
 ```
 
 ![A sharp resonance peak, black measured points over an orange calculated Lorentzian, x ticks at the band's 16 and 19 GHz edges and the peak's 17.2 GHz](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/resonance_peak.png)
