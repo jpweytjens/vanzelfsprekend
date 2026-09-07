@@ -16,6 +16,7 @@ from vanzelfsprekend.locator import (
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
+    visible_interval,
 )
 
 
@@ -326,7 +327,7 @@ def _apply_frame(ax: Axes) -> bool:
 def _frame_span(
     axis: Axis, frame: str, interval: tuple[float, float] | None = None
 ) -> tuple[float, float] | None:
-    dmin, dmax = interval if interval is not None else axis.get_data_interval()
+    dmin, dmax = interval if interval is not None else visible_interval(axis)
     if not np.isfinite([dmin, dmax]).all() or dmin == dmax:
         return None
     if frame == "data":

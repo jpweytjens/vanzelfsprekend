@@ -316,3 +316,14 @@ def test_loose_unequal_pair_view_matches_its_ticks():
         ticks = ax.xaxis.get_majorticklocs()
         assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
     plt.close(fig)
+
+
+def test_cropped_shared_view_trims_the_union_to_the_visible_data():
+    fig, a, b = _pair()
+    vzs.distill(a, frame="data")
+    a.set_ylim(1.5, 10.0)
+    fig.canvas.draw()
+    assert a.spines["left"].get_bounds() == (1.5, 5.0)
+    assert b.spines["left"].get_bounds() == (1.5, 5.0)
+    assert a.yaxis.get_majorticklocs().min() >= 1.5
+    plt.close(fig)

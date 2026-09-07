@@ -453,3 +453,82 @@ def test_n_overrides_spacing():
 def test_rejects_malformed_spacing(scatter_ax):
     with pytest.raises(ValueError, match="spacing"):
         range_frame(scatter_ax, spacing=(1, 2, 3))
+
+
+def test_data_frame_under_cropped_view_ends_at_the_visible_data(scatter_ax):
+    ax = range_frame(scatter_ax, frame="data")
+    ax.set_xlim(2.0, 30.0)
+    ax.figure.canvas.draw()
+    dmax = ax.xaxis.get_data_interval()[1]
+    assert ax.spines["bottom"].get_bounds() == (2.0, dmax)
+
+
+def test_nice_frame_under_cropped_view_refits_ticks_to_visible_data(scatter_ax):
+    ax = range_frame(scatter_ax)
+    ax.set_xlim(3.5, 30.0)
+    ax.figure.canvas.draw()
+    ticks = ax.xaxis.get_majorticklocs()
+    dmax = ax.xaxis.get_data_interval()[1]
+    assert ticks.min() >= 3.5
+    assert ticks.max() <= dmax
+    assert ax.spines["bottom"].get_bounds() == (ticks.min(), ticks.max())
+
+
+def test_loose_frame_under_cropped_view_brackets_visible_data(scatter_ax):
+    ax = range_frame(scatter_ax, frame="loose")
+    ax.set_xlim(3.5, 30.0)
+    ax.figure.canvas.draw()
+    ticks = sorted(ax.xaxis.get_majorticklocs())
+    dmax = ax.xaxis.get_data_interval()[1]
+    lo = max(t for t in ticks if t <= 3.5)
+    hi = min(t for t in ticks if t >= dmax)
+    assert (ticks[0], ticks[-1]) == (lo, hi)
+    assert ax.spines["bottom"].get_bounds() == (lo, hi)
+
+
+def test_log_frame_under_cropped_view_refits_ticks_to_visible_data(log_scatter_ax):
+    ax = range_frame(log_scatter_ax)
+    ax.set_xlim(30.0, 1e5)
+    ax.figure.canvas.draw()
+    ticks = ax.xaxis.get_majorticklocs()
+    dmax = ax.xaxis.get_data_interval()[1]
+    assert ticks.min() >= 30.0
+    assert ticks.max() <= dmax
+    assert ax.spines["bottom"].get_bounds() == (ticks.min(), ticks.max())
+
+
+def test_date_frame_under_cropped_view_refits_ticks_to_visible_data(date_plot_ax):
+    ax = range_frame(date_plot_ax)
+    ax.set_xlim(dt.datetime(2023, 9, 10), dt.datetime(2026, 1, 1))
+    ax.figure.canvas.draw()
+    ticks = ax.xaxis.get_majorticklocs()
+    vmin = ax.get_xlim()[0]
+    dmax = ax.xaxis.get_data_interval()[1]
+    assert ticks.min() >= vmin
+    assert ticks.max() <= dmax
+    assert ax.spines["bottom"].get_bounds() == (ticks.min(), ticks.max())
+
+
+def test_inverted_cropped_view_reads_the_same_visible_data(scatter_ax):
+    ax = range_frame(scatter_ax, frame="data")
+    ax.set_xlim(30.0, 2.0)
+    ax.figure.canvas.draw()
+    dmax = ax.xaxis.get_data_interval()[1]
+    assert ax.spines["bottom"].get_bounds() == (2.0, dmax)
+
+
+def test_view_outside_the_data_draws_without_error(scatter_ax):
+    ax = range_frame(scatter_ax)
+    ax.set_xlim(50.0, 60.0)
+    ax.figure.canvas.draw()
+
+
+def test_loose_view_limits_still_cover_the_whole_data(scatter_ax):
+    ax = range_frame(scatter_ax, frame="loose")
+    ax.figure.canvas.draw()
+    full = ax.get_xlim()
+    ax.set_xlim(3.5, 30.0)
+    ax.figure.canvas.draw()
+    ax.autoscale(axis="x")
+    ax.figure.canvas.draw()
+    assert ax.get_xlim() == pytest.approx(full)

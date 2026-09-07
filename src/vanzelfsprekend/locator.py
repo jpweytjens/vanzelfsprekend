@@ -162,8 +162,8 @@ class TalbotLocator(BreaksLocator):
         return breaks_extended(n=n, Q=self._q, only_inside=only_inside, w=self._w)
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
-        """Return tick locations computed from the axis data interval."""
-        dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
+        """Return tick locations computed from the axis's visible data."""
+        dmin, dmax = visible_interval(self.axis)  # ty: ignore[invalid-argument-type]
         if not np.isfinite([dmin, dmax]).all():
             view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
             return np.asarray(AutoLocator().tick_values(*view))
@@ -354,10 +354,11 @@ class LogBreaksLocator(BreaksLocator):
         return _sanitize_log_interval(vmin, vmax, self._base)
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
-        """Return tick locations computed from the axis data interval."""
+        """Return tick locations computed from the axis's visible data."""
         dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
         if dmin <= 0:
             dmin = self.axis.get_minpos()  # ty: ignore[unresolved-attribute]
+        dmin, dmax = visible_interval(self.axis, (dmin, dmax))  # ty: ignore[invalid-argument-type]
         if not np.isfinite([dmin, dmax]).all():
             view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
             return _log_fallback(view[0], view[1], self._base)
@@ -531,8 +532,8 @@ class DateBreaksLocator(BreaksLocator):
         self._loose = loose
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
-        """Return tick locations computed from the axis data interval."""
-        dmin, dmax = self.axis.get_data_interval()  # ty: ignore[unresolved-attribute]
+        """Return tick locations computed from the axis's visible data."""
+        dmin, dmax = visible_interval(self.axis)  # ty: ignore[invalid-argument-type]
         if not np.isfinite([dmin, dmax]).all():
             view = self.axis.get_view_interval()  # ty: ignore[unresolved-attribute]
             return _date_fallback(view[0], view[1])
@@ -798,6 +799,29 @@ def _tick_positions(
     # tolist: FixedLocator's stub wants Sequence[float], which an ndarray
     # does not satisfy structurally.
     return np.unique(values).tolist()
+
+
+def visible_interval(
+    axis: Axis, interval: tuple[float, float] | None = None
+) -> tuple[float, float]:
+    """Return the axis's data interval cut back to its view.
+
+    A view wider than the data leaves it unchanged, so an autoscaled
+    axis reads its data as before. A view pinned inside the data crops
+    it to the data on screen, which is what a `set_xlim` after the
+    treatment means. A view lying entirely outside the data yields a
+    non-finite pair, the same reading as no data at all. `interval`
+    stands in for the data interval when the caller has already
+    adjusted it, as a log axis does for a nonpositive minimum.
+    """
+    if interval is None:
+        interval = axis.get_data_interval()
+    dmin, dmax = (float(v) for v in interval)
+    vmin, vmax = sorted(float(v) for v in axis.get_view_interval())
+    lo, hi = max(dmin, vmin), min(dmax, vmax)
+    if lo > hi:
+        return (np.nan, np.nan)
+    return (lo, hi)
 
 
 def _extend_to_cover(ticks: np.ndarray, vmin: float, vmax: float) -> np.ndarray:

@@ -32,6 +32,7 @@ from vanzelfsprekend.locator import (
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
+    visible_interval,
 )
 from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticklabels import _apply_tick_labels
@@ -40,11 +41,13 @@ BreaksLocator = TalbotLocator | LogBreaksLocator | DateBreaksLocator
 
 
 def data_union(members: Sequence[Axes], name: str) -> tuple[float, float] | None:
-    """Union of the members' data intervals along `name` (`'x'` or `'y'`).
+    """Union of the members' visible data along `name` (`'x'` or `'y'`).
 
-    Log axes substitute `minpos` for a nonpositive minimum, mirroring
-    the locators' own reading. Members with no finite data are skipped;
-    returns `None` when none remain or the union is degenerate.
+    Each member's data interval is cut back to its view, mirroring the
+    locators' own reading, so a cropped shared axis crops the union.
+    Log axes substitute `minpos` for a nonpositive minimum. Members
+    with no finite data are skipped; returns `None` when none remain or
+    the union is degenerate.
     """
     lo, hi = np.inf, -np.inf
     for ax in members:
@@ -52,6 +55,7 @@ def data_union(members: Sequence[Axes], name: str) -> tuple[float, float] | None
         dmin, dmax = axis.get_data_interval()
         if axis.get_scale() == "log" and dmin <= 0:
             dmin = axis.get_minpos()
+        dmin, dmax = visible_interval(axis, (dmin, dmax))
         if not np.isfinite([dmin, dmax]).all():
             continue
         lo, hi = min(lo, dmin), max(hi, dmax)
