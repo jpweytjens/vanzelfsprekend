@@ -11,7 +11,7 @@ One call, `vzs.distill(ax)`, turns a default matplotlib axes into a quiet one wh
 
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.png)
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `distill(ax, frame=("data", "loose"))` and `line_labels(ax)` in place of the legend.
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `distill(ax, frame=("data", "loose"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1905)` to name the record where it starts.
 
 ## Install
 
@@ -95,6 +95,10 @@ ax.scatter([x], [y], label="Belgium")  # any scatter: draw the point you want to
 vzs.label(ax, "Belgium")  # then name it; a one-point artist needs no anchor
 ax.vzs.label("Belgium")  # the same through the accessor
 ```
+
+Doumont's resonance figure is the model: "measured" beside the topmost point and "calculated" beside the flank under it, each anchored where the reader looks and slid just clear of the ink:
+
+![A sharp resonance peak with "measured" above and right of the topmost point and "calculated" right of the falling flank, neither touching the points or the curve](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/resonance_peak.png)
 
 Labelling is deliberate: you name each label, the library decides only how far it moves. Naming many points of one cloud is a different problem, and [textalloc](https://github.com/ckjellson/textalloc) and [adjustText](https://github.com/Phlya/adjustText) solve it.
 
