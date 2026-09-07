@@ -36,8 +36,8 @@ def main() -> None:
 
     (a, b), (c, d) = axes
     for left, right in ((a, b), (c, d)):
-        left.plot(X_LEFT, LEFT, label="left")
-        right.plot(X_RIGHT, RIGHT, label="right")
+        left.plot(X_LEFT, LEFT, label="left", color=vzs.palettes.DATA_INK)
+        right.plot(X_RIGHT, RIGHT, label="right", color=vzs.palettes.DATA_INK)
 
     vzs.distill(a)
     a.set_title('sharey="row", distill(a)')
