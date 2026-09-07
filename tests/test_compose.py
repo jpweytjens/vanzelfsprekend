@@ -374,3 +374,24 @@ def test_spacing_reaches_the_locator_from_every_entry_point(entry):
         counts.append(len(ax.xaxis.get_majorticklocs()))
         plt.close(fig)
     assert counts[1] < counts[0]
+
+
+def test_distill_keeps_a_cycle_set_before_it():
+    fig, ax = plt.subplots()
+    ax.set_prop_cycle(color=["#4477AA", "#EE6677"])
+    vzs.distill(ax)
+    (first,) = ax.plot([0, 1], [0, 1])
+    (second,) = ax.plot([0, 1], [1, 0])
+    assert to_rgba(first.get_color()) == to_rgba("#4477AA")
+    assert to_rgba(second.get_color()) == to_rgba("#EE6677")
+    plt.close(fig)
+
+
+def test_restore_returns_the_cycle_set_before_distill():
+    fig, ax = plt.subplots()
+    ax.set_prop_cycle(color=["#4477AA", "#EE6677"])
+    vzs.distill(ax)
+    vzs.restore(ax)
+    (line,) = ax.plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba("#4477AA")
+    plt.close(fig)

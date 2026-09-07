@@ -1,4 +1,6 @@
+import matplotlib as mpl
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import pytest
 
 from vanzelfsprekend import palettes
@@ -60,3 +62,15 @@ def test_qualified_names_resolve_for_every_scheme():
 def test_unregistered_tol_name_still_raises():
     with pytest.raises(ValueError, match="tol:mauve"):
         mcolors.to_rgba("tol:mauve")
+
+
+def test_axes_cycle_reads_the_cycle_on_this_matplotlib():
+    # Pins the private attribute the reader relies on: a matplotlib
+    # release that moves it fails here, not silently in distill.
+    fig, ax = plt.subplots()
+    assert palettes.axes_cycle(ax) == list(mpl.rcParams["axes.prop_cycle"])
+    ax.plot([0, 1], [0, 1])  # a consumed entry does not change the cycle
+    assert palettes.axes_cycle(ax) == list(mpl.rcParams["axes.prop_cycle"])
+    ax.set_prop_cycle(color=["#4477AA", "#EE6677"])
+    assert palettes.axes_cycle(ax) == [{"color": "#4477AA"}, {"color": "#EE6677"}]
+    plt.close(fig)

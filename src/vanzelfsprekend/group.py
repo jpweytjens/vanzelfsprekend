@@ -246,8 +246,19 @@ def treat(
             intervals[name] = partial(data_union, group, name)
         mute(ax)
         if "cycle" not in state:
-            state["cycle"] = {"snapshot": mpl.rcParams["axes.prop_cycle"]}
-        ax.set_prop_cycle(palettes.cycle("ink"))
+            # The ink cycle replaces only matplotlib's default; a cycle
+            # the user chose is theirs, and restore returns whichever
+            # was there.
+            found = palettes.axes_cycle(ax)
+            default = found == list(mpl.rcParams["axes.prop_cycle"])
+            state["cycle"] = {
+                "snapshot": mpl.rcParams["axes.prop_cycle"]
+                if default
+                else palettes.cycler_of(found),
+                "ink": default,
+            }
+        if state["cycle"]["ink"]:
+            ax.set_prop_cycle(palettes.cycle("ink"))
         state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
         add_applier(ax, "tick_labels", _apply_tick_labels)
         add_applier(ax, "date_offset", _apply_date_offset)

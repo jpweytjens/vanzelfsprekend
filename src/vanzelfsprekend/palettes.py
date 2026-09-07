@@ -14,6 +14,7 @@ scheme: a grey value hierarchy for the marks, the text and the frame.
 """
 
 from cycler import Cycler, cycler
+from matplotlib.axes import Axes
 from matplotlib.colors import get_named_colors_mapping
 
 BRIGHT = {
@@ -143,3 +144,22 @@ def _register_named_colors() -> None:
 
 
 _register_named_colors()
+
+
+def axes_cycle(ax: Axes) -> list[dict]:
+    """Return the property cycle `ax` draws with, one dict per entry.
+
+    matplotlib offers no getter for it; the cycle lives on a private
+    attribute of the axes' line factory, `_cycler_items` up to 3.10
+    and inside `_prop_cycle` from 3.11. A test pins both, so a release
+    that moves it fails there rather than silently in `distill`.
+    """
+    factory = ax._get_lines  # ty: ignore[unresolved-attribute]
+    holder = getattr(factory, "_prop_cycle", factory)
+    return list(holder._cycler_items)
+
+
+def cycler_of(items: list[dict]) -> Cycler:
+    """Rebuild a cycler from the entries `axes_cycle` returns."""
+    keys = list(items[0])
+    return cycler(**{key: [entry[key] for entry in items] for key in keys})
