@@ -373,7 +373,8 @@ def label(
         over an empty proxy.
     x, y : float, optional
         The spine coordinate of the anchor; give one, not both. Required
-        for a multi-point artist and for a column.
+        for a multi-point artist and for a column. In the axis's own
+        units, so a date works on a date axis.
     side : {'right', 'left', 'above', 'below'}, optional
         Where the text goes. `None` tries the sides in that order and
         takes the first that fits.
@@ -397,9 +398,9 @@ def label(
         raise ValueError("give x= or y=, not both")
     helper: Helper | None
     if x is not None:
-        helper = ("x", float(x))
+        helper = ("x", float(ax.convert_xunits(x)))
     elif y is not None:
-        helper = ("y", float(y))
+        helper = ("y", float(ax.convert_yunits(y)))
     else:
         helper = None
     if column and helper is None:

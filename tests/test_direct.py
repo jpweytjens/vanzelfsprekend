@@ -1,6 +1,8 @@
+import datetime
 import itertools
 import warnings
 
+import matplotlib.dates
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -292,24 +294,33 @@ def assert_clear_of_ink(ax, texts):
     renderer = ax.figure.canvas.get_renderer()
     boxes = [t.get_window_extent(renderer) for t in texts]
     px_per_pt = ax.figure.dpi / 72.0
+    gap_px = 2.0 * px_per_pt
+    state = get_state(ax)
+    above_text = (state or {}).get("labels", {}).get("ylabel_above_text")
     for line in ax.get_lines():
         path = line.get_path().transformed(line.get_transform())
         if line.get_linestyle() not in NONE:
+            m = line.get_linewidth() / 2 * px_per_pt + gap_px
             for box in boxes:
-                assert not path.intersects_bbox(box, filled=False), (
+                grown = Bbox.from_extents(
+                    box.x0 - m, box.y0 - m, box.x1 + m, box.y1 + m
+                )
+                assert not path.intersects_bbox(grown, filled=False), (
                     f"{box} crosses {line.get_label()}"
                 )
         if line.get_marker() not in NONE:
-            r = (line.get_markersize() + line.get_markeredgewidth()) / 2 * px_per_pt
+            r = (
+                line.get_markersize() + line.get_markeredgewidth()
+            ) / 2 * px_per_pt + gap_px
             assert_no_marker_inside(boxes, path.vertices, r, line.get_label())
     for collection in ax.collections:
         pts = collection.get_offset_transform().transform(collection.get_offsets())
         edges = np.asarray(collection.get_linewidths(), dtype=float)
         edge = edges.max() if edges.size else 0.0
-        r = (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt
+        r = (np.sqrt(collection.get_sizes().max()) + edge) / 2 * px_per_pt + gap_px
         assert_no_marker_inside(boxes, pts, r, collection.get_label())
     for text in ax.texts:
-        if text in texts:
+        if text in texts or text is above_text:
             continue
         for box in boxes:
             assert not box.overlaps(text.get_window_extent(renderer))
@@ -324,6 +335,19 @@ def test_label_text_color_and_anchor():
     assert text.get_color() == "tab:orange"
     assert text.xy == pytest.approx((17.5, lorentzian(17.5)), rel=1e-3)
     assert text.get_ha() == "left"
+    plt.close(fig)
+
+
+def test_label_x_converts_through_the_axis_units():
+    fig, ax = plt.subplots()
+    dates = [datetime.date(2020, 1, d) for d in range(1, 11)]
+    ax.plot(dates, range(10), label="series")
+    (text,) = vzs.label(ax, "series", x=datetime.date(2020, 1, 5), side="right")
+    fig.canvas.draw()
+    assert text.xy[0] == pytest.approx(
+        matplotlib.dates.date2num(datetime.date(2020, 1, 5))
+    )
+    assert text.xy[1] == pytest.approx(4.0)
     plt.close(fig)
 
 
@@ -381,6 +405,18 @@ def test_label_re_solves_on_resize():
     fig.canvas.draw()
     fig.set_size_inches(8, 2.5)
     fig.canvas.draw()
+    assert_clear_of_ink(ax, texts)
+    plt.close(fig)
+
+
+def test_default_side_puts_both_doumont_labels_on_the_right():
+    # Pins SIDE_TOLERANCE to its provenance: below 3.0 the summit label
+    # flipped left in the 2026-09-07 sweep.
+    fig, ax = resonance()
+    texts = vzs.label(ax, "measured", x=17.2)
+    texts += vzs.label(ax, "calculated", x=17.5)
+    fig.canvas.draw()
+    assert [t.get_ha() for t in texts] == ["left", "left"]
     assert_clear_of_ink(ax, texts)
     plt.close(fig)
 
