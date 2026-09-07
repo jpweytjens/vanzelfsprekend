@@ -269,3 +269,20 @@ def test_twin_is_left_out_of_the_group_with_a_warning():
     vzs.restore(host)
     assert twin.xaxis.get_major_locator() is shared_x_original
     plt.close(fig)
+
+
+def test_unsupported_scale_warns_at_the_call_site_for_every_entry_point():
+    # Pointing at the call site is also what keeps Python's default
+    # filter from collapsing every panel's warning into one.
+    fig, axes = plt.subplots(1, 3)
+    for ax in axes:
+        ax.set_yscale("symlog")
+        ax.plot([1, 2, 3], [1, 20, 300])
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
+        vzs.range_frame(axes[0])
+        vzs.distill(axes[1])
+        vzs.small_multiples([axes[2]])
+    assert len(record) == 3
+    assert [w.filename for w in record] == [__file__] * 3
+    plt.close(fig)

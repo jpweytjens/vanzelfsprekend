@@ -1,9 +1,12 @@
+import datetime as dt
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 from matplotlib.colors import to_rgba
 
 import vanzelfsprekend as vzs
+from vanzelfsprekend.hook import get_state
 
 
 def test_import_installs_accessor():
@@ -279,4 +282,59 @@ def test_distill_loose_frame_view_equals_tick_span():
     for axis, get_lim in ((ax.xaxis, ax.get_xlim), (ax.yaxis, ax.get_ylim)):
         ticks = axis.get_majorticklocs()
         assert get_lim() == pytest.approx((ticks.min(), ticks.max()))
+    plt.close(fig)
+
+
+def _plot_linear(ax):
+    ax.plot([0.3, 4.5, 9.7], [-3.2, 1.0, 4.1])
+
+
+def _plot_log(ax):
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [3, 40, 700])
+
+
+def _plot_dates(ax):
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=30 * i) for i in range(4)]
+    ax.plot(days, [1.0, 4.0, 2.0, 3.5])
+
+
+@pytest.mark.parametrize("plot", [_plot_linear, _plot_log, _plot_dates])
+@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+def test_a_lone_axes_distills_exactly_as_range_frame(plot, frame):
+    # A group of one pins nothing, so `distill` must take the frame's
+    # own path: same spines, same view, on every scale and mode.
+    fig_distilled, distilled = plt.subplots()
+    fig_framed, framed = plt.subplots()
+    for ax in (distilled, framed):
+        plot(ax)
+    vzs.distill(distilled, frame=frame)
+    vzs.range_frame(framed, frame=frame)
+    fig_distilled.canvas.draw()
+    fig_framed.canvas.draw()
+    for side in ("bottom", "left"):
+        assert distilled.spines[side].get_bounds() == framed.spines[side].get_bounds()
+    assert distilled.get_xlim() == framed.get_xlim()
+    assert distilled.get_ylim() == framed.get_ylim()
+    plt.close(fig_distilled)
+    plt.close(fig_framed)
+
+
+def test_only_the_shared_axis_is_pinned_to_a_group():
+    fig, (upper, lower) = plt.subplots(2, 1, sharey=True)
+    upper.plot([0, 1], [0, 1])
+    lower.plot([0, 2], [0, 4])
+    lower.set_autoscaley_on(False)
+    before_autoscale = [
+        (ax.get_autoscalex_on(), ax.get_autoscaley_on()) for ax in (upper, lower)
+    ]
+    before_xlim = (upper.get_xlim(), lower.get_xlim())
+    vzs.distill(upper)
+    assert set(get_state(upper)["group"]["members"]) == {"y"}
+    fig.canvas.draw()
+    vzs.restore(upper)
+    assert [
+        (ax.get_autoscalex_on(), ax.get_autoscaley_on()) for ax in (upper, lower)
+    ] == before_autoscale
+    assert (upper.get_xlim(), lower.get_xlim()) == before_xlim
     plt.close(fig)

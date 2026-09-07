@@ -87,8 +87,7 @@ def restore(ax: Axes) -> None:
         if group_state is not None:
             autoscale[member] = {
                 name: group_state["snapshot"]["autoscale"][name]
-                for name, group in group_state["members"].items()
-                if len(group) >= 2
+                for name in group_state["members"]
             }
         _restore_member(member)
     # Second pass: a shared `set_xlim`/`set_ylim` disables autoscale on
@@ -125,10 +124,9 @@ def _restore_member(ax: Axes) -> None:
 
     group_state = state.get("group")
     if group_state is not None:
-        for name, group in group_state["members"].items():
-            if len(group) >= 2:
-                limits = group_state["snapshot"]["limits"][name]
-                (ax.set_xlim if name == "x" else ax.set_ylim)(limits)
+        for name in group_state["members"]:
+            limits = group_state["snapshot"]["limits"][name]
+            (ax.set_xlim if name == "x" else ax.set_ylim)(limits)
 
     multiples_state = state.get("multiples")
     if multiples_state is not None:

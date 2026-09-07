@@ -133,6 +133,7 @@ def small_multiples(
         offset=offset,
         nice_numbers=nice_numbers,
         weights=weights,
+        stacklevel=4,
     )
     grid = {"panels": panels, "torn_down": False}
     for ax, ss in zip(panels, specs, strict=True):

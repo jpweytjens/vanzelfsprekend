@@ -68,7 +68,14 @@ def range_frame(
         "y": axis_kind(ax.yaxis),
     }
     install_frame(
-        ax, mode, offsets, n=n, nice_numbers=nice_numbers, weights=weights, kinds=kinds
+        ax,
+        mode,
+        offsets,
+        n=n,
+        nice_numbers=nice_numbers,
+        weights=weights,
+        kinds=kinds,
+        stacklevel=3,
     )
     run_appliers(ax)
     return ax
@@ -174,13 +181,16 @@ def install_frame(
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
     kinds: dict[str, AxisKind | None],
+    stacklevel: int,
 ) -> None:
     """Install the frame on `ax` given each axis's kind.
 
     `kinds[name]` is `None` for an axis the caller decided to leave
     alone (a group that disagrees on kind; the caller has warned or
     raised). An unsupported kind warns here, as it always has, and is
-    left alone too. Registers the frame applier but does not run it.
+    left alone too; `stacklevel` is the depth of the caller the
+    warnings must point at, counted from this function. Registers the
+    frame applier but does not run it.
     """
     frame_state = get_state(ax)["frame"]  # ty: ignore[not-subscriptable]
     frame_state["mode"] = mode
@@ -193,14 +203,14 @@ def install_frame(
             warnings.warn(
                 f"vanzelfsprekend: {name}-axis has scale {kind.scale!r}; "
                 "only linear and log axes are supported, leaving it untouched",
-                stacklevel=2,
+                stacklevel=stacklevel,
             )
             continue
         if not kind.supported:
             warnings.warn(
                 f"vanzelfsprekend: {name}-axis has a units converter; "
                 "only plain and date axes are supported, leaving it untouched",
-                stacklevel=2,
+                stacklevel=stacklevel,
             )
             continue
         if kind.is_date:

@@ -135,19 +135,25 @@ def treat(
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
+    stacklevel: int = 4,
 ) -> None:
     """Distill every key of `members` as one unit.
 
     `members[ax][name]` lists the axes whose data feed `ax`'s `name`
     axis (`ax` itself for a lone axes), or is `None` to leave that axis
-    alone. Snapshots are taken for every member before any member is
-    modified, so axes that share a `Ticker` record their true original
-    once; then each member gets the frame for its group's kind, its
-    locators wrapped to read the group's data union, the spine ended at
-    that union, the muted furniture, the neutral ink cycle, and the
-    appliers. Once every member has its locator installed, each is
-    autoscaled once so a loose frame lands edge to edge. The keys
-    together are what `restore` undoes.
+    alone. An axis whose group is one axes is pinned to nothing: it
+    takes the frame's own path, exactly as `range_frame` would.
+    `state["group"]["members"]` records the pinned axes and nothing
+    else, and is the one authority every later step reads. Snapshots
+    are taken for every member before any member is modified, so axes
+    that share a `Ticker` record their true original once; then each
+    member gets the frame for its group's kind, its pinned locators
+    wrapped to read the group's data union, the spine ended at that
+    union, the muted furniture, the neutral ink cycle, and the
+    appliers. Once every member has its locator installed, each member
+    with a pinned axis is autoscaled once so a loose frame lands edge
+    to edge. `stacklevel` is the caller's depth for the warnings
+    `install_frame` raises. The keys together are what `restore` undoes.
     """
     mode, offsets = parse_frame_args(frame, offset)
     unit = tuple(members)
@@ -155,22 +161,26 @@ def treat(
         snapshot_frame(ax)
         state = ensure_state(ax)
         if "group" not in state:
-            group_state: dict = {
-                "snapshot": {
-                    "limits": {"x": ax.get_xlim(), "y": ax.get_ylim()},
-                    "autoscale": {
-                        "x": ax.get_autoscalex_on(),
-                        "y": ax.get_autoscaley_on(),
-                    },
-                }
-            }
+            group_state: dict = {"snapshot": {"limits": {}, "autoscale": {}}}
             state["group"] = group_state
         state["group"]["unit"] = unit
+        # A group of one pins nothing, so it is left out here and the
+        # axis keeps whatever the frame alone would have given it.
         state["group"]["members"] = {
             name: list(group)
             for name, group in members[ax].items()
-            if group is not None
+            if group is not None and len(group) > 1
         }
+        snapshot = state["group"]["snapshot"]
+        for name in state["group"]["members"]:
+            if name in snapshot["limits"]:
+                continue
+            # Reading a limit settles the pending autoscale, so only a
+            # pinned axis, which is autoscaled again below, is read.
+            snapshot["limits"][name] = ax.get_xlim() if name == "x" else ax.get_ylim()
+            snapshot["autoscale"][name] = (
+                ax.get_autoscalex_on() if name == "x" else ax.get_autoscaley_on()
+            )
 
     kind_of: dict[tuple[str, frozenset[int]], AxisKind | None] = {}
     for ax in unit:
@@ -193,14 +203,18 @@ def treat(
             nice_numbers=nice_numbers,
             weights=weights,
             kinds=kinds,
+            stacklevel=stacklevel,
         )
         state = ensure_state(ax)
         frame_state = state["frame"]
-        intervals = frame_state.setdefault("intervals", {})
-        for name in frame_state["active"]:
-            # The recorded list, not `members[ax][name]`: one authority for
-            # the group, shared by the locator, the applier and restore.
-            group = state["group"]["members"][name]
+        # Rebuilt from the recorded pinned axes, not `members[ax]`: one
+        # authority for the group, shared by the locator, the applier
+        # and restore, and no override left behind for an unpinned axis.
+        intervals: dict[str, partial] = {}
+        frame_state["intervals"] = intervals
+        for name, group in state["group"]["members"].items():
+            if name not in frame_state["active"]:
+                continue
             axis = ax.xaxis if name == "x" else ax.yaxis
             inner = cast("BreaksLocator", axis.get_major_locator())
             axis.set_major_locator(GroupLocator(inner, group, name))
@@ -214,26 +228,25 @@ def treat(
         add_applier(ax, "date_offset", _apply_date_offset)
         add_applier(ax, "limits", apply_limits)
     for ax in unit:
-        ax.autoscale_view()
+        if ensure_state(ax)["group"]["members"]:
+            ax.autoscale_view()
     for ax in unit:
         run_appliers(ax)
 
 
 def apply_limits(ax: Axes) -> bool:
-    """Pin each axis of `ax` to its group's view union; the sole writer of limits.
+    """Pin each pinned axis of `ax` to its group's view union; the sole writer.
 
-    A group of one is left alone, so a lone axes keeps an inverted axis
-    or a hand-set view. Groups of two or more converge onto one
-    ascending scale on the first draw, and this applier then finds
-    nothing to change.
+    Only the axes recorded in `state["group"]["members"]` are pinned, so
+    a lone axes keeps an inverted axis or a hand-set view. A group
+    converges onto one ascending scale on the first draw, and this
+    applier then finds nothing to change.
     """
     state = get_state(ax)
     if state is None or "group" not in state:
         return False
     changed = False
     for name, group in state["group"]["members"].items():
-        if len(group) < 2:
-            continue
         union = view_union(group, name)
         if union is None:
             continue
