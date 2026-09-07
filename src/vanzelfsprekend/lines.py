@@ -6,7 +6,9 @@ from itertools import cycle
 from typing import Literal, cast
 
 import numpy as np
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
+from matplotlib.collections import Collection
 from matplotlib.colors import is_color_like
 from matplotlib.lines import Line2D
 from matplotlib.text import Annotation
@@ -132,7 +134,7 @@ def line_labels(
             annotation_clip=False,
         )
         for (_, label, anchor), color in zip(
-            anchored, _resolve_colors(labelcolor, lines), strict=True
+            anchored, _resolve_colors(labelcolor, list(lines)), strict=True
         )
     ]
     for text in texts:
@@ -161,17 +163,31 @@ def _anchor(line: Line2D, at: str) -> tuple[float, float] | None:
     return (float(x[i]), float(y[i]))
 
 
+def _artist_color(artist: Artist) -> ColorType:
+    """Return the colour an artist's label takes.
+
+    A line's colour, or a scatter's face colour, else its edge colour.
+    """
+    if isinstance(artist, Line2D):
+        return artist.get_color()
+    collection = cast("Collection", artist)
+    faces = np.asarray(collection.get_facecolor())
+    if len(faces) and faces[0][3] > 0:
+        return tuple(faces[0])
+    return tuple(np.asarray(collection.get_edgecolor())[0])
+
+
 def _resolve_colors(
-    labelcolor: str | ColorType | list[ColorType], lines: list[Line2D]
+    labelcolor: str | ColorType | list[ColorType], artists: list[Artist]
 ) -> list[ColorType]:
     if isinstance(labelcolor, str) and labelcolor == "linecolor":
-        return [line.get_color() for line in lines]
+        return [_artist_color(artist) for artist in artists]
     if is_color_like(labelcolor):
-        return [cast("ColorType", labelcolor)] * len(lines)
+        return [cast("ColorType", labelcolor)] * len(artists)
     if not isinstance(labelcolor, list | tuple) or not labelcolor:
         raise ValueError(f"labelcolor {labelcolor!r} is not a colour or colour list")
     return [
-        cast("ColorType", c) for c, _ in zip(cycle(labelcolor), lines, strict=False)
+        cast("ColorType", c) for c, _ in zip(cycle(labelcolor), artists, strict=False)
     ]
 
 
