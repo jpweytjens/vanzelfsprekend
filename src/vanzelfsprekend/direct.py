@@ -8,7 +8,9 @@ coordinate form a column on the same helper. One weighted stack
 cannot move.
 """
 
-from typing import Literal, NamedTuple
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import Literal, NamedTuple, cast
 
 import numpy as np
 from matplotlib import rcParams
@@ -16,7 +18,13 @@ from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.collections import PathCollection
 from matplotlib.lines import Line2D
+from matplotlib.text import Annotation
 from matplotlib.transforms import Bbox
+from matplotlib.typing import ColorType
+
+from vanzelfsprekend import placement
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
+from vanzelfsprekend.lines import _ink_rise, _resolve_colors
 
 Side = Literal["right", "left", "above", "below"]
 Helper = tuple[Literal["x", "y"], float]
@@ -304,3 +312,328 @@ def _pins(ink: Ink, strip: tuple[float, float], axis: int, gap: float) -> np.nda
         if b_hi >= lo and b_lo <= hi:
             intervals.append((box.y0, box.y1) if axis == 1 else (box.x0, box.x1))
     return _merge(intervals, gap)
+
+
+def label(
+    ax: Axes,
+    name: str | Artist | Sequence[str | Artist],
+    *,
+    x: float | None = None,
+    y: float | None = None,
+    side: Side | None = None,
+    labelcolor: str | ColorType | list[ColorType] = "linecolor",
+    pad: float = 4.0,
+    gap: float = placement.GAP,
+) -> list[Annotation]:
+    """Put a label beside the artist called `name`, or a column of them.
+
+    The text is the artist's `label=`, the same string a legend would
+    show, and the anchor is where `x=` or `y=` meets the artist: a line's
+    crossing, a scatter's nearest point. From there the text slides along
+    a helper line through the anchor, as little as needed, to clear every
+    mark and text in its way. It goes right of the anchor by default and
+    left, above or below when the right is blocked; `side=` chooses. A
+    one-point artist needs no anchor. Several names with one coordinate
+    form a column on the same helper, stacked in order; a column takes
+    only the sides perpendicular to its helper.
+
+    An existing legend is hidden, since the labels replace it, and
+    `restore` brings it back. Calling again with the same artists rebuilds
+    that group. Labels are re-solved on every draw.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes holding the artist.
+    name : str, artist, or sequence of them
+        The artist's `label=`; or the artist itself, when two drawn
+        artists share a label. A sequence is a column. A producer that
+        keeps the legend text on an empty proxy (seaborn names its data
+        lines `_child0`, `_child1`, ...) is handled by naming the drawn
+        line first, `line.set_label("A")`: a drawn artist wins the name
+        over an empty proxy.
+    x, y : float, optional
+        The spine coordinate of the anchor; give one, not both. Required
+        for a multi-point artist and for a column.
+    side : {'right', 'left', 'above', 'below'}, optional
+        Where the text goes. `None` tries the sides in that order and
+        takes the first that fits.
+    labelcolor : color, list of color, or 'linecolor'
+        As in `line_labels`: the artist's own colour, one colour, or a
+        list cycled over the names.
+    pad : float
+        Points between the anchor (or the column's helper) and the near
+        edge of the text.
+    gap : float
+        Minimum clearance in points between the text and anything else.
+
+    Returns
+    -------
+    list of matplotlib.text.Annotation
+        The label artists, in `name` order.
+    """
+    column = not isinstance(name, str | Artist)
+    names = list(cast("Sequence[str | Artist]", name)) if column else [name]
+    if x is not None and y is not None:
+        raise ValueError("give x= or y=, not both")
+    helper: Helper | None
+    if x is not None:
+        helper = ("x", float(x))
+    elif y is not None:
+        helper = ("y", float(y))
+    else:
+        helper = None
+    if column and helper is None:
+        raise ValueError("a column of labels needs x= or y=")
+    if side is not None and side not in SIDES:
+        raise ValueError(f"side must be one of {SIDES}, got {side!r}")
+    if (
+        column
+        and helper is not None
+        and side is not None
+        and side not in _perpendicular(helper)
+    ):
+        allowed = " or ".join(_perpendicular(helper))
+        raise ValueError(
+            f"a column on {helper[0]}= can only go {allowed}, got {side!r}"
+        )
+    if not names:
+        raise ValueError("no names given")
+    artists = [_find(ax, n) for n in names]
+    anchors = [_anchor(ax, artist, helper) for artist in artists]
+    state = ensure_state(ax)
+    legend = ax.get_legend()
+    if legend is not None:
+        state.setdefault("legend", {"artist": legend, "visible": legend.get_visible()})
+        legend.set_visible(False)
+    groups: list[dict] = state.setdefault("direct", [])
+    for prior in [group for group in groups if group["artists"] == artists]:
+        for text in prior["texts"]:
+            text.remove()
+        groups.remove(prior)
+    texts = [
+        ax.annotate(
+            str(artist.get_label()),
+            xy=anchor,
+            xytext=(pad, 0.0),
+            textcoords="offset points",
+            ha="left",
+            va="baseline",
+            color=color,
+            annotation_clip=False,
+        )
+        for artist, anchor, color in zip(
+            artists, anchors, _resolve_colors(labelcolor, artists), strict=True
+        )
+    ]
+    groups.append(
+        {
+            "artists": artists,
+            "texts": texts,
+            "helper": helper,
+            "side": side,
+            "pad": pad,
+            "gap": gap,
+            "warned": False,
+        }
+    )
+    add_applier(ax, "direct", _apply_direct)
+    run_appliers(ax)
+    return texts
+
+
+@dataclass
+class _Attempt:
+    side: Side
+    base_px: float | None
+    """The strip's base on the perpendicular axis.
+
+    The column helper, or None for the anchor itself.
+    """
+    sizes: np.ndarray
+    centres: np.ndarray
+    offsets: np.ndarray
+    placed: np.ndarray
+    displacement: float
+    over: bool
+
+
+def _measure(texts: list[Annotation], side: Side) -> tuple[np.ndarray, np.ndarray]:
+    """Align `texts` for `side`.
+
+    Return their (n, 2) box sizes and box centres in pixels.
+    """
+    ha, va = _ALIGNMENT[side]
+    sizes, centres = [], []
+    for text in texts:
+        text.set_ha(ha)  # ty: ignore[unresolved-attribute]
+        text.set_va(va)  # ty: ignore[unresolved-attribute]
+        box = text.get_window_extent()
+        sizes.append((box.width, box.height))
+        centres.append(((box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2))
+    return np.array(sizes), np.array(centres)
+
+
+def _solve_side(
+    side: Side,
+    anchors: np.ndarray,
+    sizes: np.ndarray,
+    centres: np.ndarray,
+    offsets: np.ndarray,
+    rest: np.ndarray,
+    base_px: float | None,
+    pad_px: float,
+    gap_px: float,
+    ink: Ink,
+) -> tuple[np.ndarray, float, bool]:
+    """Stack the labels along the helper on `side`.
+
+    Return positions, displacement, and over-capacity. Positions are box
+    centres along the sliding axis, in pixels. The displacement is the
+    largest label move plus the largest pin move. `base_px` is where the
+    strip starts on the perpendicular axis: a column's helper, or `None`
+    for each label's own anchor.
+    """
+    axis = 1 if side in ("right", "left") else 0
+    perp = 1 - axis
+    sign = 1.0 if side in ("right", "above") else -1.0
+    shift = centres[:, axis] - anchors[:, axis] - offsets[:, axis]
+    desired = anchors[:, axis] + rest + shift
+    base = anchors[:, perp] if base_px is None else np.full(len(anchors), base_px)
+    near = base + sign * pad_px
+    far = near + sign * sizes[:, perp].max()
+    strip = (float(min(near.min(), far.min())), float(max(near.max(), far.max())))
+    pins = _pins(ink, strip, axis, gap_px)
+    centre = pins.mean(axis=1)
+    width = pins[:, 1] - pins[:, 0]
+    # The tie rule reads the anchor, not the box-centre target: the target
+    # sits a fraction of a pixel off the anchor (ink centring, descender
+    # space) and would miss a thin pin the anchor is on.
+    along = anchors[:, axis]
+    key = desired.copy()
+    for lo, hi, mid in zip(pins[:, 0], pins[:, 1], centre, strict=True):
+        inside = (along >= lo) & (along <= hi)
+        key[inside] = np.maximum(key[inside], mid + 1e-9)
+    n = len(desired)
+    placed = placement.stack(
+        np.concatenate([desired, centre]),
+        np.concatenate([sizes[:, axis], width]),
+        gap_px,
+        weights=np.concatenate(
+            [np.ones(n), np.full(len(centre), placement.PIN_WEIGHT)]
+        ),
+        key=np.concatenate([key, centre]),
+    )
+    label_move = float(np.abs(placed[:n] - desired).max())
+    pin_move = float(np.abs(placed[n:] - centre).max()) if len(centre) else 0.0
+    return placed[:n], label_move + pin_move, pin_move > placement.PIN_TOLERANCE
+
+
+def _offsets(attempt: _Attempt, anchors: np.ndarray, pad_px: float) -> np.ndarray:
+    """Return the (n, 2) pixel offsets from each anchor that realise `attempt`."""
+    axis = 1 if attempt.side in ("right", "left") else 0
+    perp = 1 - axis
+    sign = 1.0 if attempt.side in ("right", "above") else -1.0
+    shift = attempt.centres[:, axis] - anchors[:, axis] - attempt.offsets[:, axis]
+    out = np.empty_like(anchors)
+    out[:, axis] = attempt.placed - anchors[:, axis] - shift
+    base = anchors[:, perp] if attempt.base_px is None else attempt.base_px
+    out[:, perp] = base + sign * pad_px - anchors[:, perp]
+    return out
+
+
+def _attempt(
+    side: Side,
+    group: dict,
+    anchors: np.ndarray,
+    helper_px: float | None,
+    ink: Ink,
+    px_per_pt: float,
+) -> _Attempt:
+    texts = group["texts"]
+    sizes, centres = _measure(texts, side)
+    offsets = np.array([text.get_position() for text in texts]) * px_per_pt
+    if side in ("right", "left"):
+        rest = np.array([-_ink_rise(text) * px_per_pt for text in texts])
+    else:
+        rest = np.zeros(len(texts))
+    # The helper is the strip's base only when it is perpendicular to the
+    # sliding axis: always for a column, and for a single label only when
+    # the side matches (x= with right/left, y= with above/below). Otherwise
+    # the helper merely picked the anchor, and the strip starts at the
+    # anchor itself.
+    perp = 0 if side in ("right", "left") else 1
+    helper_axis = (
+        None if group["helper"] is None else (0 if group["helper"][0] == "x" else 1)
+    )
+    base_px = helper_px if helper_axis == perp else None
+    placed, displacement, over = _solve_side(
+        side,
+        anchors,
+        sizes,
+        centres,
+        offsets,
+        rest,
+        base_px,
+        group["pad"] * px_per_pt,
+        group["gap"] * px_per_pt,
+        ink,
+    )
+    return _Attempt(side, base_px, sizes, centres, offsets, placed, displacement, over)
+
+
+def _place(
+    group: dict,
+    anchors: np.ndarray,
+    helper_px: float | None,
+    ink: Ink,
+    px_per_pt: float,
+) -> tuple[np.ndarray, tuple[str, str]]:
+    """Return per-label offsets in points and the text alignment for `group`."""
+    side: Side = group["side"] or "right"
+    chosen = _attempt(side, group, anchors, helper_px, ink, px_per_pt)
+    offsets = _offsets(chosen, anchors, group["pad"] * px_per_pt) / px_per_pt
+    return offsets, _ALIGNMENT[chosen.side]
+
+
+def _apply_direct(ax: Axes) -> bool:
+    state = get_state(ax)
+    groups: list[dict] = (state or {}).get("direct") or []
+    # The managed y-label of `ylabel(place="above")` is an `ax.text` child,
+    # furniture, not ink; everything else in `ax.texts` counts.
+    furniture = {(state or {}).get("labels", {}).get("ylabel_above_text")} - {None}
+    px_per_pt = ax.figure.dpi / 72.0
+    changed = False
+    for i, group in enumerate(groups):
+        try:
+            anchors_data = [
+                _anchor(ax, artist, group["helper"]) for artist in group["artists"]
+            ]
+        except ValueError:
+            continue
+        before = [(t.get_position(), t.get_ha(), t.get_va()) for t in group["texts"]]
+        for text, anchor in zip(group["texts"], anchors_data, strict=True):
+            if text.xy != anchor:
+                text.xy = anchor
+                changed = True
+        anchors = ax.transData.transform(anchors_data)
+        helper_px = None
+        if group["helper"] is not None:
+            axis = 0 if group["helper"][0] == "x" else 1
+            probe = list(anchors_data[0])
+            probe[axis] = group["helper"][1]
+            helper_px = float(ax.transData.transform(probe)[axis])
+        pending = {text for later in groups[i:] for text in later["texts"]}
+        try:
+            ink = _ink(ax, pending | furniture)
+            offsets, (ha, va) = _place(group, anchors, helper_px, ink, px_per_pt)
+        except RuntimeError:
+            return changed
+        for text, offset, previous in zip(group["texts"], offsets, before, strict=True):
+            position = (float(offset[0]), float(offset[1]))
+            text.set_position(position)
+            text.set_ha(ha)
+            text.set_va(va)
+            if (position, ha, va) != previous:
+                changed = True
+    return changed
