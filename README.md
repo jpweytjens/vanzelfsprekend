@@ -59,7 +59,9 @@ The ticks and the spine are two separate decisions. The ticks are the locator's,
 | `loose` | nice numbers bracketing the data | the outermost ticks |
 | `data` | nice numbers inside the data | the data's exact min and max |
 
-So under `data` the spine runs a little past its last tick at each end, and a tick sits at the data's extreme only when a locator you set puts one there, as `QuartileLocator` does in the Anscombe figure below.
+So under `data` the spine runs a little past its last tick at each end, and a tick sits at the data's extreme only when a locator you set puts one there, as `QuartileLocator` does in the Anscombe figure below. The same record under the three modes carries the same ticks under `nice` and `data`; only the spine ends move:
+
+![The same rising warming curve three times, ticks at 1850 and 2000 and at -0.5 to 1.0: under nice the spines end at the 2000 and 1.0 ticks, under loose they stand off the plot and reach 2150 and 1.5, under data they run past the same ticks to the last year and the highest value](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/frame_modes.png)
 
 Both columns read the data, never the view's padding: matplotlib's autoscale leaves 5% of air around the data, and the frame ignores it. A view you pin inside the data with `set_xlim` or `set_ylim` crops the frame to the data left on screen, and the ticks re-fit it as matplotlib's own would. A view wider than the data changes nothing, and is how you make room for a fixed tick outside it, as the resonance figure does for its zero baseline.
 

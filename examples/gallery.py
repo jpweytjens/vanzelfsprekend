@@ -34,6 +34,7 @@ README_FIGURES = (
     "resonance_peak.png",
     "small_multiples.png",
     "tick_spacing.png",
+    "frame_modes.png",
     "palettes.png",
 )
 
@@ -158,6 +159,20 @@ def waiting_times() -> None:
     vzs.xlabel(ax, "minutes to the next eruption")
     vzs.ylabel(ax, "eruptions", labelpad=10)
     fig.savefig(OUTPUT / "waiting_times.png", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+
+
+def frame_modes() -> None:
+    """Render one warming record under the three frame modes, ticks alike."""
+    table = load("hadcrut5_annual.csv")
+    fig, axes = plt.subplots(1, 3, figsize=(9, 2.8))
+    fig.subplots_adjust(wspace=0.5)
+    for ax, mode in zip(axes, ("nice", "loose", "data"), strict=True):
+        vzs.distill(ax, frame=mode)
+        ax.plot(table["year"], table["anomaly_c"])
+        ax.set_title(f'frame="{mode}"', fontsize=10, color=vzs.palettes.TEXT_INK)
+    vzs.ylabel(axes[0], "warming (°C)")
+    fig.savefig(OUTPUT / "frame_modes.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -395,6 +410,7 @@ def main() -> None:
     resonance_peak()
     small_multiples_grid()
     tick_spacing()
+    frame_modes()
     palette_swatches()
     seaborn_lineplot()
     for name in README_FIGURES:
