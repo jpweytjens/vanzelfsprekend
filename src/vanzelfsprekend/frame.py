@@ -47,7 +47,10 @@ def range_frame(
         the exact data minimum and maximum. `'loose'` ends the spines
         at nice numbers bounding the data (frame may extend up to one
         tick step beyond the data). A tuple `(x_mode, y_mode)` sets
-        the bottom and left spine independently.
+        the bottom and left spine independently. All three read the
+        data cut back to the view, so a view pinned inside the data
+        with `set_xlim` crops the frame to the data on screen, and a
+        view wider than the data changes nothing.
     spacing : float or tuple of two floats
         The gap to aim for between ticks, in tick-label heights, so the
         number of ticks follows the axis's length and the labels' size:
