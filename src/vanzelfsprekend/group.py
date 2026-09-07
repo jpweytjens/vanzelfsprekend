@@ -244,6 +244,34 @@ def apply_limits(ax: Axes) -> bool:
     return changed
 
 
+def _drop_twins(entry: Axes, unit: list[Axes]) -> list[Axes]:
+    """Drop siblings that sit in a kept member's rectangle: twins, not panels.
+
+    `twinx` and `twiny` create the twin in the host's own position, the
+    public tell for a twin. The entry axes is always kept, so distilling
+    a twin directly treats the twin and leaves the host out. A dropped
+    twin still shares the host's Ticker on the shared axis, so that
+    axis follows the host, invisibly since matplotlib hides it on the
+    twin; the twin's own axis and spines are untouched, and its box
+    stays, hence the warning.
+    """
+    kept = [entry]
+    dropped = False
+    for member in unit[1:]:
+        rect = member.get_position(original=True).bounds
+        if any(rect == k.get_position(original=True).bounds for k in kept):
+            dropped = True
+            continue
+        kept.append(member)
+    if dropped:
+        warnings.warn(
+            "vanzelfsprekend: the axes has a twin (twinx/twiny); twins are "
+            "not supported, the twin keeps its frame",
+            stacklevel=4,
+        )
+    return kept
+
+
 def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
     """Form `ax`'s scale groups from matplotlib's sharing.
 
@@ -257,7 +285,7 @@ def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
     beside plain numbers), a common scale means nothing: warn once and
     set that axis to `None` for every member, which leaves it untouched.
     """
-    unit = _component(ax)
+    unit = _drop_twins(ax, _component(ax))
     unit_ids = {id(member) for member in unit}
     groups: dict[Axes, dict[str, list[Axes] | None]] = {}
     for member in unit:

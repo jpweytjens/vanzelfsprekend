@@ -244,3 +244,28 @@ def test_shared_axis_that_mixes_dates_and_floats_warns_and_is_left_alone():
     assert b.spines["bottom"].get_bounds() is None
     assert a.spines["left"].get_bounds() is not None
     plt.close(fig)
+
+
+def test_twin_is_left_out_of_the_group_with_a_warning():
+    fig, host = plt.subplots()
+    host.plot([0, 1, 2], [0, 1, 3])
+    twin = host.twinx()
+    twin.plot([0, 1, 2], [100, 300, 200])
+    twin_y_locator = twin.yaxis.get_major_locator()
+    shared_x_original = host.xaxis.get_major_locator()
+    assert twin.xaxis.get_major_locator() is shared_x_original
+    with pytest.warns(UserWarning, match="twin") as record:
+        vzs.distill(host)
+    assert len(record) == 1
+    fig.canvas.draw()
+    # The twin owns its y axis and its spines; those are untouched.
+    assert twin.yaxis.get_major_locator() is twin_y_locator
+    assert all(spine.get_visible() for spine in twin.spines.values())
+    assert not hasattr(twin, "_vanzelfsprekend_state")
+    # The twin's x axis is the host's x axis: one shared Ticker.
+    assert twin.xaxis.get_major_locator() is host.xaxis.get_major_locator()
+    # The twin's y data stays out of the host's y frame.
+    assert host.spines["left"].get_bounds()[1] <= 3.0
+    vzs.restore(host)
+    assert twin.xaxis.get_major_locator() is shared_x_original
+    plt.close(fig)
