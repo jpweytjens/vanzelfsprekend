@@ -246,6 +246,25 @@ def test_pins_from_points_and_boxes():
     np.testing.assert_allclose(pins, [[98.0, 102.0], [298.0, 302.0], [400.0, 410.0]])
 
 
+def test_pins_count_a_segment_ending_on_the_widened_edge():
+    # Strip x in [10, 20], half width 1, so the widened edge is at x = 9. A
+    # segment ending exactly there touches and pins its endpoint; one
+    # stopping short does not.
+    def ink(x_end):
+        return direct.Ink(
+            segments=np.array([[[0.0, 50.0], [x_end, 59.0]]]),
+            half_widths=np.array([1.0]),
+            points=np.zeros((0, 2)),
+            radii=np.zeros(0),
+            boxes=[],
+        )
+
+    np.testing.assert_allclose(
+        direct._pins(ink(9.0), (10.0, 20.0), 1, 0.0), [[58.0, 60.0]]
+    )
+    assert direct._pins(ink(8.9), (10.0, 20.0), 1, 0.0).shape == (0, 2)
+
+
 def test_pins_slide_along_x_for_above_and_below():
     # axis 0: strip bounds y; a horizontal segment inside it pins an x-interval.
     ink = direct.Ink(

@@ -309,10 +309,15 @@ def _pins(ink: Ink, strip: tuple[float, float], axis: int, gap: float) -> np.nda
         with np.errstate(divide="ignore", invalid="ignore"):
             ta = (lo - w - p0) / dp
             tb = (hi + w - p0) / dp
-        t0 = np.clip(np.minimum(ta, tb), 0.0, 1.0)
-        t1 = np.clip(np.maximum(ta, tb), 0.0, 1.0)
+        enters, leaves = np.minimum(ta, tb), np.maximum(ta, tb)
+        t0 = np.clip(enters, 0.0, 1.0)
+        t1 = np.clip(leaves, 0.0, 1.0)
         parallel = dp == 0
-        hits = np.where(parallel, (p0 >= lo - w) & (p0 <= hi + w), t1 > t0)
+        # Inclusive at both ends, like the point and box tests: a segment
+        # whose endpoint sits exactly on the widened edge still touches.
+        hits = np.where(
+            parallel, (p0 >= lo - w) & (p0 <= hi + w), (leaves >= 0.0) & (enters <= 1.0)
+        )
         t0 = np.where(parallel, 0.0, t0)
         t1 = np.where(parallel, 1.0, t1)
         a = s0 + t0 * (s1 - s0)
