@@ -86,7 +86,7 @@ vzs.line_labels(ax)  # label every line at its right end
 vzs.line_labels(ax, at="start")  # and/or at its left end
 ```
 
-`label` puts one label beside a named artist, wherever the reader will look for it. The text is the artist's `label=`, the same string a legend would show, and the anchor is a spine coordinate: `vzs.label(ax, "calculated", x=17.5)` names the curve at 17.5 GHz, at its crossing for a line and at the nearest point for a scatter. From there the text slides along a helper line through the anchor, as little as needed, to clear every mark and text in its way. It goes right of the anchor by default and left, above or below when the right is blocked; `side=` chooses. Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist:
+`label` puts a label beside a named artist at a spine coordinate you choose, where the reader will look for it. The text is the artist's `label=`, the anchor is the line's crossing or the scatter's nearest point, and from there the text slides just far enough to clear the other ink: right of the anchor by default, left, above or below when the right is blocked, or where `side=` says:
 
 ```python
 vzs.label(ax, "measured", x=17.2)  # resonance figure: beside the nearest point
