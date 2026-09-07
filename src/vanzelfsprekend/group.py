@@ -6,6 +6,7 @@ module, which unions the members' data so the frame and the locators span
 it. Nothing here is public.
 """
 
+import warnings
 from collections.abc import Mapping, Sequence
 from functools import partial
 from typing import cast
@@ -144,7 +145,9 @@ def treat(
     once; then each member gets the frame for its group's kind, its
     locators wrapped to read the group's data union, the spine ended at
     that union, the muted furniture, the neutral ink cycle, and the
-    appliers. The keys together are what `restore` undoes.
+    appliers. Once every member has its locator installed, each is
+    autoscaled once so a loose frame lands edge to edge. The keys
+    together are what `restore` undoes.
     """
     mode, offsets = parse_frame_args(frame, offset)
     unit = tuple(members)
@@ -211,6 +214,8 @@ def treat(
         add_applier(ax, "date_offset", _apply_date_offset)
         add_applier(ax, "limits", apply_limits)
     for ax in unit:
+        ax.autoscale_view()
+    for ax in unit:
         run_appliers(ax)
 
 
@@ -237,3 +242,67 @@ def apply_limits(ax: Axes) -> bool:
             (ax.set_xlim if name == "x" else ax.set_ylim)(union)
             changed = True
     return changed
+
+
+def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
+    """Form `ax`'s scale groups from matplotlib's sharing.
+
+    The unit is the connected component over the x and y share groupers
+    starting at `ax`; on a grid built with `sharex="col", sharey="row"`
+    that is every panel. Each member's x group is its x siblings within
+    the unit, likewise y, so a column shares x while a row shares y. A
+    lone axes is a unit of one.
+
+    When the data-holding members of one group disagree on kind (dates
+    beside plain numbers), a common scale means nothing: warn once and
+    set that axis to `None` for every member, which leaves it untouched.
+    """
+    unit = _component(ax)
+    unit_ids = {id(member) for member in unit}
+    groups: dict[Axes, dict[str, list[Axes] | None]] = {}
+    for member in unit:
+        per_axis: dict[str, list[Axes] | None] = {}
+        for name, grouper in (
+            ("x", member.get_shared_x_axes()),
+            ("y", member.get_shared_y_axes()),
+        ):
+            sibling_ids = {id(s) for s in grouper.get_siblings(member)}
+            per_axis[name] = [
+                s for s in unit if id(s) in sibling_ids and id(s) in unit_ids
+            ]
+        groups[member] = per_axis
+    agree: dict[tuple[str, frozenset[int]], bool] = {}
+    for per_axis in groups.values():
+        for name in ("x", "y"):
+            siblings = per_axis[name]
+            if siblings is None:
+                continue
+            key = (name, frozenset(id(s) for s in siblings))
+            if key not in agree:
+                agree[key] = len(axis_kinds(siblings, name)) <= 1
+                if not agree[key]:
+                    warnings.warn(
+                        f"vanzelfsprekend: shared {name}-axis mixes panels of "
+                        "different scale or date-ness; a common scale means "
+                        "nothing, leaving it untouched",
+                        stacklevel=3,
+                    )
+            if not agree[key]:
+                per_axis[name] = None
+    return groups
+
+
+def _component(ax: Axes) -> list[Axes]:
+    """Every axes reachable from `ax` through x or y sharing, `ax` first."""
+    unit = [ax]
+    seen = {id(ax)}
+    queue = [ax]
+    while queue:
+        current = queue.pop()
+        for grouper in (current.get_shared_x_axes(), current.get_shared_y_axes()):
+            for sibling in grouper.get_siblings(current):
+                if id(sibling) not in seen:
+                    seen.add(id(sibling))
+                    unit.append(sibling)
+                    queue.append(sibling)
+    return unit

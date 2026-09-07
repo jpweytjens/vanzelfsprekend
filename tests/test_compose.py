@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from matplotlib.colors import to_rgba
 
 import vanzelfsprekend as vzs
@@ -266,4 +267,16 @@ def test_distill_leaves_a_lone_inverted_axis_inverted():
     fig.canvas.draw()
     lo, hi = ax.get_ylim()
     assert lo > hi
+    plt.close(fig)
+
+
+def test_distill_loose_frame_view_equals_tick_span():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.distill(ax, frame="loose")
+    fig.canvas.draw()
+    for axis, get_lim in ((ax.xaxis, ax.get_xlim), (ax.yaxis, ax.get_ylim)):
+        ticks = axis.get_majorticklocs()
+        assert get_lim() == pytest.approx((ticks.min(), ticks.max()))
     plt.close(fig)

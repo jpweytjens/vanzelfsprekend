@@ -9,7 +9,7 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
 from vanzelfsprekend.frame import range_frame
-from vanzelfsprekend.group import treat
+from vanzelfsprekend.group import share_groups, treat
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
@@ -44,7 +44,7 @@ def distill(
         The same axes, for chaining.
     """
     treat(
-        {ax: {"x": [ax], "y": [ax]}},
+        share_groups(ax),
         frame=frame,
         n=n,
         offset=offset,
