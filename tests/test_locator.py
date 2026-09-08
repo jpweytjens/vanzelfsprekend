@@ -70,6 +70,37 @@ def test_loose_without_extension_when_already_covered():
     assert ticks.max() == 100.0
 
 
+def test_loose_pair_frees_only_the_high_end():
+    ticks = TalbotLocator(n=3, loose=(False, True)).tick_values(-7.7, 196.9)
+    np.testing.assert_allclose(ticks, [0, 100, 200])
+
+
+def test_loose_pair_keeps_the_nice_end_inside():
+    ticks = TalbotLocator(loose=(True, False)).tick_values(0.3, 9.7)
+    assert ticks.min() <= 0.3
+    assert ticks.max() <= 9.7
+    steps = np.diff(ticks)
+    np.testing.assert_allclose(steps, steps[0])
+
+
+def test_loose_pair_extends_only_the_loose_end():
+    ticks = TalbotLocator(loose=(False, True)).tick_values(0.3, 9.7)
+    assert ticks.min() >= 0.3
+    assert ticks.max() >= 9.7
+
+
+def test_loose_pair_view_limits_cover_only_the_loose_end():
+    fig, ax = plt.subplots()
+    ax.scatter([0.3, 9.7], [0, 1])
+    ax.xaxis.set_major_locator(TalbotLocator(loose=(True, False)))
+    fig.canvas.draw()
+    lo, hi = ax.get_xlim()
+    assert lo <= 0.3
+    assert lo == ax.xaxis.get_majorticklocs().min()
+    assert hi == pytest.approx(9.7 + 0.05 * 9.4)
+    plt.close(fig)
+
+
 def test_view_limits_bound_the_range():
     with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
         lo, hi = TalbotLocator().view_limits(0.3, 9.7)
@@ -205,6 +236,29 @@ def test_log_loose_ticks_bound_the_range():
     assert ticks.max() >= 4000
 
 
+def test_log_loose_pair_frees_only_the_high_end():
+    ticks = LogBreaksLocator(n=4, loose=(False, True)).tick_values(30, 4000)
+    np.testing.assert_allclose(ticks, [100, 1000, 10000])
+
+
+def test_log_loose_pair_frees_only_the_low_end():
+    ticks = LogBreaksLocator(n=4, loose=(True, False)).tick_values(30, 4000)
+    np.testing.assert_allclose(ticks, [10, 100, 1000])
+
+
+def test_log_loose_pair_view_limits_cover_only_the_loose_end():
+    fig, ax = plt.subplots()
+    ax.set_yscale("log")
+    ax.plot([1, 2, 3], [30, 400, 4000])
+    ax.yaxis.set_major_locator(LogBreaksLocator(loose=(False, True)))
+    fig.canvas.draw()
+    lo, hi = ax.get_ylim()
+    assert lo < 30
+    assert lo == pytest.approx(30 / (4000 / 30) ** 0.05)
+    assert hi == 10000
+    plt.close(fig)
+
+
 def test_log_loose_extends_an_under_covering_grid():
     ticks = LogBreaksLocator(base=2, loose=True).tick_values(3, 700)
     assert ticks.min() <= 3
@@ -329,6 +383,28 @@ def test_date_loose_ticks_bound_the_range():
     ticks = DateBreaksLocator(loose=True).tick_values(vmin, vmax)
     assert ticks.min() <= vmin
     assert ticks.max() >= vmax
+
+
+def test_date_loose_pair_frees_only_the_low_end():
+    vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
+    ticks = DateBreaksLocator(loose=(True, False)).tick_values(vmin, vmax)
+    assert ticks.min() <= vmin
+    assert ticks.max() <= vmax
+    assert ticks.min() == mdates.date2num(dt.datetime(2023, 1, 1))
+
+
+def test_date_loose_pair_view_limits_cover_only_the_loose_end():
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
+    ax.plot(days, range(32))
+    ax.xaxis.set_major_locator(DateBreaksLocator(loose=(True, False)))
+    fig.canvas.draw()
+    lo, hi = ax.get_xlim()
+    first, last = mdates.date2num(days[0]), mdates.date2num(days[-1])
+    assert lo <= first
+    assert lo == mdates.date2num(dt.datetime(2023, 1, 1))
+    assert hi == pytest.approx(last + 0.05 * (last - first))
+    plt.close(fig)
 
 
 @pytest.mark.parametrize(
