@@ -14,8 +14,8 @@ docs_dir: docs
 exclude_docs: |
   superpowers/
 
-# hooks:
-#   - docs_hooks.py
+hooks:
+  - docs_hooks.py
 
 plugins:
   - mkdocstrings:
