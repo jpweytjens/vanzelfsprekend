@@ -7,6 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpecBase, SubplotSpec
 
 from vanzelfsprekend import labels as labels_
+from vanzelfsprekend.frame import FrameMode
 from vanzelfsprekend.group import axis_kinds, treat
 from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
 from vanzelfsprekend.locator import SPACING
@@ -62,7 +63,7 @@ def _place_labels(
 def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
-    frame: str | tuple[str, str] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] = SPACING,
     n: int | None = None,
     offset: float | None = None,

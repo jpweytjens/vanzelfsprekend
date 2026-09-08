@@ -10,7 +10,7 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
-from vanzelfsprekend.frame import range_frame
+from vanzelfsprekend.frame import FrameMode, range_frame
 from vanzelfsprekend.group import share_groups, treat
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
@@ -24,7 +24,7 @@ from vanzelfsprekend.ticks import _rc, tick_direction
 
 def distill(
     ax: Axes,
-    frame: str | tuple[str, str] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] = SPACING,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
@@ -266,7 +266,7 @@ class _Accessor:
 
     def distill(
         self,
-        frame: str | tuple[str, str] = "nice",
+        frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
         spacing: float | tuple[float, float] = SPACING,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
@@ -290,7 +290,7 @@ class _Accessor:
 
     def range_frame(
         self,
-        frame: str | tuple[str, str] = "nice",
+        frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
         spacing: float | tuple[float, float] = SPACING,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,

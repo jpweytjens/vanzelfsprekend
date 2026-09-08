@@ -1,7 +1,7 @@
 """The range frame: trimmed spines and data-range ticks."""
 
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import NamedTuple
 
 import matplotlib.dates as mdates
@@ -19,10 +19,15 @@ from vanzelfsprekend.locator import (
     visible_interval,
 )
 
+FrameMode = str | tuple[str, str]
+"""One axis's frame mode: a mode for both ends, or a `(low, high)` pair."""
+
+MODES = ("nice", "data", "loose")
+
 
 def range_frame(
     ax: Axes,
-    frame: str | tuple[str, str] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] = SPACING,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
@@ -47,10 +52,13 @@ def range_frame(
         the exact data minimum and maximum. `'loose'` ends the spines
         at nice numbers bounding the data (frame may extend up to one
         tick step beyond the data). A tuple `(x_mode, y_mode)` sets
-        the bottom and left spine independently. All three read the
-        data cut back to the view, so a view pinned inside the data
-        with `set_xlim` crops the frame to the data on screen, and a
-        view wider than the data changes nothing.
+        the bottom and left spine independently, and either entry may
+        itself be a pair `(low, high)` setting that spine's two ends
+        on their own: `(("loose", "data"), "nice")` runs the bottom
+        spine from the tick below the data to the last observation.
+        All three read the data cut back to the view, so a view pinned
+        inside the data with `set_xlim` crops the frame to the data on
+        screen, and a view wider than the data changes nothing.
     spacing : float or tuple of two floats
         The gap to aim for between ticks, in tick-label heights, so the
         number of ticks follows the axis's length and the labels' size:
@@ -67,7 +75,7 @@ def range_frame(
         A single number moves both spines; a tuple `(x_offset,
         y_offset)` moves the bottom and left spine independently, like
         `frame`. `None` (the whole argument, or either tuple element)
-        resolves to 8 for a `'loose'` mode and 0 otherwise.
+        resolves to 8 for a spine with a `'loose'` end and 0 otherwise.
     nice_numbers : sequence of float, optional
         Advanced pass-through to `TalbotLocator`; see there for details.
         Applies to linear axes only; ignored on log and date axes.
@@ -103,17 +111,32 @@ def range_frame(
 
 
 def parse_frame_args(
-    frame: str | tuple[str, str],
+    frame: FrameMode | tuple[FrameMode, FrameMode],
     offset: float | tuple[float | None, float | None] | None,
-) -> tuple[dict[str, str], dict[str, float]]:
-    """Resolve `frame` and `offset` into per-axis modes and spine offsets."""
-    modes = (frame, frame) if isinstance(frame, str) else tuple(frame)
-    if len(modes) != 2 or any(m not in ("nice", "data", "loose") for m in modes):
-        raise ValueError(
-            "frame must be 'nice', 'data' or 'loose', or a tuple of two of "
-            f"them, got {frame!r}"
+) -> tuple[dict[str, tuple[str, str]], dict[str, float]]:
+    """Resolve `frame` and `offset` into per-axis end modes and spine offsets.
+
+    Every axis comes out as a `(low, high)` pair of modes, whatever
+    the spelling given.
+    """
+    invalid = ValueError(
+        "frame must be 'nice', 'data' or 'loose', a tuple of two of them, or "
+        "a tuple whose entries are each a mode or a (low, high) pair of "
+        f"modes, got {frame!r}"
+    )
+
+    def ends(axis_mode: FrameMode) -> tuple[str, str]:
+        pair = (
+            (axis_mode, axis_mode) if isinstance(axis_mode, str) else tuple(axis_mode)
         )
-    mode = {"x": modes[0], "y": modes[1]}
+        if len(pair) != 2 or any(m not in MODES for m in pair):
+            raise invalid
+        return pair
+
+    modes = (frame, frame) if isinstance(frame, str) else tuple(frame)
+    if len(modes) != 2:
+        raise invalid
+    mode = {"x": ends(modes[0]), "y": ends(modes[1])}
     if offset is None or isinstance(offset, (int, float)):
         per_offset = {"x": offset, "y": offset}
     else:
@@ -127,7 +150,7 @@ def parse_frame_args(
     offsets: dict[str, float] = {}
     for name in ("x", "y"):
         value = per_offset[name]
-        offsets[name] = (8 if mode[name] == "loose" else 0) if value is None else value
+        offsets[name] = (8 if "loose" in mode[name] else 0) if value is None else value
     return mode, offsets
 
 
@@ -208,7 +231,7 @@ def axis_kind(axis: Axis) -> AxisKind:
 
 def install_frame(
     ax: Axes,
-    mode: dict[str, str],
+    mode: dict[str, tuple[str, str]],
     offsets: dict[str, float],
     n: int | None,
     spacing: dict[str, float],
@@ -227,8 +250,9 @@ def install_frame(
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
     mode, offsets, spacing : dict
-        Per-axis frame mode, spine offset and tick spacing, keyed
-        `'x'` and `'y'`, from `parse_frame_args` and `parse_spacing`.
+        Per-axis `(low, high)` frame modes, spine offset and tick
+        spacing, keyed `'x'` and `'y'`, from `parse_frame_args` and
+        `parse_spacing`.
     n, nice_numbers, weights
         Locator settings; see `range_frame`.
     kinds : dict
@@ -261,10 +285,9 @@ def install_frame(
                 stacklevel=stacklevel,
             )
             continue
+        loose = (mode[name][0] == "loose", mode[name][1] == "loose")
         if kind.is_date:
-            locator = DateBreaksLocator(
-                n=n, spacing=spacing[name], loose=mode[name] == "loose"
-            )
+            locator = DateBreaksLocator(n=n, spacing=spacing[name], loose=loose)
             axis.set_major_locator(locator)
             axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
             frame_state["formatted"].add(name)
@@ -273,7 +296,7 @@ def install_frame(
                 LogBreaksLocator(
                     n=n,
                     spacing=spacing[name],
-                    loose=mode[name] == "loose",
+                    loose=loose,
                     base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
                 )
             )
@@ -283,7 +306,7 @@ def install_frame(
                 TalbotLocator(
                     n=n,
                     spacing=spacing[name],
-                    loose=mode[name] == "loose",
+                    loose=loose,
                     nice_numbers=nice_numbers,
                     weights=weights,
                 )
@@ -313,13 +336,12 @@ def _apply_frame(ax: Axes) -> bool:
         if name not in frame_state["active"]:
             continue
         override = overrides.get(name)
+        ends = frame_state["mode"][name]
         span = _frame_span(
-            axis,
-            frame_state["mode"][name],
-            interval=override() if override is not None else None,
+            axis, ends, interval=override() if override is not None else None
         )
-        if span is not None and frame_state["mode"][name] == "loose":
-            span, grew = _fit_loose_view(ax, name, span)
+        if span is not None and "loose" in ends:
+            span, grew = _fit_loose_view(ax, name, span, ends)
             changed = changed or grew
         if span is None:
             continue
@@ -331,16 +353,18 @@ def _apply_frame(ax: Axes) -> bool:
 
 
 def _fit_loose_view(
-    ax: Axes, name: str, span: tuple[float, float]
+    ax: Axes, name: str, span: tuple[float, float], ends: tuple[str, str]
 ) -> tuple[tuple[float, float] | None, bool]:
-    """Reconcile a loose spine with the view along `name`.
+    """Reconcile a spine with a loose end with the view along `name`.
 
-    A loose spine ends at ticks bracketing the data, which a user's
+    A loose end sits at a tick bracketing the data, which a user's
     fixed locator can put outside the autoscaled view; spines are not
     clipped, so the spine would be drawn outside the axes. While the
     axis autoscales, the view grows to cover the spine, as the default
     locator's own view limits already do. A view the user pinned is a
-    crop, so the spine keeps only the ticks the view shows.
+    crop, so a loose end keeps only the ticks the view shows; an end
+    that is not loose reads the visible data and is inside the view
+    already.
 
     Returns the span to draw and whether the view was changed.
     """
@@ -358,33 +382,45 @@ def _fit_loose_view(
     ticks = [t for t in axis.get_majorticklocs() if vmin <= t <= vmax]
     if not ticks:
         return None, False
-    return (min(ticks), max(ticks)), False
+    return (
+        min(ticks) if ends[0] == "loose" else span[0],
+        max(ticks) if ends[1] == "loose" else span[1],
+    ), False
 
 
 def _frame_span(
-    axis: Axis, frame: str, interval: tuple[float, float] | None = None
+    axis: Axis, ends: tuple[str, str], interval: tuple[float, float] | None = None
 ) -> tuple[float, float] | None:
+    """Where the spine ends, each end by its own mode, or `None` to leave it."""
     dmin, dmax = interval if interval is not None else visible_interval(axis)
     if not np.isfinite([dmin, dmax]).all() or dmin == dmax:
         return None
-    if frame == "data":
-        return (dmin, dmax)
-    ticks = axis.get_majorticklocs()
-    if len(ticks) == 0:
+    ticks = list(axis.get_majorticklocs())
+    if not ticks and ends != ("data", "data"):
         return None
-    if frame == "nice":
-        ticks = [t for t in ticks if dmin <= t <= dmax]
-    elif interval is not None:
-        # Loose over an injected interval: end at the drawn ticks
+    inside = [t for t in ticks if dmin <= t <= dmax]
+    tol = 1e-9 * (dmax - dmin)
+
+    def end(
+        mode: str,
+        datum: float,
+        outer: Callable[[list[float]], float],
+        nearest: Callable[[list[float]], float],
+        beyond: list[float],
+    ) -> float | None:
+        if mode == "data":
+            return datum
+        if mode == "nice":
+            return outer(inside) if inside else None
+        if interval is None:
+            return outer(ticks)
+        # Loose over an injected interval: end at the drawn tick
         # bounding it, since ticks inside the interval cannot bracket
         # the data. Tolerance absorbs mizani's float dust.
-        tol = 1e-9 * (dmax - dmin)
-        below = [t for t in ticks if t <= dmin + tol]
-        above = [t for t in ticks if t >= dmax - tol]
-        ticks = [
-            max(below) if below else min(ticks),
-            min(above) if above else max(ticks),
-        ]
-    if len(ticks) == 0:
+        return nearest(beyond) if beyond else outer(ticks)
+
+    lo = end(ends[0], dmin, min, max, [t for t in ticks if t <= dmin + tol])
+    hi = end(ends[1], dmax, max, min, [t for t in ticks if t >= dmax - tol])
+    if lo is None or hi is None:
         return None
-    return (min(ticks), max(ticks))
+    return (lo, hi)

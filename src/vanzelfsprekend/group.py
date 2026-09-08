@@ -19,6 +19,7 @@ from matplotlib.ticker import Locator
 from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import (
     AxisKind,
+    FrameMode,
     axis_kind,
     install_frame,
     parse_frame_args,
@@ -149,7 +150,7 @@ def axis_kinds(members: Sequence[Axes], name: str) -> set[AxisKind]:
 def treat(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
-    frame: str | tuple[str, str] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] = SPACING,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,

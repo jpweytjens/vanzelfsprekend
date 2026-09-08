@@ -88,7 +88,10 @@ def test_repeated_calls_keep_one_hook(scatter_ax):
     first_cid = ax._vanzelfsprekend_state["cid"]
     range_frame(ax, frame="data")
     assert ax._vanzelfsprekend_state["cid"] == first_cid
-    assert ax._vanzelfsprekend_state["frame"]["mode"] == {"x": "data", "y": "data"}
+    assert ax._vanzelfsprekend_state["frame"]["mode"] == {
+        "x": ("data", "data"),
+        "y": ("data", "data"),
+    }
 
 
 def test_invalid_frame_raises(scatter_ax):
@@ -107,6 +110,61 @@ def test_loose_in_tuple_offsets_only_that_spine(scatter_ax):
     ax = range_frame(scatter_ax, frame=("loose", "nice"))
     assert ax.spines["bottom"].get_position() == ("outward", 8)
     assert ax.spines["left"].get_position() == ("outward", 0)
+
+
+def test_per_end_modes_parse_to_pairs(scatter_ax):
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), "nice"))
+    assert ax._vanzelfsprekend_state["frame"]["mode"] == {
+        "x": ("loose", "data"),
+        "y": ("nice", "nice"),
+    }
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [(("loose", "tight"), "nice"), (("loose",), "nice"), ("nice", ("data",) * 3)],
+)
+def test_invalid_per_end_modes_raise(scatter_ax, frame):
+    with pytest.raises(ValueError, match="frame"):
+        range_frame(scatter_ax, frame=frame)
+
+
+def test_per_end_modes_end_each_spine_end_on_its_own(scatter_ax):
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("data", "nice")))
+    ax.figure.canvas.draw()
+    xticks = ax.xaxis.get_majorticklocs()
+    xmin, xmax = ax.xaxis.get_data_interval()
+    assert xticks.min() <= xmin
+    assert xticks.max() <= xmax
+    assert ax.spines["bottom"].get_bounds() == (xticks.min(), xmax)
+    ymin, _ = ax.yaxis.get_data_interval()
+    assert ax.spines["left"].get_bounds() == (ymin, outermost_ticks(ax.yaxis)[1])
+
+
+def test_per_end_loose_view_covers_only_the_loose_end(scatter_ax):
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), "nice"))
+    ax.figure.canvas.draw()
+    xmin, xmax = ax.xaxis.get_data_interval()
+    lo, hi = ax.get_xlim()
+    assert lo == ax.xaxis.get_majorticklocs().min()
+    assert hi == pytest.approx(xmax + 0.05 * (xmax - xmin))
+
+
+def test_per_end_loose_offsets_that_spine(scatter_ax):
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("nice", "data")))
+    assert ax.spines["bottom"].get_position() == ("outward", 8)
+    assert ax.spines["left"].get_position() == ("outward", 0)
+
+
+def test_record_starts_at_the_round_year_and_ends_at_its_last_observation():
+    fig, ax = plt.subplots()
+    years = np.arange(1903, 2024)
+    ax.plot(years, np.linspace(-0.3, 1.2, years.size))
+    range_frame(ax, frame=(("loose", "data"), "nice"), n=3)
+    fig.canvas.draw()
+    np.testing.assert_allclose(ax.xaxis.get_majorticklocs(), [1900, 1950, 2000])
+    assert ax.spines["bottom"].get_bounds() == (1900.0, 2023.0)
+    plt.close(fig)
 
 
 def test_loose_in_tuple_bounds_only_that_axis(scatter_ax):
@@ -402,6 +460,16 @@ def test_frame_span_interval_override_loose_mode():
     plt.close(fig)
 
 
+def test_frame_span_interval_override_per_end_modes():
+    fig, ax = _framed_ax((("loose", "data"), "nice"))
+    get_state(ax)["frame"]["intervals"] = {"x": lambda: (3.1, 6.9)}
+    fig.canvas.draw()
+    ticks = sorted(ax.xaxis.get_majorticklocs())
+    lo = max(t for t in ticks if t <= 3.1)
+    assert ax.spines["bottom"].get_bounds() == (lo, 6.9)
+    plt.close(fig)
+
+
 def test_frame_span_override_returning_none_leaves_panel_local_trim():
     fig, ax = _framed_ax("data")
     get_state(ax)["frame"]["intervals"] = {"x": lambda: None}
@@ -550,6 +618,26 @@ def test_loose_frame_view_covers_a_fixed_tick_outside_the_data():
     lo, hi = ax.get_ylim()
     assert lo <= 0.0
     assert hi >= 7938.0
+    plt.close(fig)
+
+
+def test_per_end_loose_frame_view_covers_a_fixed_tick_past_that_end():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("nice", ("loose", "data")))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    assert ax.get_ylim()[0] <= 0.0
+    plt.close(fig)
+
+
+def test_per_end_loose_frame_under_pinned_view_crops_only_the_loose_end():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("nice", ("loose", "data")))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7900]))
+    ax.set_ylim(7600, 8000)
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7680.0, 7938.0)
     plt.close(fig)
 
 
