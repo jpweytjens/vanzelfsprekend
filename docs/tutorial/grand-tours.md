@@ -27,6 +27,6 @@ The line labels replace the legend. Each race is named at the end of its line, i
 
 ## Going further
 
-Change `compare="column"` to `compare="all"` and every panel shares one y scale; the Vuelta's early slowness then reads against the Tour's on equal terms, and the ticks come from the union of the three records. The [small multiples how-to](../how-to/small-multiples.md) has the three scopes.
+Change `compare="column"` to `compare="figure"` and every panel shares one y scale; the Vuelta's early slowness then reads against the Tour's on equal terms, and the ticks come from the union of the three records. The [small multiples how-to](../how-to/small-multiples.md) has the three scopes.
 
 That is the tutorial. The [how-to](../how-to/frame-modes.md) pages answer one question each, and the [gallery](../gallery.md) has the full progression of figures.
