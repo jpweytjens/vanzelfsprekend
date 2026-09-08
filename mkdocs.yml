@@ -1,0 +1,76 @@
+site_name: vanzelfsprekend
+site_url: https://vanzelfsprekend.johannesweytjens.be/
+site_description: Distill a matplotlib plot until it speaks for itself
+repo_url: https://github.com/jpweytjens/vanzelfsprekend
+strict: true
+
+theme:
+  name: null
+  custom_dir: docs_theme
+  static_templates:
+    - 404.html
+
+docs_dir: docs
+exclude_docs: |
+  superpowers/
+
+# hooks:
+#   - docs_hooks.py
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            docstring_section_style: list
+            show_root_heading: true
+            show_root_full_path: false
+            show_source: false
+            separate_signature: true
+            show_signature_annotations: true
+            heading_level: 2
+            members_order: source
+
+markdown_extensions:
+  - footnotes
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: false
+  - pymdownx.highlight:
+      use_pygments: true
+      pygments_lang_class: true
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: [".", "examples"]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Tutorial:
+      - Old Faithful: tutorial/old-faithful.md
+      - The resonance peak: tutorial/resonance-peak.md
+      - The grand tours: tutorial/grand-tours.md
+  - How-to:
+      - Frame modes: how-to/frame-modes.md
+      - Axis labels: how-to/axis-labels.md
+      - Direct labels: how-to/direct-labels.md
+      - Locators: how-to/locators.md
+      - Colour: how-to/colour.md
+      - Small multiples: how-to/small-multiples.md
+      - The accessor and restore: how-to/accessor.md
+  - Gallery: gallery.md
+  - Reference:
+      - Axes: reference/axes.md
+      - Labels: reference/labels.md
+      - Locators: reference/locators.md
+      - Palettes: reference/palettes.md
+      - Style: reference/style.md
+      - Registration: reference/registration.md
+  - Explanation:
+      - Where the ideas come from: explanation/ideas.md
+      - What vanzelfsprekend never does: explanation/boundary.md
+      - Ticks and spines are two decisions: explanation/frame-modes.md

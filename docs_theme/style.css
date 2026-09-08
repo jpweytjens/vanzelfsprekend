@@ -1,0 +1,163 @@
+/* Tokens that are the site's own. Palette-derived tokens live in palette.css. */
+:root {
+  --ground: #fbfbfb;
+  --ink: #1a1a1a;
+  --rule: #1a1a1a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #151515;
+    --ink: #dcdcdc;
+    --rule: #dcdcdc;
+    color-scheme: dark;
+  }
+}
+
+/* Fonts */
+@font-face {
+  font-family: "Mona Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url(fonts/mona-sans-latin-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Mona Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url(fonts/mona-sans-latin-ext-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Monaspace Neon";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url(fonts/monaspace-neon-latin-400-normal.woff2) format("woff2");
+}
+@font-face {
+  font-family: "Monaspace Neon";
+  font-style: italic;
+  font-display: swap;
+  font-weight: 400;
+  src: url(fonts/monaspace-neon-latin-400-italic.woff2) format("woff2");
+}
+
+/* Type */
+html {
+  font-family: "Mona Sans", system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 450;
+  font-variant-numeric: oldstyle-nums;
+  background: var(--ground);
+  color: var(--ink);
+  counter-reset: sidenote;
+}
+body { margin: 0; }
+.page { max-width: 1100px; padding: 2.5rem 4rem 4rem; }
+article { max-width: 66ch; }
+p { margin: 0 0 1.1rem; text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.25; }
+h1 { font-size: 1.6rem; font-weight: 700; margin: 2.2rem 0 0.3rem; }
+h2 { font-size: 1.25rem; font-weight: 700; font-style: italic; margin: 2.6rem 0 0.6rem; }
+h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 0 0.4rem; }
+.subtitle, h1 + p > em:only-child { font-style: italic; color: var(--ink-soft); }
+h1 + p { margin-bottom: 2rem; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 0.15em; }
+hr { border: 0; height: 1px; background: var(--rule); margin: 3rem 0; }
+blockquote { margin: 1.5rem 0 1.5rem 2.5rem; font-style: italic; }
+blockquote footer { font-style: normal; font-size: 0.9em; text-align: right; }
+ul, ol { padding-left: 1.4rem; }
+li { margin-bottom: 0.3rem; }
+
+/* Nav */
+nav { display: flex; flex-wrap: wrap; gap: 0.8rem 1.6rem; align-items: baseline; font-size: 0.95rem; }
+nav .brand { font-weight: 700; letter-spacing: 0.02em; color: var(--ink); margin-right: 1rem; }
+nav a { color: var(--ink); }
+nav a.current { border-bottom: 1px solid var(--rule); }
+nav.siblings { margin-top: 0.6rem; font-size: 0.85rem; color: var(--ink-soft); }
+nav.siblings a { color: var(--ink-soft); }
+nav.siblings a.current { color: var(--ink); }
+
+/* Sidenotes */
+.sidenote-number { counter-increment: sidenote; }
+.sidenote-number::after, .sidenote::before {
+  content: counter(sidenote);
+  font-size: 0.75em;
+  font-variant-numeric: lining-nums;
+  position: relative; top: -0.45em; vertical-align: baseline;
+}
+.sidenote-number::after { margin-left: 0.1em; }
+.sidenote::before { margin-right: 0.35em; }
+.sidenote {
+  float: right; clear: right;
+  margin-right: -52%; width: 42%;
+  margin-top: 0.3rem; margin-bottom: 0;
+  font-size: 0.85rem; line-height: 1.45;
+  color: var(--ink-soft);
+}
+.sidenote p { display: inline; margin: 0; }
+
+/* Figures */
+figure { margin: 2rem 0; display: flow-root; }
+figure svg, figure img { display: block; width: 100%; height: auto; }
+figcaption { font-size: 0.85rem; line-height: 1.45; color: var(--ink-soft); margin-top: 0.5rem; }
+figcaption p { margin: 0; }
+@media (min-width: 1001px) {
+  figure svg, figure img { float: left; width: 100%; }
+  figcaption { float: right; clear: right; margin-right: -52%; width: 42%; margin-top: 0; }
+}
+
+/* Tables */
+.table-scroll { overflow-x: auto; margin: 1.5rem 0 2rem; }
+table { border-collapse: collapse; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 0.25rem 1.2rem 0.25rem 0; font-weight: normal; vertical-align: top; }
+th { border-bottom: 1px solid var(--rule); font-style: italic; }
+
+/* Code: on the page ground, no box. Blocks may run into the margin. */
+code, pre {
+  font-family: "Monaspace Neon", ui-monospace, Menlo, monospace;
+  font-size: 0.88em;
+  font-feature-settings: "calt", "liga";
+}
+pre {
+  margin: 1.4rem 0 1.6rem 1.5rem;
+  line-height: 1.5;
+  color: var(--ink);
+  overflow-x: auto;
+  width: max-content;
+  max-width: calc(100% + 45%); /* the measure plus the sidenote margin */
+}
+p code, li code, td code { font-size: 0.86em; }
+.highlight { background: none; }
+
+/* mkdocstrings (markup verified: material templates under a nameless theme) */
+.doc-heading { margin-top: 3rem; }
+.doc-heading .doc-object-name { font-family: "Monaspace Neon", ui-monospace, monospace; font-style: normal; font-size: 0.95em; }
+.doc-signature { margin-left: 0; }
+.doc-signature pre { margin-left: 0; margin-top: 0.4rem; }
+.doc-section-title { font-style: italic; color: var(--ink-soft); margin: 1.2rem 0 0.3rem; font-weight: 600; }
+.doc-section-item { list-style: none; margin: 0 0 0.6rem; }
+.doc-section-item > code:first-child { font-weight: 600; }
+.doc-md-description { display: inline; }
+.doc-md-description p { display: inline; margin: 0; }
+.doc-contents ul { padding-left: 0; }
+.admonition { margin: 1.4rem 0; }
+.admonition-title { font-style: italic; color: var(--ink-soft); display: inline; margin-right: 0.4em; }
+.admonition-title::after { content: "."; }
+.admonition > p { display: inline; }
+
+.colophon { margin-top: 5rem; font-size: 0.8rem; color: var(--ink-soft); }
+.colophon a { color: var(--ink-soft); }
+
+/* Narrow screens */
+@media (max-width: 1000px) {
+  .page { padding: 1.5rem 1.25rem 3rem; }
+  .sidenote { float: none; display: block; width: auto; margin: 0.5rem 0 0.9rem 1.5rem; }
+  pre { width: auto; max-width: 100%; margin-left: 0; }
+}

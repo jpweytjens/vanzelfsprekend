@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title and not page.is_homepage %}{{ page.title }} · {% endif %}{{ config.site_name }}</title>
+  {% if config.site_description %}<meta name="description" content="{{ config.site_description }}">{% endif %}
+  <link rel="stylesheet" href="{{ 'palette.css' | url }}">
+  <link rel="stylesheet" href="{{ 'style.css' | url }}">
+</head>
+<body>
+<div class="page">
+  <nav aria-label="Sections">
+    <a class="brand" href="{{ nav.homepage.url | url }}">{{ config.site_name }}</a>
+    {% for item in nav %}
+      {% if not item.is_homepage %}
+        {% set target = item.children[0].url if item.children else item.url %}
+        <a href="{{ target | url }}"{% if item.active %} class="current"{% endif %}>{{ item.title }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  {% if page.parent and page.parent.children | length > 1 %}
+  <nav class="siblings" aria-label="{{ page.parent.title }}">
+    {% for sibling in page.parent.children %}
+      <a href="{{ sibling.url | url }}"{% if sibling.active %} class="current"{% endif %}>{{ sibling.title }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  <article>
+    {{ page.content }}
+  </article>
+
+  <footer class="colophon">
+    <a href="{{ config.repo_url }}">Source on GitHub</a> · BSD-3-Clause
+  </footer>
+</div>
+</body>
+</html>

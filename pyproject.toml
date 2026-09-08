@@ -55,8 +55,15 @@ examples = [
     "pandas>=2.3.3",
     "seaborn>=0.13.2",
 ]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocstrings[python]>=1.0.6",
+    "pymdown-extensions>=11.0",
+    "pygments>=2.20",
+]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]  # tests import docs_hooks.py from the repo root
 filterwarnings = [
   # mizani's internal date arithmetic trips a numpy deprecation; not ours to fix
   "ignore:The 'generic' unit for NumPy timedelta is deprecated:DeprecationWarning:mizani.*",

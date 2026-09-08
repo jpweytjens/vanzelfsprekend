@@ -9,3 +9,5 @@ docs/superpowers/
 examples/output/
 .ruff_cache/
 .pytest_cache/
+docs/figures/
+site/
