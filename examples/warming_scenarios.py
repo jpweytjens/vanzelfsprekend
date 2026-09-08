@@ -78,6 +78,12 @@ def main() -> None:
     treated.set_title("vanzelfsprekend")
 
     fig.savefig(DOCS / "warming_scenarios.png", dpi=150, bbox_inches="tight")
+    (DOCS / "figures").mkdir(exist_ok=True)
+    fig.savefig(
+        DOCS / "figures" / "warming_scenarios.svg",
+        bbox_inches="tight",
+        transparent=True,
+    )
     plt.close(fig)
 
 

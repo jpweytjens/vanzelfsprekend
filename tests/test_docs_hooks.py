@@ -131,3 +131,74 @@ def test_ink_tokens_are_keyed_by_lowercase_hex():
         palettes.TEXT_INK.lower(): "--ink-text",
         palettes.LINE_INK.lower(): "--ink-line",
     } == docs_hooks.INK_TOKENS
+
+
+SVG = (
+    '<?xml version="1.0" encoding="utf-8" standalone="no"?>\n'
+    '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" '
+    '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n'
+    '<svg xmlns:xlink="http://www.w3.org/1999/xlink" '
+    'width="359.15pt" height="239.44pt" '
+    'viewBox="0 0 359.15 239.44" xmlns="http://www.w3.org/2000/svg" version="1.1">\n'
+    '<path d="M 0 0" style="fill: #333333"/>\n'
+    '<path d="M 0 0" style="stroke: #555555; fill: none"/>\n'
+    '<path d="M 0 0" style="stroke: #999999"/>\n'
+    '<path d="M 0 0" style="fill: #ee7733"/>\n'
+    "</svg>\n"
+)
+
+
+def test_ink_tokens_maps_the_three_inks_and_leaves_other_colours():
+    out = docs_hooks.ink_tokens(SVG)
+    assert "fill: var(--ink-data)" in out
+    assert "stroke: var(--ink-text)" in out
+    assert "stroke: var(--ink-line)" in out
+    assert "fill: #ee7733" in out
+    assert "#333333" not in out
+    assert "#555555" not in out
+    assert "#999999" not in out
+
+
+def test_ink_tokens_strips_the_xml_prolog_and_fixed_size():
+    out = docs_hooks.ink_tokens(SVG)
+    assert out.startswith("<svg ")
+    assert "<?xml" not in out
+    assert "<!DOCTYPE" not in out
+    assert 'width="359.15pt"' not in out
+    assert 'height="239.44pt"' not in out
+    assert 'viewBox="0 0 359.15 239.44"' in out
+
+
+def test_inline_svg_replaces_the_img_and_carries_the_alt():
+    html = (
+        '<figure>\n<p><img alt="Two spines" src="figures/old_faithful.svg" /></p>\n'
+        "<figcaption>Cap.</figcaption>\n</figure>"
+    )
+    out = docs_hooks.inline_svg(
+        html, lambda path: SVG if path == "figures/old_faithful.svg" else ""
+    )
+    assert "<img" not in out
+    assert '<svg role="img" aria-label="Two spines"' in out
+    assert "fill: var(--ink-data)" in out
+    assert "<figcaption>Cap.</figcaption>" in out
+    assert "<p></p>" not in out
+
+
+def test_inline_svg_copes_with_a_class_between_alt_and_src():
+    html = '<p><img alt="Wide" class="wide" src="figures/x.svg" /></p>'
+    out = docs_hooks.inline_svg(html, lambda path: SVG)
+    assert out.startswith('<svg role="img" aria-label="Wide"')
+
+
+def test_inline_svg_ignores_png_images_and_pages_without_images():
+    html = '<p><img alt="a" src="warming.png" /></p>'
+    assert docs_hooks.inline_svg(html, lambda path: "") == html
+    assert docs_hooks.inline_svg("<p>none</p>", lambda path: "") == "<p>none</p>"
+
+
+def test_figure_reader_resolves_a_src_against_its_own_page(tmp_path):
+    (tmp_path / "figures").mkdir()
+    (tmp_path / "figures" / "x.svg").write_text("<svg/>", encoding="utf-8")
+    assert docs_hooks.figure_reader(tmp_path, "gallery.md")("figures/x.svg") == "<svg/>"
+    nested = docs_hooks.figure_reader(tmp_path, "tutorial/old-faithful.md")
+    assert nested("../figures/x.svg") == "<svg/>"

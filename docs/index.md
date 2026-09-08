@@ -4,6 +4,11 @@
 
 vanzelfsprekend takes an axes you have already drawn and removes what is not data. The box becomes two spines that end where the data ends. The ticks fall on round numbers inside the data. The legend goes, and each line is named at its end. Nothing you drew is moved or recoloured.[^1]
 
+<figure markdown>
+![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](figures/warming_scenarios.svg)
+<figcaption markdown>The same plotting calls twice. The right panel adds one call, and the legend becomes labels at the line ends.</figcaption>
+</figure>
+
 ```python
 import matplotlib.pyplot as plt
 import numpy as np

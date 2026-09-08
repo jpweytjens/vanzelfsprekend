@@ -7,11 +7,14 @@ event glue that calls them. Registered in `mkdocs.yml` under `hooks:`.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from vanzelfsprekend import palettes
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from mkdocs.config.defaults import MkDocsConfig
     from mkdocs.structure.files import Files
     from mkdocs.structure.pages import Page
@@ -26,6 +29,11 @@ REFERENCE = re.compile(
 )
 SINGLE_PARAGRAPH = re.compile(r"\A<p>(?P<inner>(?:(?!</p>).)*)</p>\Z", re.DOTALL)
 TABLE = re.compile(r'(?<!<div class="table-scroll">)<table>.*?</table>', re.DOTALL)
+XML_PROLOG = re.compile(r"\A(?:<\?xml[^>]*>\s*)?(?:<!DOCTYPE[^>]*>\s*)?", re.DOTALL)
+SVG_SIZE = re.compile(r'\s(?:width|height)="[^"]*"')
+HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
+IMG_TAG = re.compile(r"(?:<p>)?<img\b(?P<attrs>[^>]*?)/?>(?:</p>)?")
+ATTRIBUTE = re.compile(r'(?P<name>\w+)="(?P<value>[^"]*)"')
 
 # Pygments short class names, grouped into Alabaster's four categories.
 STRING_CLASSES = ".s, .s1, .s2, .sa, .sb, .sc, .se, .sh, .si, .sx, .sr, .ss, .dl"
@@ -160,6 +168,95 @@ def on_files(files: Files, config: MkDocsConfig) -> Files:
     return files
 
 
+def ink_tokens(svg: str) -> str:
+    """Prepare a matplotlib SVG for inlining with the page's ink tokens.
+
+    The three ink roles become CSS variables so the figure follows the
+    page's ground; every other colour is left as drawn. The XML prolog
+    goes, and so do the fixed ``width`` and ``height`` on the root, so
+    the stylesheet sizes the figure by its ``viewBox``.
+
+    Parameters
+    ----------
+    svg
+        The file's text as matplotlib wrote it.
+
+    Returns
+    -------
+    str
+        An ``<svg>`` element ready to drop into HTML.
+    """
+    body = XML_PROLOG.sub("", svg, count=1)
+    root_end = body.index(">") + 1
+    root = SVG_SIZE.sub("", body[:root_end])
+    rest = HEX_COLOUR.sub(
+        lambda m: (
+            f"var({INK_TOKENS[m.group(0).lower()]})"
+            if m.group(0).lower() in INK_TOKENS
+            else m.group(0)
+        ),
+        body[root_end:],
+    )
+    return root + rest
+
+
+def inline_svg(html: str, read: Callable[[str], str]) -> str:
+    """Replace each ``<img>`` pointing at an SVG with the file's content.
+
+    Parameters
+    ----------
+    html
+        One page's rendered content.
+    read
+        Returns the SVG text for a ``src`` as the page spells it.
+
+    Returns
+    -------
+    str
+        The page with SVG figures inlined; PNG images are untouched.
+    """
+
+    def replace(match: re.Match[str]) -> str:
+        attrs = dict(ATTRIBUTE.findall(match.group("attrs")))
+        src = attrs.get("src", "")
+        if not src.endswith(".svg"):
+            return match.group(0)
+        svg = ink_tokens(read(src))
+        return svg.replace(
+            "<svg ", f'<svg role="img" aria-label="{attrs.get("alt", "")}" ', 1
+        )
+
+    return IMG_TAG.sub(replace, html)
+
+
+def figure_reader(docs_dir: Path, page_uri: str) -> Callable[[str], str]:
+    """Return a reader for the paths one page spells in its ``src`` attributes.
+
+    A ``src`` is relative to the page that carries it, so a tutorial
+    page's ``../figures/x.svg`` and the gallery's ``figures/x.svg``
+    name the same file.
+
+    Parameters
+    ----------
+    docs_dir
+        The build's documentation directory.
+    page_uri
+        The page's source path within that directory.
+
+    Returns
+    -------
+    Callable[[str], str]
+        Reads one ``src`` and returns the file's text.
+    """
+    base = docs_dir / Path(page_uri).parent
+
+    def read(src: str) -> str:
+        return (base / src).resolve().read_text(encoding="utf-8")
+
+    return read
+
+
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
     """Apply the HTML rewrites to every page (MkDocs event)."""
-    return scrolling_tables(sidenotes(html))
+    read = figure_reader(Path(config["docs_dir"]), page.file.src_uri)
+    return scrolling_tables(inline_svg(sidenotes(html), read))

@@ -1,4 +1,4 @@
-"""Render sample vanzelfsprekend figures to PNG for eyeballing.
+"""Render sample vanzelfsprekend figures to PNG and SVG for eyeballing.
 
 Every figure draws a dataset from `examples/data` (each file carries its
 source and licence in its header) or an honest construction that says so:
@@ -24,6 +24,7 @@ import vanzelfsprekend as vzs
 DATA = Path(__file__).parent / "data"
 OUTPUT = Path(__file__).parent / "output"
 DOCS = Path(__file__).parents[1] / "docs"
+FIGURES = DOCS / "figures"
 README_FIGURES = (
     "anscombe.png",
     "grand_tours.png",
@@ -37,6 +38,13 @@ README_FIGURES = (
     "frame_modes.png",
     "palettes.png",
 )
+
+
+def save(fig: plt.Figure, name: str) -> None:
+    """Write `name.png` for the README and a transparent `name.svg` for the site."""
+    fig.savefig(OUTPUT / f"{name}.png", dpi=150, bbox_inches="tight")
+    fig.savefig(FIGURES / f"{name}.svg", bbox_inches="tight", transparent=True)
+    plt.close(fig)
 
 
 def load(name: str, usecols: tuple[int, ...] | None = None) -> np.ndarray:
@@ -65,8 +73,7 @@ def anscombe() -> None:
         ax.xaxis.set_major_formatter("{x:.0f}")
         ax.yaxis.set_major_formatter("{x:.1f}")
         ax.set_title(numeral, fontsize=10, color=vzs.palettes.TEXT_INK)
-    fig.savefig(OUTPUT / "anscombe.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "anscombe")
 
 
 def grand_tours() -> None:
@@ -103,8 +110,7 @@ def grand_tours() -> None:
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
         vzs.line_labels(ax)
-    fig.savefig(OUTPUT / "grand_tours.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "grand_tours")
 
 
 def seaborn_lineplot() -> None:
@@ -132,8 +138,7 @@ def seaborn_lineplot() -> None:
     # replaces seaborn's legend, hiding it in the process.
     vzs.distill(ax, frame=("data", "nice"))
     vzs.line_labels(ax, labels=list("ABCD"))
-    fig.savefig(OUTPUT / "seaborn_lineplot.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "seaborn_lineplot")
 
 
 def brain_body() -> None:
@@ -146,8 +151,7 @@ def brain_body() -> None:
     ax.scatter(table["body_kg"], table["brain_g"], s=12)
     vzs.xlabel(ax, "body mass (kg)")
     vzs.ylabel(ax, "brain mass (g)")
-    fig.savefig(OUTPUT / "brain_body.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "brain_body")
 
 
 def waiting_times() -> None:
@@ -158,8 +162,20 @@ def waiting_times() -> None:
     ax.hist(table["waiting"], bins=27)
     vzs.xlabel(ax, "minutes to the next eruption")
     vzs.ylabel(ax, "eruptions", labelpad=10)
-    fig.savefig(OUTPUT / "waiting_times.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "waiting_times")
+
+
+def old_faithful() -> None:
+    """Render Old Faithful's eruption durations against the wait to the next."""
+    table = load("old_faithful.csv")
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    # --8<-- [start:old_faithful]
+    ax.scatter(table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK)
+    vzs.distill(ax, frame="data")
+    vzs.xlabel(ax, "eruption length (min)")
+    vzs.ylabel(ax, "minutes to the next")
+    # --8<-- [end:old_faithful]
+    save(fig, "old_faithful")
 
 
 def frame_modes() -> None:
@@ -172,8 +188,7 @@ def frame_modes() -> None:
         ax.plot(table["year"], table["anomaly_c"])
         ax.set_title(f'frame="{mode}"', fontsize=10, color=vzs.palettes.TEXT_INK)
     vzs.ylabel(axes[0], "warming (°C)")
-    fig.savefig(OUTPUT / "frame_modes.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "frame_modes")
 
 
 def tick_spacing() -> None:
@@ -190,8 +205,7 @@ def tick_spacing() -> None:
             f"{width_cm:.0f} cm wide", fontsize=10, color=vzs.palettes.TEXT_INK
         )
     vzs.ylabel(fig.axes[0], "warming (°C)")
-    fig.savefig(OUTPUT / "tick_spacing.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "tick_spacing")
 
 
 # Morton's 3-parameter critical-power model, (CP, W', Pmax), with
@@ -224,8 +238,7 @@ def power_profiles() -> None:
     vzs.line_labels(ax)
     vzs.xlabel(ax, "duration (s)")
     vzs.ylabel(ax, "power (W)")
-    fig.savefig(OUTPUT / "power_profiles.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "power_profiles")
 
 
 def resonance_peak() -> None:
@@ -284,8 +297,7 @@ def resonance_peak() -> None:
     # is a feature of the points, the same one the x tick reads.
     vzs.label(ax, "measured", x=lambda x, y: x[np.argmax(y)])
     vzs.label(ax, "calculated", x=17.5)
-    fig.savefig(OUTPUT / "resonance_peak.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "resonance_peak")
 
 
 def small_multiples_grid() -> None:
@@ -315,8 +327,7 @@ def small_multiples_grid() -> None:
     vzs.small_multiples(
         axes.flat, frame=("data", "nice"), spacing=(5, 4), ylabel="CO₂ (ppm)"
     )
-    fig.savefig(OUTPUT / "small_multiples.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "small_multiples")
 
 
 def _relative_luminance(rgb: tuple[int, int, int]) -> float:
@@ -394,18 +405,19 @@ def palette_swatches() -> None:
                 fontsize=7,
                 color=_label_ink(hex_colour),
             )
-    fig.savefig(OUTPUT / "palettes.png", dpi=150, bbox_inches="tight")
-    plt.close(fig)
+    save(fig, "palettes")
 
 
 def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
+    FIGURES.mkdir(exist_ok=True)
     anscombe()
     grand_tours()
     seaborn_lineplot()
     brain_body()
     waiting_times()
+    old_faithful()
     power_profiles()
     resonance_peak()
     small_multiples_grid()
