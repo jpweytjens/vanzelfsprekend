@@ -6,7 +6,7 @@ First release.
 
 Range frame:
 - distill(ax) turns the box around a matplotlib plot into two spines that end at the data, so each spine shows its variable's span
-- The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis
+- The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis and per end of a spine, so a record that begins in 1903 can run from a round 1900 to its last observation
 - A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view's padding; a view pinned inside the data crops the frame to the data on screen
 - How many ticks an axis carries follows its length and its labels' size, a gap in tick-label heights rather than a fixed count, so a small panel gets few and a poster's large labels thin them out; a count can still be asked for outright
