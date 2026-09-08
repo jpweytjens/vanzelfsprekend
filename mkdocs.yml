@@ -47,6 +47,7 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: [".", "examples"]
       check_paths: true
+      dedent_subsections: true
 
 nav:
   - Home: index.md

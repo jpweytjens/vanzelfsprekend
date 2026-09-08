@@ -229,26 +229,29 @@ def inline_svg(html: str, read: Callable[[str], str]) -> str:
     return IMG_TAG.sub(replace, html)
 
 
-def figure_reader(docs_dir: Path, page_uri: str) -> Callable[[str], str]:
+def figure_reader(docs_dir: Path, dest_uri: str) -> Callable[[str], str]:
     """Return a reader for the paths one page spells in its ``src`` attributes.
 
-    A ``src`` is relative to the page that carries it, so a tutorial
-    page's ``../figures/x.svg`` and the gallery's ``figures/x.svg``
-    name the same file.
+    MkDocs rewrites every ``src`` to be relative to the page's built
+    location before this hook sees it, so the tutorial's
+    ``../../figures/x.svg`` and the home page's ``figures/x.svg`` name
+    the same file. A media file sits at the same relative path under the
+    documentation directory as under the site, so walking the rewritten
+    ``src`` from the page's destination finds the source file.
 
     Parameters
     ----------
     docs_dir
         The build's documentation directory.
-    page_uri
-        The page's source path within that directory.
+    dest_uri
+        The page's path within the built site, ``page.file.dest_uri``.
 
     Returns
     -------
     Callable[[str], str]
         Reads one ``src`` and returns the file's text.
     """
-    base = docs_dir / Path(page_uri).parent
+    base = (docs_dir / dest_uri).parent
 
     def read(src: str) -> str:
         return (base / src).resolve().read_text(encoding="utf-8")
@@ -258,5 +261,5 @@ def figure_reader(docs_dir: Path, page_uri: str) -> Callable[[str], str]:
 
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
     """Apply the HTML rewrites to every page (MkDocs event)."""
-    read = figure_reader(Path(config["docs_dir"]), page.file.src_uri)
+    read = figure_reader(Path(config["docs_dir"]), page.file.dest_uri)
     return scrolling_tables(inline_svg(sidenotes(html), read))

@@ -199,6 +199,7 @@ def test_inline_svg_ignores_png_images_and_pages_without_images():
 def test_figure_reader_resolves_a_src_against_its_own_page(tmp_path):
     (tmp_path / "figures").mkdir()
     (tmp_path / "figures" / "x.svg").write_text("<svg/>", encoding="utf-8")
-    assert docs_hooks.figure_reader(tmp_path, "gallery.md")("figures/x.svg") == "<svg/>"
-    nested = docs_hooks.figure_reader(tmp_path, "tutorial/old-faithful.md")
-    assert nested("../figures/x.svg") == "<svg/>"
+    home = docs_hooks.figure_reader(tmp_path, "index.html")
+    assert home("figures/x.svg") == "<svg/>"
+    nested = docs_hooks.figure_reader(tmp_path, "tutorial/old-faithful/index.html")
+    assert nested("../../figures/x.svg") == "<svg/>"
