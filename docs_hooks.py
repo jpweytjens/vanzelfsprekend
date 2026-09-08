@@ -23,6 +23,7 @@ REFERENCE = re.compile(
     r'<sup id="fnref:(?P<key>[^"]+)"><a class="footnote-ref"[^>]*>\d+</a></sup>'
 )
 SINGLE_PARAGRAPH = re.compile(r"\A<p>(?P<inner>(?:(?!</p>).)*)</p>\Z", re.DOTALL)
+TABLE = re.compile(r'(?<!<div class="table-scroll">)<table>.*?</table>', re.DOTALL)
 
 
 def sidenotes(html: str) -> str:
@@ -64,6 +65,24 @@ def sidenotes(html: str) -> str:
     return REFERENCE.sub(replace, without_block)
 
 
+def scrolling_tables(html: str) -> str:
+    """Wrap every table in ``div.table-scroll`` so a wide one scrolls inside itself.
+
+    A table already wrapped is left alone.
+
+    Parameters
+    ----------
+    html
+        One page's rendered content.
+
+    Returns
+    -------
+    str
+        The page with each bare table wrapped.
+    """
+    return TABLE.sub(lambda m: f'<div class="table-scroll">{m.group(0)}</div>', html)
+
+
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
     """Apply the HTML rewrites to every page (MkDocs event)."""
-    return sidenotes(html)
+    return scrolling_tables(sidenotes(html))

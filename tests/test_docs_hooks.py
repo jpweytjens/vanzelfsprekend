@@ -53,3 +53,24 @@ def test_sidenotes_keeps_a_multi_paragraph_note():
     )
     out = docs_hooks.sidenotes(html)
     assert '<span class="sidenote"><p>First.</p>\n<p>Second.</p></span>' in out
+
+
+def test_scrolling_tables_wraps_each_table():
+    html = (
+        "<p>a</p>\n<table>\n<tr><td>1</td></tr>\n</table>\n"
+        "<p>b</p>\n<table><tr><td>2</td></tr></table>"
+    )
+    out = docs_hooks.scrolling_tables(html)
+    assert out.count('<div class="table-scroll">') == 2
+    assert out.startswith('<p>a</p>\n<div class="table-scroll"><table>')
+    assert out.endswith("<table><tr><td>2</td></tr></table></div>")
+
+
+def test_scrolling_tables_does_not_double_wrap():
+    html = '<div class="table-scroll"><table><tr><td>1</td></tr></table></div>'
+    assert docs_hooks.scrolling_tables(html) == html
+
+
+def test_scrolling_tables_leaves_pages_without_tables_alone():
+    html = "<p>Nothing tabular.</p>"
+    assert docs_hooks.scrolling_tables(html) == html
