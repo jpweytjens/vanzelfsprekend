@@ -95,6 +95,7 @@ def grand_tours() -> None:
         speeds[table["year"].astype(int) - first] = table[column]
         speeds_of[ax] = speeds
         ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
+    # --8<-- [start:grand_tours]
     # Plot before distill: the axis becomes a date axis when date data
     # arrives, and distill detects date-ness at call time.
     vzs.small_multiples(
@@ -110,6 +111,7 @@ def grand_tours() -> None:
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
         vzs.line_labels(ax)
+    # --8<-- [end:grand_tours]
     save(fig, "grand_tours")
 
 
