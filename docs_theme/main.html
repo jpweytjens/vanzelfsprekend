@@ -10,8 +10,8 @@
 </head>
 <body>
 <div class="page">
+  <a class="brand" href="{{ nav.homepage.url | url }}">{{ config.site_name }}</a>
   <nav aria-label="Sections">
-    <a class="brand" href="{{ nav.homepage.url | url }}">{{ config.site_name }}</a>
     {% for item in nav %}
       {% if not item.is_homepage %}
         {% set target = item.children[0].url if item.children else item.url %}

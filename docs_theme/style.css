@@ -75,9 +75,14 @@ blockquote footer { font-style: normal; font-size: 0.9em; text-align: right; }
 ul, ol { padding-left: 1.4rem; }
 li { margin-bottom: 0.3rem; }
 
-/* Nav */
+/* Nav: the site, its sections, the page, a size apart at each step. */
+.brand {
+  display: inline-block;
+  font-size: 1.2rem; font-weight: 700; letter-spacing: 0.02em;
+  color: var(--ink);
+  margin-bottom: 0.8rem;
+}
 nav { display: flex; flex-wrap: wrap; gap: 0.8rem 1.6rem; align-items: baseline; font-size: 0.95rem; }
-nav .brand { font-weight: 700; letter-spacing: 0.02em; color: var(--ink); margin-right: 1rem; }
 nav a { color: var(--ink); }
 nav a.current { border-bottom: 1px solid var(--rule); }
 nav.siblings { margin-top: 0.6rem; font-size: 0.85rem; color: var(--ink-soft); }
