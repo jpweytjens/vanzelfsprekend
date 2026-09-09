@@ -89,16 +89,16 @@ def main() -> None:
     fig, ax = draw(frequency, calculated, random_sampled, measured)
     vzs.distill(ax, frame="loose", offset=(24, -6))
     # --8<-- [start:step3]
-    vzs.xlabel(ax, "frequency (GHz)", flush=True)
-    vzs.ylabel(ax, "output power (mW)", place="above")
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     # --8<-- [end:step3]
     ax.legend()
     save(fig, 3)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
     vzs.distill(ax, frame="loose", offset=(24, -6))
-    vzs.xlabel(ax, "frequency (GHz)", flush=True)
-    vzs.ylabel(ax, "output power (mW)", place="above")
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     # --8<-- [start:step4]
     ax.xaxis.set_major_locator(
         vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
@@ -118,8 +118,8 @@ def main() -> None:
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
     vzs.distill(ax, frame="loose", offset=(24, -6))
-    vzs.xlabel(ax, "frequency (GHz)", flush=True)
-    vzs.ylabel(ax, "output power (mW)", place="above")
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     ax.xaxis.set_major_locator(
         vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
     )

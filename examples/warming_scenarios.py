@@ -74,7 +74,8 @@ def main() -> None:
     draw_data(treated)
     vzs.line_labels(treated)
     vzs.label(treated, "observed", x=1905)
-    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)")  # noqa: RUF001
+    # the panel carries a title, so the label keeps to the side
+    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")  # noqa: RUF001
     treated.set_title("vanzelfsprekend")
 
     fig.savefig(DOCS / "warming_scenarios.png", dpi=150, bbox_inches="tight")

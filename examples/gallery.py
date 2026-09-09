@@ -187,7 +187,7 @@ def frame_modes() -> None:
         vzs.distill(ax, frame=mode)
         ax.plot(table["year"], table["anomaly_c"])
         ax.set_title(f'frame="{mode}"', fontsize=10, color=vzs.palettes.TEXT_INK)
-    vzs.ylabel(axes[0], "warming (°C)")
+    vzs.ylabel(axes[0], "warming (°C)", place="beside")
     save(fig, "frame_modes")
 
 
@@ -290,8 +290,8 @@ def resonance_peak() -> None:
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
-    vzs.xlabel(ax, "frequency (GHz)", flush=True)
-    vzs.ylabel(ax, "output power (mW)", place="above")
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     # Doumont names the points beside the summit and the curve beside the
     # flank under it; the anchors are his, the sliding is ours. The summit
     # is a feature of the points, the same one the x tick reads.
