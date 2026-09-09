@@ -144,6 +144,8 @@ SVG = (
     '<path d="M 0 0" style="stroke: #555555; fill: none"/>\n'
     '<path d="M 0 0" style="stroke: #999999"/>\n'
     '<path d="M 0 0" style="fill: #ee7733"/>\n'
+    '<path d="M 0 0" style="stroke: #000000; stroke-width: 0.8"/>\n'
+    '<path d="M 0 0" style="fill: #ffffff; opacity: 0.8; stroke: #cccccc"/>\n'
     "</svg>\n"
 )
 
@@ -167,6 +169,21 @@ def test_ink_tokens_strips_the_xml_prolog_and_fixed_size():
     assert 'width="359.15pt"' not in out
     assert 'height="239.44pt"' not in out
     assert 'viewBox="0 0 359.15 239.44"' in out
+
+
+def test_ink_tokens_inverts_matplotlibs_untreated_furniture():
+    out = docs_hooks.ink_tokens(SVG)
+    assert "stroke: var(--ink)" in out
+    assert "fill: var(--ground)" in out
+    assert "#000000" not in out
+    assert "#ffffff" not in out
+    assert "stroke: #cccccc" in out  # a colour no role owns is left as drawn
+
+
+def test_ink_tokens_gives_the_root_a_fill_for_glyphs_that_inherit_one():
+    out = docs_hooks.ink_tokens(SVG)
+    root = out[: out.index(">") + 1]
+    assert 'style="fill: var(--ink)"' in root
 
 
 def test_inline_svg_replaces_the_img_and_carries_the_alt():

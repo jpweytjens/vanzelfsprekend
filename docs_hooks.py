@@ -43,13 +43,35 @@ DEFINITION_CLASSES = ".nf, .nc, .fm"
 
 # The site's own dark counterparts to the three ink roles. If the package
 # ever gains dark-ground inks, these go and both sets come from palettes.
-DARK_INKS = {"--ink-data": "#dcdcdc", "--ink-text": "#9a9a9a", "--ink-line": "#666666"}
+#
+# Chosen to hold each role's light-mode standing against the body ink
+# rather than its absolute contrast, since the dark ground's body ink is
+# quieter than the light ground's. Measured with APCA (the gallery's
+# `_apca_lc`) on 2026-09-09, as |Lc| against each mode's ground:
+#
+#     role   light ink   |Lc|   dark ink   |Lc|
+#     body   #1a1a1a    101.9   #dcdcdc    84.6
+#     data   #333333     96.3   #d4d4d4    79.7
+#     text   #555555     83.5   #c3c3c3    69.5
+#     line   #999999     52.2   #a4a4a4    52.2
+#
+# The line role keeps the light mode's own value instead of its lower
+# ratio: spines and tick marks are hairlines, and 0.8 pt of grey is the
+# least forgiving mark on the page.
+DARK_INKS = {"--ink-data": "#d4d4d4", "--ink-text": "#c3c3c3", "--ink-line": "#a4a4a4"}
+
+# matplotlib's furniture colour and ground on an axes nobody distilled.
+# No palette owns them: they are the defaults the "before" figures show,
+# and on a dark page they must invert or the figure disappears.
+DEFAULT_TOKENS = {"#000000": "--ink", "#ffffff": "--ground"}
 
 INK_TOKENS = {
     palettes.DATA_INK.lower(): "--ink-data",
     palettes.TEXT_INK.lower(): "--ink-text",
     palettes.LINE_INK.lower(): "--ink-line",
 }
+
+FIGURE_TOKENS = INK_TOKENS | DEFAULT_TOKENS
 
 
 def sidenotes(html: str) -> str:
@@ -171,10 +193,13 @@ def on_files(files: Files, config: MkDocsConfig) -> Files:
 def ink_tokens(svg: str) -> str:
     """Prepare a matplotlib SVG for inlining with the page's ink tokens.
 
-    The three ink roles become CSS variables so the figure follows the
-    page's ground; every other colour is left as drawn. The XML prolog
-    goes, and so do the fixed ``width`` and ``height`` on the root, so
-    the stylesheet sizes the figure by its ``viewBox``.
+    The three ink roles and matplotlib's own black and white become CSS
+    variables so the figure follows the page's ground; every other
+    colour is left as drawn. The root carries a ``fill`` as well, since
+    an axes nobody distilled leaves its text glyphs to inherit one, and
+    the SVG default is a black that vanishes on a dark page. The XML
+    prolog goes, and so do the fixed ``width`` and ``height`` on the
+    root, so the stylesheet sizes the figure by its ``viewBox``.
 
     Parameters
     ----------
@@ -189,10 +214,11 @@ def ink_tokens(svg: str) -> str:
     body = XML_PROLOG.sub("", svg, count=1)
     root_end = body.index(">") + 1
     root = SVG_SIZE.sub("", body[:root_end])
+    root = f'{root[:-1]} style="fill: var(--ink)">'
     rest = HEX_COLOUR.sub(
         lambda m: (
-            f"var({INK_TOKENS[m.group(0).lower()]})"
-            if m.group(0).lower() in INK_TOKENS
+            f"var({FIGURE_TOKENS[m.group(0).lower()]})"
+            if m.group(0).lower() in FIGURE_TOKENS
             else m.group(0)
         ),
         body[root_end:],
