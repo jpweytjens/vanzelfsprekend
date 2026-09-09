@@ -7,6 +7,11 @@ from vanzelfsprekend.group import GroupLocator
 from vanzelfsprekend.hook import run_appliers
 
 
+def _ylabel_text(ax):
+    """The panel's y label, wherever the placement put it."""
+    return ax.get_ylabel() or "".join(t.get_text() for t in ax.texts)
+
+
 def _grid22():
     fig, axes = plt.subplots(2, 2)
     for ax, (lo, hi) in zip(axes.flat, [(0, 1), (2, 5), (-3, 0), (4, 9)], strict=True):
@@ -297,24 +302,25 @@ def test_spanning_panel_trims_over_covered_columns():
 def test_single_ylabel_lands_once_on_top_left():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, ylabel="rate")
-    assert axes[0, 0].get_ylabel() == "rate"
-    assert all(ax.get_ylabel() == "" for ax in axes.flat if ax is not axes[0, 0])
+    assert _ylabel_text(axes[0, 0]) == "rate"
+    assert all(_ylabel_text(ax) == "" for ax in axes.flat if ax is not axes[0, 0])
     plt.close(fig)
 
 
-def test_grid_ylabel_sits_beside_top_tick():
+def test_grid_ylabel_stacks_above_the_top_tick():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, ylabel="rate")
     fig.canvas.draw()
     ax = axes[0, 0]
-    label = ax.yaxis.label.get_window_extent()
+    label = ax.texts[0].get_window_extent()
     ticks = [
         t.get_window_extent()
         for t in ax.yaxis.get_ticklabels()
         if t.get_text() and t.get_visible()
     ]
     top = max(ticks, key=lambda b: b.y1)
-    assert abs(label.y1 - top.y1) < 1
+    assert label.y0 >= top.y1
+    assert abs(label.x0 - top.x0) < 1
     plt.close(fig)
 
 
@@ -329,9 +335,9 @@ def test_single_xlabel_lands_once_on_bottom_right():
 def test_ylabel_sequence_labels_each_row():
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, compare="row", ylabel=["a", "b"])
-    assert axes[0, 0].get_ylabel() == "a"
-    assert axes[1, 0].get_ylabel() == "b"
-    assert axes[0, 1].get_ylabel() == ""
+    assert _ylabel_text(axes[0, 0]) == "a"
+    assert _ylabel_text(axes[1, 0]) == "b"
+    assert _ylabel_text(axes[0, 1]) == ""
     plt.close(fig)
 
 

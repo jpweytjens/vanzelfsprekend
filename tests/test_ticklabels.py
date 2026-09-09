@@ -248,7 +248,7 @@ def test_beside_ylabel_follows_displaced_top_label():
     vzs.distill(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(values))
     ax.yaxis.set_major_formatter("{x:.1f}")
-    vzs.ylabel(ax, "value")
+    vzs.ylabel(ax, "value", place="beside")
     fig.canvas.draw()
     fig.canvas.draw()
     labels = ax.yaxis.get_ticklabels()

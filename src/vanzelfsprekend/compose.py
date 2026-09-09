@@ -309,13 +309,13 @@ class _Accessor:
         )
 
     def set_xlabel(
-        self, text: str, flush: bool = False, labelpad: float | None = None
+        self, text: str, flush: bool = True, labelpad: float | None = None
     ) -> Text:
         """End-of-spine x-label; see `vanzelfsprekend.xlabel`."""
         return xlabel(self._ax, text, flush=flush, labelpad=labelpad)
 
     def set_ylabel(
-        self, text: str, place: str = "beside", labelpad: float | None = None
+        self, text: str, place: str = "above", labelpad: float | None = None
     ) -> Text:
         """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
         return ylabel(self._ax, text, place=place, labelpad=labelpad)
