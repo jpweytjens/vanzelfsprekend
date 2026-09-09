@@ -20,6 +20,7 @@ jobs:
       - run: uv run examples/gallery.py
       - run: uv run examples/warming_scenarios.py
       - run: uv run examples/tutorial_resonance.py
+      - run: uv run examples/tutorial_grand_tours.py
       - run: uv run mkdocs build --strict
       - uses: actions/upload-pages-artifact@v3
         with:
