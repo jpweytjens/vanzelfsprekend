@@ -509,3 +509,61 @@ def test_beside_ylabel_clears_a_data_end_past_the_top_tick():
     end = _spine_end_frac(ax)
     assert ax.yaxis.label.get_position()[1] == pytest.approx(end, abs=1e-4)
     plt.close(fig)
+
+
+def _inverted_ax(axis_name):
+    """Axes with one axis running backwards, as a depth profile does.
+
+    Depth increases downward, so the y view runs 480 to 0 and the top of
+    the frame is the *smallest* value. An anchor picked by value alone
+    lands at the far end of the screen from where the label belongs.
+    """
+    fig, ax = plt.subplots()
+    depth = np.linspace(0, 480, 120)
+    temperature = 18 - 0.03 * depth
+    if axis_name == "y":
+        ax.plot(temperature, depth)
+        ax.invert_yaxis()
+    else:
+        ax.plot(depth, temperature)
+        ax.invert_xaxis()
+    vzs.range_frame(ax, frame="nice")
+    return fig, ax
+
+
+def test_above_ylabel_sits_at_the_top_of_an_inverted_axis():
+    fig, ax = _inverted_ax("y")
+    vzs.ylabel(ax, "depth (m)")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    ticks = _drawn_tick_bboxes(ax.yaxis, renderer)
+    assert ticks
+    top = max(ticks, key=lambda b: b.y1)
+    label = vzs.labels._labels_state(ax)["ylabel_above_text"].get_window_extent(
+        renderer
+    )
+    gap = ax.yaxis.labelpad * fig.dpi / 72.0
+    assert abs(label.y0 - (top.y1 + gap)) < 2
+    plt.close(fig)
+
+
+def test_beside_ylabel_sits_at_the_top_of_an_inverted_axis():
+    fig, ax = _inverted_ax("y")
+    vzs.ylabel(ax, "depth (m)", place="beside")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    ticks = _drawn_tick_bboxes(ax.yaxis, renderer)
+    top = max(ticks, key=lambda b: b.y1)
+    assert abs(ax.yaxis.label.get_window_extent(renderer).y1 - top.y1) < 2
+    plt.close(fig)
+
+
+def test_flush_xlabel_sits_at_the_right_of_an_inverted_axis():
+    fig, ax = _inverted_ax("x")
+    vzs.xlabel(ax, "depth (m)")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    ticks = _drawn_tick_bboxes(ax.xaxis, renderer)
+    right = max(ticks, key=lambda b: b.x1)
+    assert abs(ax.xaxis.label.get_window_extent(renderer).x1 - right.x1) < 2
+    plt.close(fig)

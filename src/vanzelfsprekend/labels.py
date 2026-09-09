@@ -196,13 +196,17 @@ def _drawn_spine_span(ax: Axes, name: str) -> tuple[float, float] | None:
     return None if bounds is None else (float(bounds[0]), float(bounds[1]))
 
 
-def _visible_high_tick(axis: Axis) -> int | None:
-    """Index of the highest-valued major tick the view shows, or `None`.
+def _visible_end_tick(axis: Axis) -> int | None:
+    """Index of the major tick at the axis's drawn end, or `None`.
+
+    The drawn end is where the axis label sits: the top of a y axis, the
+    right of an x axis. That is the largest tick value, or the smallest
+    on an inverted axis, whose view interval runs backwards.
 
     matplotlib lays out a `Text` for every tick the locator returns but
     draws only those inside the view interval (`Axis._update_ticks`), so
     a loose end reaching past a pinned limit leaves a positioned tick
-    label that never renders. Anchoring on the highest tick of all would
+    label that never renders. Anchoring on the end tick of all would
     follow one of those off the axes; reading the view here crops the
     same way `_fit_loose_view` crops the spine to a pinned view.
     """
@@ -211,7 +215,18 @@ def _visible_high_tick(axis: Axis) -> int | None:
     visible = [i for i, loc in enumerate(locs) if vmin <= loc <= vmax]
     if not visible:
         return None
-    return max(visible, key=lambda i: locs[i])
+    reach = min if axis.get_inverted() else max
+    return reach(visible, key=lambda i: locs[i])
+
+
+def _span_end(axis: Axis, span: tuple[float, float]) -> float:
+    """Return the end of a low-to-high `span` that the axis draws last.
+
+    `_frame_span` and the spine's bounds both run low to high whichever
+    way the axis points, so an inverted axis draws `span[0]` at the end
+    the label sits at.
+    """
+    return span[0] if axis.get_inverted() else span[1]
 
 
 def _apply_labels(ax: Axes) -> bool:
@@ -226,7 +241,7 @@ def _apply_labels(ax: Axes) -> bool:
         span = _drawn_spine_span(ax, "x")
         if span is not None:
             vmin, vmax = ax.get_xlim()
-            frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
+            frac = _axes_fraction(ax.xaxis, _span_end(ax.xaxis, span), vmin, vmax)
             if ls["xlabel_flush"]:
                 flush_frac = _xlabel_flush_frac(ax)
                 if flush_frac is not None:
@@ -242,18 +257,17 @@ def _apply_labels(ax: Axes) -> bool:
         span = _drawn_spine_span(ax, "y")
         if span is not None:
             locs = ax.yaxis.get_majorticklocs()
-            top = _visible_high_tick(ax.yaxis)
-            # A 'data' end runs the spine past the top tick, to the data.
-            # The label belongs at whichever the frame ends on; the tick
-            # label's own offset only applies when the tick is the end.
-            if top is not None and float(locs[top]) >= span[1]:
-                anchor = float(locs[top])
-                offset_px = _top_label_offset(ax, top)
-            else:
-                anchor, offset_px = span[1], 0.0
+            top = _visible_end_tick(ax.yaxis)
             vmin, vmax = ax.get_ylim()
-            frac = _axes_fraction(ax.yaxis, anchor, vmin, vmax)
-            frac += offset_px / ax.bbox.height
+            # A 'data' end runs the spine past the end tick, to the data.
+            # The label belongs at whichever the frame ends on; comparing
+            # in axes fractions reads the same either way the axis points,
+            # and the tick label's own offset applies only when it wins.
+            frac = _axes_fraction(ax.yaxis, _span_end(ax.yaxis, span), vmin, vmax)
+            if top is not None:
+                tick_frac = _axes_fraction(ax.yaxis, float(locs[top]), vmin, vmax)
+                if tick_frac >= frac:
+                    frac = tick_frac + _top_label_offset(ax, top) / ax.bbox.height
             pos = ax.yaxis.label.get_position()
             if pos[1] != frac:
                 ax.yaxis.label.set_position((pos[0], frac))
@@ -324,7 +338,7 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
     else moves it each draw.
     """
     labels = ax.yaxis.get_ticklabels()
-    top = _visible_high_tick(ax.yaxis)
+    top = _visible_end_tick(ax.yaxis)
     if top is None or top >= len(labels):
         return False
     try:
@@ -335,7 +349,8 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
     span = _drawn_spine_span(ax, "y")
     if span is not None:
         vmin, vmax = ax.get_ylim()
-        upper = max(upper, _axes_fraction(ax.yaxis, span[1], vmin, vmax))
+        end = _axes_fraction(ax.yaxis, _span_end(ax.yaxis, span), vmin, vmax)
+        upper = max(upper, end)
     gap = ax.yaxis.labelpad * ax.figure.dpi / 72.0 / ax.bbox.height
     target = (float(left), float(upper) + gap)
     pos = above_text.get_position()
@@ -352,7 +367,7 @@ def _xlabel_flush_frac(ax: Axes) -> float | None:
     caller falls back to the spine-end anchor.
     """
     labels = ax.xaxis.get_ticklabels()
-    right = _visible_high_tick(ax.xaxis)
+    right = _visible_end_tick(ax.xaxis)
     if right is None or right >= len(labels):
         return None
     try:
