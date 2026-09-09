@@ -104,6 +104,12 @@ nav.siblings a.current { color: var(--link); }
 /* Last, so it outranks the sibling row's quieter ink at equal weight. */
 nav a:hover, nav a.current:hover { color: var(--link-hover); }
 
+/* The repo link is a mark, not a section: an icon among the words says so
+   without needing a place of its own. It takes the nav's ink, so the dark
+   ground turns it over with everything else. */
+.repo { align-self: center; display: flex; }
+.repo svg { width: 1.05em; height: 1.05em; }
+
 /* Sidenotes */
 .sidenote-number { counter-increment: sidenote; }
 .sidenote-number::after, .sidenote::before {
