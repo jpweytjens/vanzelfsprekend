@@ -3,6 +3,12 @@
   --ground: #fbfbfb;
   --ink: #1a1a1a;
   --rule: #1a1a1a;
+  /* Mona Sans and Monaspace Neon are drawn to the same x-height, so code
+     needs almost none of the customary setting down. Measured in the
+     browser 2026-09-09, at a nominal 17px: x-heights 8.92 and 8.73, cap
+     heights 12.39 and 12.41, ten glyphs 98.95pt and 105.41pt wide. The
+     step left is for the width, not the height. */
+  --code-size: 0.95em;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -136,7 +142,7 @@ th { border-bottom: 1px solid var(--rule); font-style: italic; }
 /* Code: on the page ground, no box. Blocks may run into the margin. */
 code, pre {
   font-family: "Monaspace Neon", ui-monospace, Menlo, monospace;
-  font-size: 0.88em;
+  font-size: var(--code-size);
   font-feature-settings: "calt", "liga";
 }
 pre {
@@ -147,7 +153,6 @@ pre {
   width: max-content;
   max-width: calc(100% + 45%); /* the measure plus the sidenote margin */
 }
-p code, li code, td code { font-size: 0.86em; }
 .highlight { background: none; }
 
 /* mkdocstrings (markup verified: material templates under a nameless theme)
