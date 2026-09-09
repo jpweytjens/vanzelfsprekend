@@ -243,7 +243,10 @@ def _apply_labels(ax: Axes) -> bool:
         if span is not None:
             locs = ax.yaxis.get_majorticklocs()
             top = _visible_high_tick(ax.yaxis)
-            if top is not None:
+            # A 'data' end runs the spine past the top tick, to the data.
+            # The label belongs at whichever the frame ends on; the tick
+            # label's own offset only applies when the tick is the end.
+            if top is not None and float(locs[top]) >= span[1]:
                 anchor = float(locs[top])
                 offset_px = _top_label_offset(ax, top)
             else:
@@ -314,9 +317,11 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
     """Stack the managed above-label over the top tick label, left aligned.
 
     Anchored on the topmost drawn tick label's measured left/top edge,
-    so it tracks the tick label's rendered width, and lifted clear of it by
-    `ax.yaxis.labelpad`. The above-label is a plain `transAxes` text
-    child, so a `set_position` sticks; nothing else moves it each draw.
+    so it tracks the tick label's rendered width, and lifted clear of it
+    by `ax.yaxis.labelpad`. A `'data'` end runs the spine past that tick,
+    so the lift clears whichever of the two reaches higher. The above-label
+    is a plain `transAxes` text child, so a `set_position` sticks; nothing
+    else moves it each draw.
     """
     labels = ax.yaxis.get_ticklabels()
     top = _visible_high_tick(ax.yaxis)
@@ -327,6 +332,10 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
     except RuntimeError:
         return False
     left, upper = ax.transAxes.inverted().transform((bbox.x0, bbox.y1))
+    span = _drawn_spine_span(ax, "y")
+    if span is not None:
+        vmin, vmax = ax.get_ylim()
+        upper = max(upper, _axes_fraction(ax.yaxis, span[1], vmin, vmax))
     gap = ax.yaxis.labelpad * ax.figure.dpi / 72.0 / ax.bbox.height
     target = (float(left), float(upper) + gap)
     pos = above_text.get_position()

@@ -468,3 +468,44 @@ def test_flush_xlabel_skips_the_tick_the_pinned_view_crops():
     assert abs(label.x1 - right.x1) < 2
     assert ax.xaxis.label.get_position()[0] <= 1.0
     plt.close(fig)
+
+
+def _data_end_past_top_tick_ax():
+    """Axes whose `'data'` end runs the y spine past its topmost tick.
+
+    Old Faithful's shape: the data reaches 96 while the ticks stop at
+    90, so the spine's drawn end sits above every tick and a label
+    anchored on the tick alone lands inside the frame.
+    """
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(1.6, 5.1, 200), rng.uniform(43, 96, 200), s=10)
+    vzs.range_frame(ax, frame="data")
+    return fig, ax
+
+
+def _spine_end_frac(ax):
+    lo, hi = ax.get_ylim()
+    return (ax.spines["left"].get_bounds()[1] - lo) / (hi - lo)
+
+
+def test_above_ylabel_clears_a_data_end_past_the_top_tick():
+    fig, ax = _data_end_past_top_tick_ax()
+    vzs.ylabel(ax, "minutes to the next")
+    fig.canvas.draw()
+    end = _spine_end_frac(ax)
+    ticks = ax.yaxis.get_majorticklocs()
+    lo, hi = ax.get_ylim()
+    assert (max(ticks) - lo) / (hi - lo) < end  # the spine outruns the ticks
+    label = vzs.labels._labels_state(ax)["ylabel_above_text"]
+    assert label.get_position()[1] > end
+    plt.close(fig)
+
+
+def test_beside_ylabel_clears_a_data_end_past_the_top_tick():
+    fig, ax = _data_end_past_top_tick_ax()
+    vzs.ylabel(ax, "minutes to the next", place="beside")
+    fig.canvas.draw()
+    end = _spine_end_frac(ax)
+    assert ax.yaxis.label.get_position()[1] == pytest.approx(end, abs=1e-4)
+    plt.close(fig)
