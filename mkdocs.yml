@@ -6,13 +6,14 @@ strict: true
 
 theme:
   name: null
-  custom_dir: docs_theme
+  custom_dir: docs/theme
   static_templates:
     - 404.html
 
 docs_dir: docs
 exclude_docs: |
   superpowers/
+  theme/
 
 hooks:
   - docs_hooks.py
