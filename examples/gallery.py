@@ -228,7 +228,10 @@ def power_profiles() -> None:
     seconds = np.geomspace(1, 10_000, 400)
     fig, ax = plt.subplots(figsize=(7, 3.5))
     ax.set_xscale("log")
-    vzs.distill(ax, frame=("data", "nice"))
+    # The sprinter's one-second power runs above the outermost tick, so a
+    # 'nice' y end would leave the curve spilling over the ylabel. A 'data'
+    # end takes the spine, and with it the label, up past the peak.
+    vzs.distill(ax, frame=("data", "data"))
     # Four peer series, so opt into colour: the muted scheme carries the
     # distinction, and line_labels names each curve in its own colour.
     ax.set_prop_cycle(vzs.palettes.cycle("muted"))
