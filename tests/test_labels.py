@@ -393,3 +393,78 @@ def test_log_axes_labels_anchor_in_log_space():
     )
     assert ax.yaxis.label.get_position()[1] == pytest.approx(expected_y)
     plt.close(fig)
+
+
+def _cropped_loose_ax(axis_name):
+    """Axes whose pinned view crops the loose frame's outermost tick.
+
+    The data reaches 690 and the view is pinned just past it, so the
+    loose end lands on a tick the view cannot show. matplotlib lays that
+    tick label out but never draws it; a label anchored on it would sit
+    a whole tick step outside the frame.
+    """
+    fig, ax = plt.subplots()
+    values = np.linspace(0, 690, 50)
+    ax.plot(values, values)
+    (ax.set_xlim if axis_name == "x" else ax.set_ylim)(0, 690.44)
+    vzs.range_frame(ax, frame="loose")
+    return fig, ax
+
+
+def _drawn_tick_bboxes(axis, renderer):
+    """Bboxes of the tick labels the view actually shows.
+
+    `get_visible()` stays True on a tick the view crops, so filtering on
+    it is not enough; matplotlib decides by the tick's location.
+    """
+    vmin, vmax = sorted(float(v) for v in axis.get_view_interval())
+    return [
+        t.get_window_extent(renderer)
+        for t, loc in zip(axis.get_ticklabels(), axis.get_majorticklocs(), strict=False)
+        if t.get_text() and vmin <= loc <= vmax
+    ]
+
+
+def test_above_ylabel_skips_the_tick_the_pinned_view_crops():
+    fig, ax = _cropped_loose_ax("y")
+    vzs.ylabel(ax, "output power (mW)")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    assert 700.0 in ax.yaxis.get_majorticklocs()  # the cropped tick exists
+    ticks = _drawn_tick_bboxes(ax.yaxis, renderer)
+    assert ticks
+    top = max(ticks, key=lambda b: b.y1)
+    label = vzs.labels._labels_state(ax)["ylabel_above_text"].get_window_extent(
+        renderer
+    )
+    gap = ax.yaxis.labelpad * fig.dpi / 72.0
+    assert abs(label.y0 - (top.y1 + gap)) < 2
+    plt.close(fig)
+
+
+def test_beside_ylabel_skips_the_tick_the_pinned_view_crops():
+    fig, ax = _cropped_loose_ax("y")
+    vzs.ylabel(ax, "output power (mW)", place="beside")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    ticks = _drawn_tick_bboxes(ax.yaxis, renderer)
+    assert ticks
+    top = max(ticks, key=lambda b: b.y1)
+    label = ax.yaxis.label.get_window_extent(renderer)
+    assert abs(label.y1 - top.y1) < 2
+    plt.close(fig)
+
+
+def test_flush_xlabel_skips_the_tick_the_pinned_view_crops():
+    fig, ax = _cropped_loose_ax("x")
+    vzs.xlabel(ax, "frequency (GHz)")
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    assert 800.0 in ax.xaxis.get_majorticklocs()  # the cropped tick exists
+    ticks = _drawn_tick_bboxes(ax.xaxis, renderer)
+    assert ticks
+    right = max(ticks, key=lambda b: b.x1)
+    label = ax.xaxis.label.get_window_extent(renderer)
+    assert abs(label.x1 - right.x1) < 2
+    assert ax.xaxis.label.get_position()[0] <= 1.0
+    plt.close(fig)

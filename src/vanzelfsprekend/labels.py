@@ -184,17 +184,46 @@ def _label_props(label: Text) -> dict:
     }
 
 
+def _drawn_spine_span(ax: Axes, name: str) -> tuple[float, float] | None:
+    """Return the span the frame applier drew the spine over, or `None`.
+
+    `_frame_span` reports where a loose end wants to sit, which
+    `_fit_loose_view` then crops to a pinned view before setting the
+    spine's bounds. A label belongs at the spine's drawn end, so it
+    reads the bounds rather than re-deriving the crop.
+    """
+    bounds = ax.spines["bottom" if name == "x" else "left"].get_bounds()
+    return None if bounds is None else (float(bounds[0]), float(bounds[1]))
+
+
+def _visible_high_tick(axis: Axis) -> int | None:
+    """Index of the highest-valued major tick the view shows, or `None`.
+
+    matplotlib lays out a `Text` for every tick the locator returns but
+    draws only those inside the view interval (`Axis._update_ticks`), so
+    a loose end reaching past a pinned limit leaves a positioned tick
+    label that never renders. Anchoring on the highest tick of all would
+    follow one of those off the axes; reading the view here crops the
+    same way `_fit_loose_view` crops the spine to a pinned view.
+    """
+    locs = axis.get_majorticklocs()
+    vmin, vmax = sorted(float(v) for v in axis.get_view_interval())
+    visible = [i for i, loc in enumerate(locs) if vmin <= loc <= vmax]
+    if not visible:
+        return None
+    return max(visible, key=lambda i: locs[i])
+
+
 def _apply_labels(ax: Axes) -> bool:
     state = get_state(ax)
     if state is None or "frame" not in state:
         return False
     frame_state = state["frame"]
-    mode = frame_state["mode"]
     active = frame_state["active"]
     ls = state.get("labels", {})
     changed = False
     if "x" in active and ax.get_xlabel():
-        span = _frame_span(ax.xaxis, mode["x"])
+        span = _drawn_spine_span(ax, "x")
         if span is not None:
             vmin, vmax = ax.get_xlim()
             frac = _axes_fraction(ax.xaxis, span[1], vmin, vmax)
@@ -210,12 +239,13 @@ def _apply_labels(ax: Axes) -> bool:
     if "y" in active and above_text is not None:
         changed = _place_ylabel_above(ax, above_text) or changed
     elif "y" in active and ax.get_ylabel():
-        span = _frame_span(ax.yaxis, mode["y"])
+        span = _drawn_spine_span(ax, "y")
         if span is not None:
             locs = ax.yaxis.get_majorticklocs()
-            if len(locs):
-                anchor = max(locs)
-                offset_px = _top_label_offset(ax, int(np.argmax(locs)))
+            top = _visible_high_tick(ax.yaxis)
+            if top is not None:
+                anchor = float(locs[top])
+                offset_px = _top_label_offset(ax, top)
             else:
                 anchor, offset_px = span[1], 0.0
             vmin, vmax = ax.get_ylim()
@@ -283,17 +313,14 @@ def _apply_date_offset(ax: Axes) -> bool:
 def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
     """Stack the managed above-label over the top tick label, left aligned.
 
-    Anchored on the topmost tick label's measured left/top edge, so it
-    tracks the tick label's rendered width, and lifted clear of it by
+    Anchored on the topmost drawn tick label's measured left/top edge,
+    so it tracks the tick label's rendered width, and lifted clear of it by
     `ax.yaxis.labelpad`. The above-label is a plain `transAxes` text
     child, so a `set_position` sticks; nothing else moves it each draw.
     """
-    locs = ax.yaxis.get_majorticklocs()
     labels = ax.yaxis.get_ticklabels()
-    if not len(locs) or not labels:
-        return False
-    top = int(np.argmax(locs))
-    if top >= len(labels):
+    top = _visible_high_tick(ax.yaxis)
+    if top is None or top >= len(labels):
         return False
     try:
         bbox = labels[top].get_window_extent()
@@ -310,17 +337,14 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
 
 
 def _xlabel_flush_frac(ax: Axes) -> float | None:
-    """Axes-fraction x of the rightmost tick label's right edge, or None.
+    """Axes-fraction x of the rightmost drawn tick label's right edge, or None.
 
-    Returns None when there is no rightmost tick label to anchor to, so
-    the caller falls back to the spine-end anchor.
+    Returns None when the view shows no tick label to anchor to, so the
+    caller falls back to the spine-end anchor.
     """
-    locs = ax.xaxis.get_majorticklocs()
     labels = ax.xaxis.get_ticklabels()
-    if not len(locs) or not labels:
-        return None
-    right = int(np.argmax(locs))
-    if right >= len(labels):
+    right = _visible_high_tick(ax.xaxis)
+    if right is None or right >= len(labels):
         return None
     try:
         bbox = labels[right].get_window_extent()
