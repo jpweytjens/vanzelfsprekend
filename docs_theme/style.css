@@ -150,14 +150,36 @@ pre {
 p code, li code, td code { font-size: 0.86em; }
 .highlight { background: none; }
 
-/* mkdocstrings (markup verified: material templates under a nameless theme) */
+/* mkdocstrings (markup verified: material templates under a nameless theme)
+   Each rank gets its own instrument rather than a wider gap: a size for the
+   member name, an indent for the signature and the arguments it takes, air
+   for the section label. */
 .doc-heading { margin-top: 3rem; }
-.doc-heading .doc-object-name { font-family: "Monaspace Neon", ui-monospace, monospace; font-style: normal; font-size: 0.95em; }
+/* One member ends where the next begins, and space alone cannot say so
+   on a page that spaces everything. A rule can, and the border stops the
+   heading's margin collapsing through, so the air below it is set here. */
+.doc-object + .doc-object { border-top: 1px solid var(--rule); margin-top: 3.5rem; }
+.doc-object + .doc-object > .doc-heading { margin-top: 1.3rem; }
+/* A method parts from a method less than a class parts from a class, so
+   the rule between them takes the quieter ink and less air, as the two
+   heading ranks above it already do. */
+.doc-children .doc-object + .doc-object { border-top-color: var(--ink-soft); margin-top: 2.4rem; }
+.doc-children .doc-object + .doc-object > .doc-heading { margin-top: 1.1rem; }
+.doc-heading .doc-object-name { font-family: "Monaspace Neon", ui-monospace, monospace; font-style: normal; font-size: 1.1em; }
 .doc-signature { margin-left: 0; }
-.doc-signature pre { margin-left: 0; margin-top: 0.4rem; }
-.doc-section-title { font-style: italic; color: var(--ink-soft); margin: 1.2rem 0 0.3rem; font-weight: 600; }
-.doc-section-item { list-style: none; margin: 0 0 0.6rem; }
-.doc-section-item > code:first-child { font-weight: 600; }
+.doc-signature pre { margin-left: 1.5rem; margin-top: 0.5rem; }
+/* The label is a span inside a paragraph, and vertical margins do not apply
+   to an inline box, so the paragraph is the one that can carry the air. It
+   leans on what follows: the list is its own, the prose above is not. */
+p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
+.doc-section-title { font-style: italic; color: var(--ink-soft); font-weight: 600; }
+/* An entry is a name and its gloss; the parentheses, the default and the
+   dash between them are apparatus, and take the quieter ink. */
+.doc-section-item { list-style: none; margin: 0 0 0.6rem 1.5rem; color: var(--ink-soft); }
+.doc-section-item > b, .doc-section-item .doc-md-description { color: var(--ink); }
+/* A return has no name, so its type stands in the name's place and takes
+   the name's ink. */
+.doc-section-item > code:first-child { font-weight: 600; color: var(--ink); }
 .doc-md-description { display: inline; }
 .doc-md-description p { display: inline; margin: 0; }
 .doc-contents ul { padding-left: 0; }
@@ -174,4 +196,7 @@ p code, li code, td code { font-size: 0.86em; }
   .page { padding: 1.5rem 1.25rem 3rem; }
   .sidenote { float: none; display: block; width: auto; margin: 0.5rem 0 0.9rem 1.5rem; }
   pre { width: auto; max-width: 100%; margin-left: 0; }
+  /* The class rule beats the bare pre above it, so the signature needs
+     naming to go flush with the rest of the code. */
+  .doc-signature pre { margin-left: 0; }
 }
