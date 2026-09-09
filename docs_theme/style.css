@@ -185,6 +185,11 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 /* A return has no name, so its type stands in the name's place and takes
    the name's ink. */
 .doc-section-item > code:first-child { font-weight: 600; color: var(--ink); }
+/* mkdocstrings sets only the type and the default as code, leaving the
+   parentheses, the comma and the word "default:" bare, so the fragment
+   alternates faces. docs_hooks.type_annotations wraps it to be set in one. */
+.doc-annotation { font-family: "Monaspace Neon", ui-monospace, Menlo, monospace; font-size: var(--code-size); }
+.doc-annotation code { font-size: 1em; }
 .doc-md-description { display: inline; }
 .doc-md-description p { display: inline; margin: 0; }
 .doc-contents ul { padding-left: 0; }

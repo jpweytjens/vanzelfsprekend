@@ -29,6 +29,9 @@ REFERENCE = re.compile(
 )
 SINGLE_PARAGRAPH = re.compile(r"\A<p>(?P<inner>(?:(?!</p>).)*)</p>\Z", re.DOTALL)
 TABLE = re.compile(r'(?<!<div class="table-scroll">)<table>.*?</table>', re.DOTALL)
+ANNOTATION = re.compile(r"(?<=</b>)\s*(?P<annotation>\(.*?\))\s*(?=\u2013)", re.DOTALL)
+RUN_OF_SPACE = re.compile(r"\s+")
+SPACE_BEFORE_CLOSE = re.compile(r"\s+\)\Z")
 XML_PROLOG = re.compile(r"\A(?:<\?xml[^>]*>\s*)?(?:<!DOCTYPE[^>]*>\s*)?", re.DOTALL)
 SVG_SIZE = re.compile(r'\s(?:width|height)="[^"]*"')
 HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
@@ -129,6 +132,38 @@ def scrolling_tables(html: str) -> str:
         The page with each bare table wrapped.
     """
     return TABLE.sub(lambda m: f'<div class="table-scroll">{m.group(0)}</div>', html)
+
+
+def type_annotations(html: str) -> str:
+    """Wrap the type and default of each parameter in one span.
+
+    mkdocstrings marks up only the type and the default value as code and
+    leaves the parentheses, the comma and the word ``default:`` as bare
+    text, so a parameter's parenthetical alternates between the two faces.
+    Wrapping it lets the stylesheet set the whole fragment in one. Its
+    whitespace is collapsed on the way, which also closes the gap the
+    template's line break opens before the closing parenthesis.
+
+    A return or a raise has no name to be annotated, so its type is not
+    preceded by a bold name and is left alone.
+
+    Parameters
+    ----------
+    html : str
+        The rendered page.
+
+    Returns
+    -------
+    str
+        The page with each parameter annotation wrapped.
+    """
+
+    def wrap(match: re.Match[str]) -> str:
+        annotation = RUN_OF_SPACE.sub(" ", match["annotation"])
+        annotation = SPACE_BEFORE_CLOSE.sub(")", annotation)
+        return f' <span class="doc-annotation">{annotation}</span> '
+
+    return ANNOTATION.sub(wrap, html)
 
 
 def palette_css() -> str:
@@ -293,4 +328,4 @@ def figure_reader(docs_dir: Path, dest_uri: str) -> Callable[[str], str]:
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
     """Apply the HTML rewrites to every page (MkDocs event)."""
     read = figure_reader(Path(config["docs_dir"]), page.file.dest_uri)
-    return scrolling_tables(inline_svg(sidenotes(html), read))
+    return scrolling_tables(type_annotations(inline_svg(sidenotes(html), read)))

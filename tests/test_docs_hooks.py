@@ -223,3 +223,55 @@ def test_figure_reader_resolves_a_src_against_its_own_page(tmp_path):
     assert home("figures/x.svg") == "<svg/>"
     nested = docs_hooks.figure_reader(tmp_path, "tutorial/old-faithful/index.html")
     assert nested("../../figures/x.svg") == "<svg/>"
+
+
+PARAMETER_ITEM = (
+    '<li class="doc-section-item field-body">\n'
+    "            <b><code>flush</code></b>\n"
+    '              (<code><span title="bool">bool</span></code>, default:\n'
+    "                  <code>True</code>\n"
+    ")\n"
+    "          \u2013\n"
+    '          <div class="doc-md-description">\n'
+    "<p>Where the label's right edge sits.</p>\n"
+    "</div>\n"
+    "</li>"
+)
+
+RETURN_ITEM = (
+    '<li class="doc-section-item field-body">\n'
+    '              <code><span title="matplotlib.text.Text">Text</span></code>\n'
+    "          \u2013\n"
+    '          <div class="doc-md-description">\n'
+    "<p>The label artist.</p>\n"
+    "</div>\n"
+    "</li>"
+)
+
+
+def test_type_annotations_wraps_the_whole_parenthetical():
+    out = docs_hooks.type_annotations(PARAMETER_ITEM)
+    assert (
+        '<span class="doc-annotation">'
+        '(<code><span title="bool">bool</span></code>, default: '
+        "<code>True</code>)</span>" in out
+    )
+
+
+def test_type_annotations_keeps_the_name_and_the_dash_apart():
+    out = docs_hooks.type_annotations(PARAMETER_ITEM)
+    assert '</b> <span class="doc-annotation">' in out
+    assert "</span> \u2013" in out
+
+
+def test_type_annotations_closes_the_gap_before_the_parenthesis():
+    assert " )" not in docs_hooks.type_annotations(PARAMETER_ITEM)
+
+
+def test_type_annotations_leaves_an_unnamed_type_alone():
+    assert docs_hooks.type_annotations(RETURN_ITEM) == RETURN_ITEM
+
+
+def test_type_annotations_leaves_pages_without_parameters_alone():
+    html = "<p>Plain prose with <code>code</code> in it.</p>"
+    assert docs_hooks.type_annotations(html) == html
