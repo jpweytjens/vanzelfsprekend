@@ -17,8 +17,8 @@ Each race gets a column in the file and a row of `NaN` where no edition was held
 ```
 
 <figure markdown>
-![Three stacked panels of grand tour speeds in default matplotlib boxes, each with its own y range and a legend in the corner](../figures/grand_tours_step_1.svg)
-<figcaption markdown>Step one. Three boxes, three legends, and three y axes that each cover a different range of speeds, so no reading crosses from one panel to the next.</figcaption>
+![Three stacked panels of grand tour speeds in default matplotlib boxes, each repeating the year axis, each with its own y range and a legend in the corner](../figures/grand_tours_step_1.svg)
+<figcaption markdown>Step one. Three boxes, three legends, three y ranges and the same century of years spelled out three times. Nothing here reads across the panels.</figcaption>
 </figure>
 
 ## Treat the three panels as one figure

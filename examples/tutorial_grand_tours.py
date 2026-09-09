@@ -50,7 +50,7 @@ def draw(
 ) -> tuple[plt.Figure, np.ndarray]:
     """Plot one race per panel on a fresh stack of three axes."""
     # --8<-- [start:draw]
-    fig, axes = plt.subplots(3, 1, figsize=(5, 4.5), sharex=True)
+    fig, axes = plt.subplots(3, 1, figsize=(5, 4.5))
     fig.subplots_adjust(hspace=0.45)
     for ax, (race, (label, color)) in zip(axes, JERSEYS.items(), strict=True):
         ax.plot(dates, speeds_of[race], color=color, linewidth=1.2, label=label)
