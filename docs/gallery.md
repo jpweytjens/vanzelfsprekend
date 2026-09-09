@@ -56,7 +56,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, each y spine running from that race's slowest to its fastest winner with the median marked between, with gaps during the world wars](figures/grand_tours.svg)
-<figcaption markdown>**The grand tours.** Small multiples sharing one time axis, each race its own y scale, the ticks at the slowest, median and fastest winner. The wars are holes in every record and the Vuelta's broken start is its own story. The [tutorial](tutorial/grand-tours.md) reads it.</figcaption>
+<figcaption markdown>**The grand tours.** Small multiples on one shared scale, each panel ticked at its own race's slowest, median and fastest winner. The wars are holes in every record and the Vuelta's broken start is its own story. The [tutorial](tutorial/grand-tours.md) reads it.</figcaption>
 </figure>
 
 <figure markdown>

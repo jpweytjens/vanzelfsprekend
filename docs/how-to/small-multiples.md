@@ -15,4 +15,4 @@ vzs.small_multiples(axes.flat, spacing=(5, 4), ylabel="CO₂ (ppm)")
 <figcaption markdown>Only the left column and bottom row keep spines, ticks and axis labels; every panel keeps its line.</figcaption>
 </figure>
 
-`compare` sets the smallest set of panels that are fully comparable. `"figure"`, the default, shares both axes across the grid, as the CO₂ panels do. `"column"` scopes x per column and leaves each panel its own y, as the grand tours do. `"row"` is the transpose, scoping y per row. The [grand tours tutorial](../tutorial/grand-tours.md) reads a figure built this way.
+`compare` sets the smallest set of panels that are fully comparable. `"figure"`, the default, shares one scale per axis across the whole grid, as the CO₂ panels do. `"column"` scopes x per column and leaves y shared across the grid; `"row"` is the transpose, scoping y per row and leaving x shared. Narrowing one axis's scope never widens the other's, so a single-column grid such as the [grand tours](../tutorial/grand-tours.md) comes out the same under `"column"` as under `"figure"`.

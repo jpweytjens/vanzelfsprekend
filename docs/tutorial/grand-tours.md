@@ -10,7 +10,7 @@ A century of winners' average speeds at the Tour de France, the Giro d'Italia an
 --8<-- "gallery.py:grand_tours"
 ```
 
-`small_multiples` treats the three axes together. `compare="column"` shares the time axis down the column and gives each race its own y scale, so every panel's left spine is that race's range frame. Under `frame="data"` the spine runs from the slowest winner to the fastest, and `SummaryLocator` puts a tick at each end and one at the median.
+`small_multiples` treats the three axes together. `compare="column"` scopes the time axis to the column, and since there is one column the three panels come out on one shared scale: every left spine runs from the slowest winner in any of the three races to the fastest in any of them. `SummaryLocator` then ticks each panel at its own race's slowest, median and fastest, so the ticks differ from panel to panel while the scale behind them does not.
 
 <figure markdown>
 ![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, each y spine running from that race's slowest to its fastest winner with the median marked between, with gaps during the world wars](../figures/grand_tours.svg)
@@ -27,6 +27,6 @@ The line labels replace the legend. Each race is named at the end of its line, i
 
 ## Going further
 
-Change `compare="column"` to `compare="figure"` and every panel shares one y scale; the Vuelta's early slowness then reads against the Tour's on equal terms, and the ticks come from the union of the three records. The [small multiples how-to](../how-to/small-multiples.md) has the three scopes.
+The scope is `compare`'s to set. `"row"` would give each row its own y scale, so each race would be framed and ticked by its own record alone; every line would then fill its panel and nothing could be read across the three. The [small multiples how-to](../how-to/small-multiples.md) has the three scopes.
 
 That is the tutorial. The [how-to](../how-to/frame-modes.md) pages answer one question each, and the [gallery](../gallery.md) has the full progression of figures.
