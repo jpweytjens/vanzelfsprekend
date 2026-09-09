@@ -68,7 +68,7 @@ h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 
 .subtitle, h1 + p > em:only-child { font-style: italic; color: var(--ink-soft); }
 h1 + p { margin-bottom: 2rem; }
 a { color: var(--link); text-decoration: none; }
-a:hover { text-decoration: underline; text-underline-offset: 0.15em; }
+a:hover { color: var(--link-hover); }
 hr { border: 0; height: 1px; background: var(--rule); margin: 3rem 0; }
 blockquote { margin: 1.5rem 0 1.5rem 2.5rem; font-style: italic; }
 blockquote footer { font-style: normal; font-size: 0.9em; text-align: right; }
@@ -76,7 +76,8 @@ ul, ol { padding-left: 1.4rem; }
 li { margin-bottom: 0.3rem; }
 
 /* Nav: the site, its sections, the page, a size apart at each step.
-   The current one is marked by a rule set clear of the descenders. */
+   The current one is marked in the link colour and by a rule set clear
+   of the descenders, so the mark does not rest on colour alone. */
 .brand {
   display: inline-block;
   font-size: 1.2rem; font-weight: 700; letter-spacing: 0.02em;
@@ -86,13 +87,16 @@ li { margin-bottom: 0.3rem; }
 nav { display: flex; flex-wrap: wrap; gap: 0.8rem 1.6rem; align-items: baseline; font-size: 0.95rem; }
 nav a { color: var(--ink); }
 nav a.current {
+  color: var(--link);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.3em;
 }
 nav.siblings { margin-top: 0.6rem; font-size: 0.85rem; color: var(--ink-soft); }
 nav.siblings a { color: var(--ink-soft); }
-nav.siblings a.current { color: var(--ink); }
+nav.siblings a.current { color: var(--link); }
+/* Last, so it outranks the sibling row's quieter ink at equal weight. */
+nav a:hover, nav a.current:hover { color: var(--link-hover); }
 
 /* Sidenotes */
 .sidenote-number { counter-increment: sidenote; }

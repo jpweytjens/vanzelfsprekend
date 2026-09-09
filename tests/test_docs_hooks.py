@@ -85,6 +85,8 @@ def test_palette_css_reads_light_code_colours_from_tol_muted():
     assert f"--code-comment: {palettes.MUTED['green']};" in light
     assert f"--code-constant: {palettes.MUTED['purple']};" in light
     assert f"--code-definition: {palettes.MUTED['indigo']};" in light
+    assert f"--link: {palettes.MUTED['indigo']};" in light
+    assert f"--link-hover: {palettes.MUTED['rose']};" in light
     assert f"--ink-soft: {palettes.DARK['grey']};" in light
 
 
@@ -96,6 +98,7 @@ def test_palette_css_reads_dark_code_colours_from_tol_light():
     assert f"--code-constant: {palettes.LIGHT['light_cyan']};" in dark
     assert f"--code-definition: {palettes.LIGHT['light_blue']};" in dark
     assert f"--link: {palettes.LIGHT['light_blue']};" in dark
+    assert f"--link-hover: {palettes.LIGHT['orange']};" in dark
 
 
 def test_palette_css_maps_the_three_inks_in_both_modes():

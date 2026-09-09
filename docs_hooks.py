@@ -136,9 +136,12 @@ def palette_css() -> str:
 
     Light mode takes its code colours from Tol's muted scheme and its
     soft ink from Tol's dark grey; dark mode takes its code colours from
-    Tol's light scheme. The three ink roles get a token each so an
-    inlined figure can follow the page's ground. Only four token
-    categories are coloured: strings, comments and docstrings,
+    Tol's light scheme. A link is the definition colour of its mode, so
+    the two names that point somewhere share one colour on both grounds,
+    and it turns to that scheme's warm accent on hover, a hue away from
+    every colour the page uses at rest. The three ink roles get a token
+    each so an inlined figure can follow the page's ground. Only four
+    token categories are coloured: strings, comments and docstrings,
     constants, definitions. Everything else stays body ink.
 
     Returns
@@ -148,7 +151,8 @@ def palette_css() -> str:
     """
     light = {
         "--ink-soft": palettes.DARK["grey"],
-        "--link": "#3a6ea5",
+        "--link": palettes.MUTED["indigo"],
+        "--link-hover": palettes.MUTED["rose"],
         "--code-string": palettes.MUTED["wine"],
         "--code-comment": palettes.MUTED["green"],
         "--code-constant": palettes.MUTED["purple"],
@@ -160,6 +164,7 @@ def palette_css() -> str:
     dark = {
         "--ink-soft": "#9a9a9a",
         "--link": palettes.LIGHT["light_blue"],
+        "--link-hover": palettes.LIGHT["orange"],
         "--code-string": palettes.LIGHT["pink"],
         "--code-comment": palettes.LIGHT["mint"],
         "--code-constant": palettes.LIGHT["light_cyan"],
