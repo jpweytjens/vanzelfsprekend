@@ -11,7 +11,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![The same rising warming curve three times under the three frame modes](figures/frame_modes.svg)
-<figcaption markdown>**One record, three frame modes.** `nice` ends the spines at the outermost ticks, `loose` at round numbers bracketing the data with the spine standing off, `data` at the record's own extremes. The ticks are the same under `nice` and `data`; only the spine ends move.</figcaption>
+<figcaption markdown>**One record, three frame modes.** `nice` ends the spines at the outermost ticks, `loose` at round numbers bracketing the data with the spine standing off, `data` at the record's own extremes. The ticks are the same under `nice` and `data`; only the spine ends move. Each panel is titled, so the y label keeps to the side rather than taking the space above the frame.</figcaption>
 </figure>
 
 <figure markdown>
@@ -51,7 +51,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![A sharp resonance peak, black measured points over an orange calculated Lorentzian, x ticks at the band's 16 and 19 GHz edges and the peak's 17.2 GHz](figures/resonance_peak.svg)
-<figcaption markdown>**The resonance peak.** After Doumont. `FeatureLocator` marks the band edges and the peak's own frequency; `SummaryLocator` sets a minor tick at half power; the y label is raised above the spine; and the two labels anchor at the summit and the flank. The [tutorial](tutorial/resonance-peak.md) builds it one call at a time.</figcaption>
+<figcaption markdown>**The resonance peak.** After Doumont. `FeatureLocator` marks the band edges and the peak's own frequency; `SummaryLocator` sets a minor tick at half power; and the two labels anchor at the summit and the flank. The [tutorial](tutorial/resonance-peak.md) builds it one call at a time.</figcaption>
 </figure>
 
 <figure markdown>
@@ -86,4 +86,4 @@ This index is written by hand until the gallery declares its own features; then 
 - **A label beside a point or curve**: the resonance peak.
 - **Colour opted in**: power profiles (a scheme cycle), the grand tours (the jerseys).
 - **Small multiples**: the grand tours (`compare="column"`), the CO₂ grid.
-- **Axis labels raised or flush**: the resonance peak.
+- **Axis labels raised and flush**: every figure with labels; `place="beside"` where a title takes the space above the frame, in the frame modes and the warming scenarios.

@@ -40,7 +40,7 @@ The bottom spine stands 24 points off and the left spine sits 6 points inside, w
 
 <figure markdown>
 ![The same figure with the x label flush under the spine's right end and the y label stacked above the top tick](../figures/resonance_step_3.svg)
-<figcaption markdown>Step three. `flush` puts the x label under the spine's end. `place="above"` stacks the y label over the top tick, Doumont's raised label from his "better" graph.</figcaption>
+<figcaption markdown>Step three. Two calls, no arguments. The x label ends where the tick labels end, and the y label stands horizontal above the top tick, Doumont's raised label from his "better" graph.</figcaption>
 </figure>
 
 ## Put the ticks where the reader looks

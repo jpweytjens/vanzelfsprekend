@@ -22,8 +22,8 @@ Ticks:
 
 Labels:
 - Axis labels sit at the ends of the spines, the y label horizontal at the top rather than rotated along the side
-- The y label sits beside the top tick, or stacks above it with left edges aligned, Doumont's good and better graphs
-- The x label ends at the spine, or lines up its right edge with the last tick label for a clean right margin
+- The y label stacks above the top tick with left edges aligned, and sits beside it instead when asked, Doumont's better and good graphs; beside is what to reach for when a title already takes the space above the frame
+- The x label lines its right edge up with the last tick label, so the label and the tick-label row share one right margin, and falls back to the spine's end when asked
 - Line labels replace the legend: each line gets its name at its end, in its own colour, and labels that would collide move apart just far enough to stay readable, keeping their order
 - Lines can be labelled at their starts instead, slopegraph-style, and a labels= list names them when the drawing library keeps the legend text away from the line, as seaborn does
 - On a date axis the year the tick labels share sits at the right end of the bottom spine, and stacks above an x label when you set one
