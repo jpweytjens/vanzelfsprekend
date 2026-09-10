@@ -7,11 +7,15 @@
 
 <img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.svg" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
-*Above all else show the data.* Edward Tufte
+*Above all else show the data.* — Edward Tufte
 
 One call, `vzs.distill(ax)`, puts the frame, the ticks and the labels around your data to work for the reader. The box becomes two spines that end where the data ends, so each spine shows its variable's span. The ticks fall on round numbers inside that span. The legend goes, and each line is named at its end in its own colour. The furniture fades to grey, and the ink goes to the data. The name is Dutch for self-evident, literally "self-speaking".
 
-The data themselves stay as you drew them. Tufte's line is your job, and the library keeps its hands off it: a line stays where you plotted it, a scatter keeps its colour, a bar its width. Everything around the data is a different matter. [Talbot, Lin and Hanrahan](http://vis.stanford.edu/papers/tick-labels) open their paper on tick labels with the reason: "The non-data components of a visualization, such as axes and legends, can often be just as important as the data itself. They provide contextual information essential to interpreting the data." Those are the parts vanzelfsprekend owns, and the only parts.
+The data themselves stay as you drew them. Tufte's line is your job,[^tufte] and the library keeps its hands off it: a line stays where you plotted it, a scatter keeps its colour, a bar its width. Everything around the data is a different matter, and Talbot, Lin and Hanrahan say why in the first sentences of their paper on tick labels.[^talbot]
+
+> The non-data components of a visualization, such as axes and legends, can often be just as important as the data itself. They provide contextual information essential to interpreting the data.
+
+Those are the parts vanzelfsprekend owns, and the only parts.
 
 The treatment is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/boundary/) and why.
 
@@ -56,3 +60,6 @@ fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 The documentation is at [vanzelfsprekend.johannesweytjens.be](https://vanzelfsprekend.johannesweytjens.be/): a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds three figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/frame-modes/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and [where the ideas come from](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/).
 
 The data are yours and stay as you drew them. The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
+
+[^tufte]: Edward R. Tufte, *The Visual Display of Quantitative Information* (Cheshire, Connecticut: Graphics Press, 1983), chapter 4, where the line heads his five principles of data-ink.
+[^talbot]: Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043. The quote opens the abstract.
