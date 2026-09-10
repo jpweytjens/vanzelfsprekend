@@ -7,7 +7,7 @@
 
 <img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.svg" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
-*Above all else show the data.*
+*Above all else show the data.* Edward Tufte
 
 One call, `vzs.distill(ax)`, puts the frame, the ticks and the labels around your data to work for the reader. The box becomes two spines that end where the data ends, so each spine shows its variable's span. The ticks fall on round numbers inside that span. The legend goes, and each line is named at its end in its own colour. The furniture fades to grey, and the ink goes to the data. The name is Dutch for self-evident, literally "self-speaking".
 
