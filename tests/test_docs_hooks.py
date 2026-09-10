@@ -309,3 +309,30 @@ def test_palette_sheet_hides_the_swatch_from_a_screen_reader():
 def test_palette_sheet_leaves_pages_without_the_placeholder_alone():
     html = "<p>Nothing to substitute.</p>"
     assert docs_hooks.palette_sheet(html) == html
+
+
+def test_dark_svg_bakes_the_dark_inks_in():
+    out = docs_hooks.dark_svg(SVG)
+    assert f"fill: {docs_hooks.DARK_INKS['--ink-data']}" in out
+    assert f"stroke: {docs_hooks.DARK_INKS['--ink-text']}" in out
+    assert f"stroke: {docs_hooks.DARK_INKS['--ink-line']}" in out
+    assert "fill: #ee7733" in out
+    assert "stroke: #cccccc" in out
+    assert "var(" not in out
+
+
+def test_dark_svg_inverts_matplotlibs_untreated_furniture():
+    out = docs_hooks.dark_svg(SVG)
+    assert f"stroke: {docs_hooks.DARK_INKS['--ink-data']}; stroke-width: 0.8" in out
+    assert "fill: none; opacity: 0.8" in out
+    assert "#000000" not in out
+    assert "#ffffff" not in out
+
+
+def test_dark_svg_keeps_the_file_whole_and_gives_the_root_a_fill():
+    out = docs_hooks.dark_svg(SVG)
+    assert out.startswith("<?xml")
+    root = out[out.index("<svg ") :]
+    root = root[: root.index(">") + 1]
+    assert 'width="359.15pt" height="239.44pt"' in root
+    assert f'style="fill: {docs_hooks.DARK_INKS["--ink-data"]}"' in root

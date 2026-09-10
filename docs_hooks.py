@@ -77,6 +77,11 @@ INK_TOKENS = {
 
 FIGURE_TOKENS = INK_TOKENS | DEFAULT_TOKENS
 
+# What each figure token is worth on a dark ground the site's stylesheet
+# cannot reach. Untreated black takes the data ink, and untreated white
+# goes transparent so the host page's own ground shows through.
+DARK_VALUES = DARK_INKS | {"--ink": DARK_INKS["--ink-data"], "--ground": "none"}
+
 
 def sidenotes(html: str) -> str:
     """Rewrite Python-Markdown footnotes into Tufte sidenotes.
@@ -293,15 +298,58 @@ def ink_tokens(svg: str) -> str:
     root_end = body.index(">") + 1
     root = SVG_SIZE.sub("", body[:root_end])
     root = f'{root[:-1]} style="fill: var(--ink)">'
-    rest = HEX_COLOUR.sub(
-        lambda m: (
-            f"var({FIGURE_TOKENS[m.group(0).lower()]})"
-            if m.group(0).lower() in FIGURE_TOKENS
-            else m.group(0)
-        ),
-        body[root_end:],
-    )
-    return root + rest
+    variables = {
+        hex_colour: f"var({token})" for hex_colour, token in FIGURE_TOKENS.items()
+    }
+    return root + recolour(body[root_end:], variables)
+
+
+def recolour(svg: str, colours: dict[str, str]) -> str:
+    """Replace each listed hex colour in an SVG's text; the rest stay as drawn.
+
+    Parameters
+    ----------
+    svg
+        SVG text.
+    colours
+        Lowercase hex colour to its replacement, which may be any CSS
+        colour value.
+
+    Returns
+    -------
+    str
+        The SVG with the listed colours replaced.
+    """
+    return HEX_COLOUR.sub(lambda m: colours.get(m.group(0).lower(), m.group(0)), svg)
+
+
+def dark_svg(svg: str) -> str:
+    """Bake the dark-ground colours into a matplotlib SVG.
+
+    For a page the site's stylesheet cannot reach, such as the README
+    on GitHub, where the figure is served as a file and shown through
+    `<picture>`. The same colours `ink_tokens` turns into variables
+    are written as their dark values instead; the root carries the
+    fill for the same reason, and the file otherwise stays as
+    matplotlib wrote it, prolog and fixed size included.
+
+    Parameters
+    ----------
+    svg
+        The file's text as matplotlib wrote it.
+
+    Returns
+    -------
+    str
+        A complete SVG file for a dark ground.
+    """
+    root_start = svg.index("<svg ")
+    root_end = svg.index(">", root_start) + 1
+    root = f'{svg[root_start : root_end - 1]} style="fill: {DARK_VALUES["--ink"]}">'
+    dark = {
+        hex_colour: DARK_VALUES[token] for hex_colour, token in FIGURE_TOKENS.items()
+    }
+    return svg[:root_start] + root + recolour(svg[root_end:], dark)
 
 
 def inline_svg(html: str, read: Callable[[str], str]) -> str:
