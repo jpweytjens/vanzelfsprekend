@@ -30,6 +30,7 @@ REFERENCE = re.compile(
 SINGLE_PARAGRAPH = re.compile(r"\A<p>(?P<inner>(?:(?!</p>).)*)</p>\Z", re.DOTALL)
 TABLE = re.compile(r'(?<!<div class="table-scroll">)<table>.*?</table>', re.DOTALL)
 ANNOTATION = re.compile(r"(?<=</b>)\s*(?P<annotation>\(.*?\))\s*(?=\u2013)", re.DOTALL)
+PALETTE_PLACEHOLDER = "<!-- palette-sheet -->"
 RUN_OF_SPACE = re.compile(r"\s+")
 SPACE_BEFORE_CLOSE = re.compile(r"\s+\)\Z")
 XML_PROLOG = re.compile(r"\A(?:<\?xml[^>]*>\s*)?(?:<!DOCTYPE[^>]*>\s*)?", re.DOTALL)
@@ -164,6 +165,43 @@ def type_annotations(html: str) -> str:
         return f' <span class="doc-annotation">{annotation}</span> '
 
     return ANNOTATION.sub(wrap, html)
+
+
+def palette_sheet(html: str) -> str:
+    """Replace the palette placeholder with every Tol colour, named.
+
+    One group per scheme, its name above blocks of colour, each block
+    over the bare name to type after ``tol:scheme.``. Groups and
+    colours follow the order `palettes.SCHEMES` declares, which is the
+    technote's recommended picking sequence, so the colours to reach
+    for first are the ones on the left. Built from that module, so the
+    names here cannot drift from the registered ``tol:`` colours. The
+    block is hidden from a screen reader, since the name under it
+    already says which colour it is.
+
+    Parameters
+    ----------
+    html
+        One page's rendered content.
+
+    Returns
+    -------
+    str
+        The page with the placeholder replaced, or unchanged if it
+        carries none.
+    """
+    groups = "".join(
+        f"<dt><code>{scheme}</code></dt><dd><ul>"
+        + "".join(
+            f'<li><span class="swatch" aria-hidden="true"'
+            f' style="background: {hex_colour}"></span>'
+            f"<code>{name}</code></li>"
+            for name, hex_colour in colours.items()
+        )
+        + "</ul></dd>"
+        for scheme, colours in palettes.SCHEMES.items()
+    )
+    return html.replace(PALETTE_PLACEHOLDER, f'<dl class="palettes">{groups}</dl>')
 
 
 def palette_css() -> str:
@@ -328,4 +366,5 @@ def figure_reader(docs_dir: Path, dest_uri: str) -> Callable[[str], str]:
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files) -> str:
     """Apply the HTML rewrites to every page (MkDocs event)."""
     read = figure_reader(Path(config["docs_dir"]), page.file.dest_uri)
-    return scrolling_tables(type_annotations(inline_svg(sidenotes(html), read)))
+    content = palette_sheet(sidenotes(html))
+    return scrolling_tables(type_annotations(inline_svg(content, read)))

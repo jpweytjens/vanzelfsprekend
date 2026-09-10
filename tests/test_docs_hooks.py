@@ -1,3 +1,5 @@
+import re
+
 import docs_hooks
 
 from vanzelfsprekend import palettes
@@ -275,3 +277,35 @@ def test_type_annotations_leaves_an_unnamed_type_alone():
 def test_type_annotations_leaves_pages_without_parameters_alone():
     html = "<p>Plain prose with <code>code</code> in it.</p>"
     assert docs_hooks.type_annotations(html) == html
+
+
+def test_palette_sheet_names_every_colour_in_every_scheme():
+    out = docs_hooks.palette_sheet(docs_hooks.PALETTE_PLACEHOLDER)
+    for scheme, colours in palettes.SCHEMES.items():
+        assert f"<code>{scheme}</code>" in out
+        for name, hex_colour in colours.items():
+            assert f"<code>{name}</code>" in out
+            assert hex_colour in out
+
+
+def test_palette_sheet_follows_the_technote_picking_order():
+    out = docs_hooks.palette_sheet(docs_hooks.PALETTE_PLACEHOLDER)
+    names = re.findall(r"<code>([a-z_]+)</code>", out)
+    expected = [
+        name
+        for scheme, colours in palettes.SCHEMES.items()
+        for name in (scheme, *colours)
+    ]
+    assert names == expected
+
+
+def test_palette_sheet_hides_the_swatch_from_a_screen_reader():
+    out = docs_hooks.palette_sheet(docs_hooks.PALETTE_PLACEHOLDER)
+    swatches = re.findall(r"<span class=\"swatch\"[^>]*>", out)
+    assert len(swatches) == sum(len(c) for c in palettes.SCHEMES.values())
+    assert all('aria-hidden="true"' in swatch for swatch in swatches)
+
+
+def test_palette_sheet_leaves_pages_without_the_placeholder_alone():
+    html = "<p>Nothing to substitute.</p>"
+    assert docs_hooks.palette_sheet(html) == html

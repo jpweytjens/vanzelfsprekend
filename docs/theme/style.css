@@ -145,6 +145,41 @@ table { border-collapse: collapse; font-size: 0.95rem; font-variant-numeric: tab
 th, td { text-align: left; padding: 0.25rem 1.2rem 0.25rem 0; font-weight: normal; vertical-align: top; }
 th { border-bottom: 1px solid var(--rule); font-style: italic; }
 
+/* The palette sheet: a scheme per group, its name over blocks of colour
+   with the name to type under each. The block carries the colour and the
+   name reads at reading size, so the thing you scan by and the thing you
+   copy are both doing their own job. Every block is as wide as the
+   longest name, since one sized to its own name would give light_yellow
+   four times the colour of red and mean nothing by it.
+
+   Wider than the measure, into the sidenote margin, like a code block.
+   Capped at the viewport less the page's 4rem of padding each side, plus
+   a rem for a scrollbar, so a window too narrow for the full width drops
+   a column instead of running off the edge. */
+.palettes {
+  width: calc(100% + 45%);
+  max-width: min(calc(100% + 45%), calc(100vw - 9rem));
+  margin: 2rem 0 2.4rem;
+}
+.palettes dt { margin: 0 0 0.6rem; }
+.palettes dd { margin: 0 0 2.2rem; }
+.palettes dd:last-of-type { margin-bottom: 0; }
+.palettes ul {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 0.7rem;
+}
+.palettes li { display: flex; flex-direction: column; align-items: stretch; }
+/* The measure is set on the name, whose own font makes ch the right unit;
+   the block above stretches to whatever that comes to. */
+.palettes li code { min-width: 13ch; text-align: center; padding-top: 0.25rem; }
+.palettes .swatch {
+  height: 2.2em; border-radius: 2px;
+  /* The frame ink as a hairline, so a colour that matches the page ground
+     still reads as a block: pale yellow on white, dark blue on black.
+     Inset, so the ring costs no width. */
+  box-shadow: inset 0 0 0 1px var(--ink-line);
+}
+
 /* Code: on the page ground, no box. Blocks may run into the margin. */
 code, pre {
   font-family: "Monaspace Neon", ui-monospace, Menlo, monospace;
@@ -212,6 +247,8 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
   .page { padding: 1.5rem 1.25rem 3rem; }
   .sidenote { float: none; display: block; width: auto; margin: 0.5rem 0 0.9rem 1.5rem; }
   pre { width: auto; max-width: 100%; margin-left: 0; }
+  /* No sidenote margin to borrow, so the colours wrap in the measure. */
+  .palettes { width: 100%; max-width: 100%; }
   /* The class rule beats the bare pre above it, so the signature needs
      naming to go flush with the rest of the code. */
   .doc-signature pre { margin-left: 0; }

@@ -8,12 +8,9 @@ Colour is a choice you make, not one vanzelfsprekend makes for you. Three greys 
 ax.set_prop_cycle(vzs.palettes.cycle("muted"))  # then plot; line_labels names them
 ```
 
-A single colour comes from Paul Tol's schemes through matplotlib's named-colour registry: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. The two spaces stay distinct: the `tol:` prefix disambiguates a colour name in matplotlib's global registry, while `cycle` takes the bare scheme name (`"muted"`) since it is already in vanzelfsprekend's own namespace. `vzs.palettes.SCHEMES` enumerates them in code, and the sheet below names every swatch:
+A single colour comes from Paul Tol's schemes through matplotlib's named-colour registry: a bare `tol:orange` is the vibrant default, and a qualified `tol:scheme.name` (`tol:muted.rose`, `tol:bright.blue`) reaches the rest. The two spaces stay distinct: the `tol:` prefix disambiguates a colour name in matplotlib's global registry, while `cycle` takes the bare scheme name (`"muted"`) since it is already in vanzelfsprekend's own namespace. `vzs.palettes.SCHEMES` enumerates them in code, and the sheet below names every swatch. Each row runs in the technote's picking order, so the colours to reach for first are the ones on the left.
 
-<figure markdown>
-![Eight rows of Paul Tol's colour schemes (bright, high-contrast, vibrant, muted, medium-contrast, pale, dark and light), each swatch labelled with the colour name to type after tol:](../figures/palettes.svg)
-<figcaption markdown>Every swatch, named as you type it after `tol:`.</figcaption>
-</figure>
+<!-- palette-sheet -->
 
 What you reach for depends on what you bring. Hand a finished plot to `distill` and it trims the frame and greys the furniture, touching nothing you drew — that is the only step. When you draw the plot yourself and want it restrained from the start, three orthogonal knobs shape the ink: `distill` (and `mute`) own the frame, `cycle` owns the colour, and the `vanzelfsprekend` style owns the marks' geometry — lighter lines, smaller marks, quieter titles. Each answers one question and none overlaps, so you compose the ones you want and `distill` is always the last word:
 

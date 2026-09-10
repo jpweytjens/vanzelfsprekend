@@ -17,7 +17,6 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Rectangle
 
 import vanzelfsprekend as vzs
 
@@ -36,7 +35,6 @@ README_FIGURES = (
     "small_multiples.png",
     "tick_spacing.png",
     "frame_modes.png",
-    "palettes.png",
 )
 
 
@@ -354,63 +352,6 @@ def _apca_lc(text: tuple[int, int, int], background: tuple[int, int, int]) -> fl
     return lc * 100
 
 
-def _label_ink(hex_colour: str) -> str:
-    """White or near-black, whichever has the stronger APCA contrast on `hex_colour`."""
-    background = (
-        int(hex_colour[1:3], 16),
-        int(hex_colour[3:5], 16),
-        int(hex_colour[5:7], 16),
-    )
-    dark_lc = abs(_apca_lc((34, 34, 34), background))
-    light_lc = abs(_apca_lc((255, 255, 255), background))
-    return "#222222" if dark_lc >= light_lc else "#ffffff"
-
-
-def palette_swatches() -> None:
-    """Render every Tol scheme as labelled swatches, a colour reference.
-
-    Drawn straight from `vzs.palettes.SCHEMES`, so the swatches and names
-    cannot drift from the registered `tol:` colours. A bare `tol:orange`
-    is the vibrant default; a qualified `tol:scheme.name` reaches any of
-    the eight schemes.
-    """
-    schemes = vzs.palettes.SCHEMES
-    ncols = max(len(colours) for colours in schemes.values())
-    x0, span = 0.2, 0.78
-    cell = span / ncols
-    fig, ax = plt.subplots(figsize=(1.25 * ncols, 0.85 * len(schemes) + 0.7))
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, len(schemes))
-    ax.axis("off")
-    by_size = sorted(schemes.items(), key=lambda kv: len(kv[1]), reverse=True)
-    for row, (scheme, colours) in enumerate(by_size):
-        y = row + 0.5
-        ax.text(
-            x0 - 0.02,
-            y,
-            scheme,
-            ha="right",
-            va="center",
-            fontsize=10,
-            color=vzs.palettes.TEXT_INK,
-        )
-        for i, (name, hex_colour) in enumerate(colours.items()):
-            cx = x0 + i * cell
-            ax.add_patch(
-                Rectangle((cx, y - 0.25), cell * 0.86, 0.5, facecolor=hex_colour, lw=0)
-            )
-            ax.text(
-                cx + cell * 0.43,
-                y,
-                name,
-                ha="center",
-                va="center",
-                fontsize=7,
-                color=_label_ink(hex_colour),
-            )
-    save(fig, "palettes")
-
-
 def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
@@ -426,7 +367,6 @@ def main() -> None:
     small_multiples_grid()
     tick_spacing()
     frame_modes()
-    palette_swatches()
     seaborn_lineplot()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)

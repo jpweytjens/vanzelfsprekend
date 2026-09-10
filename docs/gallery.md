@@ -1,6 +1,6 @@
 # Gallery
 
-*Thirteen figures in the order a reader should meet them, from one call to ticks that are the argument.*
+*Twelve figures in the order a reader should meet them, from one call to ticks that are the argument.*
 
 Every figure comes from `examples/gallery.py`; regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in `examples/data`, each file naming its source and licence; what is not a measurement says so.
 
@@ -62,11 +62,6 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 <figure markdown>
 ![A 2x2 grid of monthly CO2 at Barrow, Mauna Loa, Samoa and the South Pole on a shared scale, the seasonal sawtooth shrinking toward the pole, spines and ticks only on the left column and bottom row](figures/small_multiples.svg)
 <figcaption markdown>**A small-multiples grid.** Monthly CO₂ at four stations from the Arctic to the South Pole on one shared scale. Only the left column and bottom row keep furniture, so the seasonal swing shrinking toward the pole reads on equal terms.</figcaption>
-</figure>
-
-<figure markdown>
-![Eight rows of Paul Tol's colour schemes, each swatch labelled with the colour name to type after tol:](figures/palettes.svg)
-<figcaption markdown>**The palettes.** A reference sheet, outside the story: every scheme and every name.</figcaption>
 </figure>
 
 ## Which figure shows what
