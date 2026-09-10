@@ -5,7 +5,7 @@
 Every figure comes from `examples/gallery.py`; regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in `examples/data`, each file naming its source and licence; what is not a measurement says so.
 
 <figure markdown>
-![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](figures/warming_scenarios.svg)
+![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
 <figcaption markdown>**The warming scenarios.** The same plotting calls twice. One call trims the frame and the legend becomes names at the line ends, the record labelled where it starts.</figcaption>
 </figure>
 

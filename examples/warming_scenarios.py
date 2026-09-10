@@ -7,6 +7,7 @@ adds the treatment, with `line_labels` in place of the legend.
 """
 
 import io
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -17,6 +18,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import vanzelfsprekend as vzs
+
+sys.path.insert(0, str(Path(__file__).parents[1]))  # docs_hooks.py is at the repo root
+
+import docs_hooks
 
 DATA = Path(__file__).parent / "data"
 DOCS = Path(__file__).parents[1] / "docs"
@@ -61,7 +66,7 @@ def draw_data(ax: plt.Axes) -> None:
 
 
 def main() -> None:
-    """Render the figure into `docs/warming_scenarios.png`."""
+    """Render the figure into `docs/`, once for each ground."""
     fig, (plain, treated) = plt.subplots(1, 2, figsize=(10, 3.5))
     fig.subplots_adjust(wspace=0.8)
 
@@ -78,14 +83,13 @@ def main() -> None:
     vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")  # noqa: RUF001
     treated.set_title("vanzelfsprekend")
 
-    fig.savefig(DOCS / "warming_scenarios.png", dpi=150, bbox_inches="tight")
-    (DOCS / "figures").mkdir(exist_ok=True)
-    fig.savefig(
-        DOCS / "figures" / "warming_scenarios.svg",
-        bbox_inches="tight",
-        transparent=True,
-    )
+    light = io.StringIO()
+    fig.savefig(light, format="svg", bbox_inches="tight", transparent=True)
     plt.close(fig)
+    (DOCS / "warming_scenarios.svg").write_text(light.getvalue(), encoding="utf-8")
+    (DOCS / "warming_scenarios-dark.svg").write_text(
+        docs_hooks.dark_svg(light.getvalue()), encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":
