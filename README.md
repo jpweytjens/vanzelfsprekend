@@ -7,9 +7,13 @@
 
 <img align="right" width="160" src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/icon/vanzelfsprekend-plotted.png" alt="Three rising lines in a range frame, labelled v, z and s at their ends; the s line is a sigmoid">
 
-Distill a matplotlib plot until it speaks for itself: a treatment in the tradition of [Edward Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/) and [Jean-luc Doumont](https://www.principiae.be/). The name is Dutch for self-evident, literally "self-speaking".
+*Above all else show the data.*
 
-One call, `vzs.distill(ax)`, turns a default matplotlib axes into a quiet one where everything left on the page is information. The box around the plot becomes two spines that end at the data, so each spine shows its variable's span. Ticks land on round numbers strictly inside that span. The legend gives way to labels at the lines' ends, each in its line's colour. The axis furniture fades to grey, and the ink goes to the data.
+The line is Tufte's, and the data are yours. vanzelfsprekend takes an axes you have already drawn and touches no mark on it: a line stays where you plotted it, a scatter keeps its colour, a bar its width. What it does touch is everything else, and everything else is not decoration. [Talbot, Lin and Hanrahan](http://vis.stanford.edu/papers/tick-labels) open their paper on tick labels with the reason: "The non-data components of a visualization, such as axes and legends, can often be just as important as the data itself. They provide contextual information essential to interpreting the data." Axes and legends are exactly the parts vanzelfsprekend owns.
+
+One call, `vzs.distill(ax)`, does the work. The box becomes two spines that end where the data ends, so each spine shows its variable's span. The ticks fall on round numbers inside that span. The legend goes, and each line is named at its end in its own colour. The furniture fades to grey, and the ink goes to the data. The name is Dutch for self-evident, literally "self-speaking".
+
+The treatment is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/boundary/) and why.
 
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.png)
 
