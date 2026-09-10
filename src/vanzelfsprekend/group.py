@@ -11,12 +11,10 @@ from collections.abc import Mapping, Sequence
 from functools import partial
 from typing import cast
 
-import matplotlib as mpl
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.ticker import Locator
 
-from vanzelfsprekend import palettes
 from vanzelfsprekend.frame import (
     AxisKind,
     FrameMode,
@@ -246,20 +244,6 @@ def treat(
             axis.set_major_locator(GroupLocator(inner, group, name))
             intervals[name] = partial(data_union, group, name)
         mute(ax)
-        if "cycle" not in state:
-            # The ink cycle replaces only matplotlib's default; a cycle
-            # the user chose is theirs, and restore returns whichever
-            # was there.
-            found = palettes.axes_cycle(ax)
-            default = found == list(mpl.rcParams["axes.prop_cycle"])
-            state["cycle"] = {
-                "snapshot": mpl.rcParams["axes.prop_cycle"]
-                if default
-                else palettes.cycler_of(found),
-                "ink": default,
-            }
-        if state["cycle"]["ink"]:
-            ax.set_prop_cycle(palettes.cycle("ink"))
         state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
         add_applier(ax, "tick_labels", _apply_tick_labels)
         add_applier(ax, "date_offset", _apply_date_offset)

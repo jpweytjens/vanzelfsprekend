@@ -120,3 +120,31 @@ def test_restore_resets_tick_ink_on_tickless_axes():
     tick = ax.xaxis.get_major_ticks()[0]
     assert to_rgba(tick.tick1line.get_color()) == to_rgba(plt.rcParams["xtick.color"])
     plt.close(fig)
+
+
+def test_mute_installs_the_ink_cycle():
+    fig, ax = plt.subplots()
+    vzs.mute(ax)
+    (first,) = ax.plot([0, 1], [0, 1])
+    (second,) = ax.plot([0, 1], [1, 0])
+    assert to_rgba(first.get_color()) == to_rgba(vzs.palettes.DATA_INK)
+    assert to_rgba(second.get_color()) == to_rgba(vzs.palettes.DATA_INK)
+    plt.close(fig)
+
+
+def test_restore_after_mute_returns_the_default_cycle():
+    fig, ax = plt.subplots()
+    vzs.mute(ax)
+    vzs.restore(ax)
+    (line,) = ax.plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba("#1f77b4")  # matplotlib's default C0
+    plt.close(fig)
+
+
+def test_mute_keeps_a_cycle_set_before_it():
+    fig, ax = plt.subplots()
+    ax.set_prop_cycle(color=["#123456", "#abcdef"])
+    vzs.mute(ax)
+    (line,) = ax.plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba("#123456")
+    plt.close(fig)

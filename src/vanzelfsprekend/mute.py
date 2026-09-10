@@ -1,8 +1,10 @@
 """Grey the axis furniture so the data carries the ink."""
 
+import matplotlib as mpl
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 
+from vanzelfsprekend import palettes
 from vanzelfsprekend.hook import ensure_state
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
 
@@ -26,6 +28,12 @@ def mute(
     and tick visibility are snapshotted on the first call so `restore`
     can undo the change; later calls update the inks without
     overwriting the snapshot.
+
+    The neutral ink cycle is installed as well, so a mark drawn after
+    `mute` is `DATA_INK` until you opt into colour with a scheme cycle
+    of your own (`palettes.cycle`). Only matplotlib's default cycle is
+    replaced; a cycle you set before `mute` is kept, and `restore`
+    returns whichever was there.
 
     Returns
     -------
@@ -66,6 +74,20 @@ def mute(
     # (seaborn's grid styles) should not leave the range frame with none.
     ax.tick_params(axis="x", which="major", bottom=True)
     ax.tick_params(axis="y", which="major", left=True)
+    if "cycle" not in state:
+        # The ink cycle replaces only matplotlib's default; a cycle
+        # the user chose is theirs, and restore returns whichever
+        # was there.
+        found = palettes.axes_cycle(ax)
+        default = found == list(mpl.rcParams["axes.prop_cycle"])
+        state["cycle"] = {
+            "snapshot": mpl.rcParams["axes.prop_cycle"]
+            if default
+            else palettes.cycler_of(found),
+            "ink": default,
+        }
+    if state["cycle"]["ink"]:
+        ax.set_prop_cycle(palettes.cycle("ink"))
     return ax
 
 
