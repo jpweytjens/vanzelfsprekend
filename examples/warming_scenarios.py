@@ -83,8 +83,16 @@ def main() -> None:
     vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")  # noqa: RUF001
     treated.set_title("vanzelfsprekend")
 
+    # a committed SVG: fixed element ids and no date, so a rerun is a no-op
+    plt.rcParams["svg.hashsalt"] = "vanzelfsprekend"
     light = io.StringIO()
-    fig.savefig(light, format="svg", bbox_inches="tight", transparent=True)
+    fig.savefig(
+        light,
+        format="svg",
+        bbox_inches="tight",
+        transparent=True,
+        metadata={"Date": None},
+    )
     plt.close(fig)
     (DOCS / "warming_scenarios.svg").write_text(light.getvalue(), encoding="utf-8")
     (DOCS / "warming_scenarios-dark.svg").write_text(
