@@ -181,11 +181,26 @@ th { border-bottom: 1px solid var(--rule); font-style: italic; }
   box-shadow: inset 0 0 0 1px var(--ink-line);
 }
 
-/* Code: on the page ground, no box. Blocks may run into the margin. */
+/* Code: blocks on the page ground, no box, and they may run into the
+   margin; an indent, air and syntax colour already set them apart. A name
+   in a sentence gets a tint of the ink into the ground, since the two
+   faces share an x-height and the face alone did not mark it. */
 code, pre {
   font-family: "Monaspace Neon", ui-monospace, Menlo, monospace;
   font-size: var(--code-size);
   font-feature-settings: "calt", "liga";
+}
+:not(pre) > code {
+  background: color-mix(in srgb, var(--ink) 6%, var(--ground));
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+}
+/* Apparatus that is all code, the palette sheet and a parameter list, sets
+   code as structure rather than as a name among words, and a box under
+   every entry would say nothing. */
+.palettes code, .doc-section-item > code, .doc-section-item > b > code, .doc-annotation code {
+  background: none;
+  padding-inline: 0;
 }
 pre {
   margin: 1.4rem 0 1.6rem 1.5rem;
