@@ -8,6 +8,8 @@ redraw when anything changed. This module knows nothing about frames or
 labels.
 """
 
+import traceback
+import warnings
 from collections.abc import Callable
 
 from matplotlib.axes import Axes
@@ -59,6 +61,14 @@ def _make_on_draw(ax: Axes) -> Callable[[Event], None]:
         try:
             changed = run_appliers(ax)
         except Exception:
+            state = get_state(ax)
+            if state is not None and not state.get("draw_warned"):
+                state["draw_warned"] = True
+                warnings.warn(
+                    "vanzelfsprekend: a draw-time frame update failed; the "
+                    "frame may be stale. Traceback:\n" + traceback.format_exc(),
+                    stacklevel=2,
+                )
             return
         if changed:
             event.canvas.draw_idle()
