@@ -14,7 +14,7 @@ The library is in the tradition of Tufte's range frame and Doumont's direct labe
 
 <figure markdown>
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
-<figcaption markdown>The same plotting calls twice. The right panel adds one call, and the legend becomes labels at the line ends.</figcaption>
+<figcaption markdown>The same plotting calls twice. The right panel adds `apply`, `line_labels` in place of the legend, and one `label` on the observed record.</figcaption>
 </figure>
 
 ```python

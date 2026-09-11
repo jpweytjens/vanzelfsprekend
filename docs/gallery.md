@@ -6,7 +6,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
-<figcaption markdown>**The warming scenarios.** The same plotting calls twice. One call trims the frame and the legend becomes names at the line ends, the record labelled where it starts.</figcaption>
+<figcaption markdown>**The warming scenarios.** The same plotting calls twice. `apply` trims the frame, `line_labels` turns the legend into names at the line ends, and one `label` names the observed record where it starts.</figcaption>
 </figure>
 
 <figure markdown>
@@ -68,7 +68,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 This index is written by hand until the gallery declares its own features; then it is generated from those declarations.
 
-- **One call, `apply`**: every figure; on its own in the warming scenarios and Old Faithful.
+- **One call, `apply`**: every figure; on its own in Old Faithful.
 - **`frame="data"`**: Old Faithful, waiting times, Anscombe, the grand tours.
 - **`frame="loose"` and the spine offset**: brain and body mass, the resonance peak, one panel of the frame modes.
 - **Ticks that follow the axis's length**: tick spacing.

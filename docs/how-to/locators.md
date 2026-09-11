@@ -1,8 +1,8 @@
 # Locators
 
-*Set your own ticks after `range_frame`; the frame reads them and still decides where the spine ends.*
+*Set your own ticks after `apply` or `range_frame`; the frame reads them and still decides where the spine ends.*
 
-To place ticks yourself (`QuartileLocator`, `FeatureLocator`, or any matplotlib locator) set it *after* `range_frame`, which installs the default locator and would otherwise overwrite yours. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the [resonance figure](../tutorial/resonance-peak.md) holds its spine at 16–19 while the curve spills past.
+To place ticks yourself (`QuartileLocator`, `FeatureLocator`, or any matplotlib locator) set it *after* `apply` or `range_frame`, either of which installs the default locator and would otherwise overwrite yours. The two take the same arguments, so everything here holds for either. The frame mode still decides where the spine ends, now reading your ticks: `nice` and `loose` bound it to your outermost ticks, `data` to the data's extent. That is how the [resonance figure](../tutorial/resonance-peak.md) holds its spine at 16–19 while the curve spills past.
 
 Linear, log and date axes are handled; set the scale before calling `range_frame`, and plot date data first, since an axis only becomes a date axis once dates arrive on it. On a log axis the ticks sit on powers of the base and the minor ticks disappear with them; `ax.xaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs="auto"))` brings the minors back. On a date axis the ticks sit on calendar starts (a year, a month, a day, an hour) and the labels shorten to what changes between ticks, so a run of months does not repeat the year. That shared year sits at the right end of the bottom spine, where `xlabel` goes, and stacks above an `xlabel` if you set one. Anything else (`symlog`, `logit`, categorical axes) is left untouched with a warning. The warning covers the frame and ticks only; `line_labels` places its labels on any scale.
 

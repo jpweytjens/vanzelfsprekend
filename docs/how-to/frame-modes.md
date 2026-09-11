@@ -2,7 +2,7 @@
 
 *Choose where each spine ends: at the outermost tick, at a round number bracketing the data, or at the data itself.*
 
-`range_frame(ax)` ends the spines at the outermost ticks. Two other modes:
+`apply(ax)` ends the spines at the outermost ticks, and so does `range_frame(ax)`, the framing step on its own; the two take the same arguments, so everything below holds for either. Two other modes:
 
 ```python
 vzs.range_frame(ax, frame="data")  # spines end at the exact data min and max
