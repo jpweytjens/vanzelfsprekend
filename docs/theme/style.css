@@ -71,8 +71,9 @@ h1, h2, h3 { text-wrap: balance; line-height: 1.25; }
 h1 { font-size: 1.6rem; font-weight: 700; margin: 2.2rem 0 0.3rem; }
 h2 { font-size: 1.25rem; font-weight: 700; font-style: italic; margin: 2.6rem 0 0.6rem; }
 h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 0 0.4rem; }
-.subtitle, h1 + p > em:only-child { font-style: italic; color: var(--ink-soft); }
+.subtitle, h1 + p > em:only-child, article > p:first-child > em:only-child { font-style: italic; color: var(--ink-soft); }
 h1 + p { margin-bottom: 2rem; }
+article > p:first-child { margin: 2.2rem 0 2rem; }
 a { color: var(--link); text-decoration: none; }
 a:hover { color: var(--link-hover); }
 hr { border: 0; height: 1px; background: var(--rule); margin: 3rem 0; }
