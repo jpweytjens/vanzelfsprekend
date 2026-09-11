@@ -1,6 +1,6 @@
 site_name: vanzelfsprekend
 site_url: https://vanzelfsprekend.johannesweytjens.be/
-site_description: Distill a matplotlib plot until it speaks for itself
+site_description: Matplotlib plots that speak for themselves, inspired by Tufte and Doumont.
 repo_url: https://github.com/jpweytjens/vanzelfsprekend
 strict: true
 
