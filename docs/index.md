@@ -15,7 +15,7 @@ Install it with `uv add vanzelfsprekend` or `pip install vanzelfsprekend`.
 
 Where to go next: the [tutorial](tutorial/old-faithful.md) builds four figures from scratch. The [how-to](how-to/frame-modes.md) pages answer one question each. The [gallery](gallery.md) shows what the range frame does to real data. The [reference](reference/axes.md) is generated from the docstrings, and the [explanation](explanation/ideas.md) pages say where the ideas come from.
 
-The data are yours and [stay as you drew them](explanation/boundary.md). The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
+The data are yours and [stay as you drew them](explanation/decisions.md). The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
 
 [^tufte]: Edward R. Tufte, *The Visual Display of Quantitative Information* (Cheshire, Connecticut: Graphics Press, 1983), chapter 4, where the epigraph heads his five principles of data-ink.
 [^doumont]: Jean-luc Doumont, *Trees, Maps, and Theorems: Effective Communication for Rational Minds* (Brussels: Principiae, 2009), from the caption to the graph he redraws.

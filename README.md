@@ -17,7 +17,7 @@ The data themselves stay as you drew them. Tufte's line is your job,[^tufte] and
 
 Those are the parts vanzelfsprekend owns, and the only parts.
 
-The library is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/boundary/) and why.
+The library is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/decisions/) and why.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios-dark.svg">
