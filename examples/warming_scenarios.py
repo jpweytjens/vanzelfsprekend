@@ -72,7 +72,7 @@ def main() -> None:
     fig.subplots_adjust(wspace=0.8)
 
     draw_data(plain)
-    plain.set_ylabel("warming (°C vs 1850–1900)")  # noqa: RUF001
+    plain.set_ylabel("warming (°C vs 1850–1900)")
     plain.legend()
     plain.set_title("matplotlib")
 
@@ -81,7 +81,7 @@ def main() -> None:
     vzs.line_labels(treated)
     vzs.label(treated, "observed", x=1905)
     # the panel carries a title, so the label keeps to the side
-    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")  # noqa: RUF001
+    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")
     treated.set_title("vanzelfsprekend")
 
     # a committed SVG: fixed element ids and no date, so a rerun is a no-op
