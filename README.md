@@ -9,30 +9,26 @@
 
 *Above all else show the data.* — Edward Tufte
 
-One call, `vzs.apply(ax)`, gives the axes a range frame and mutes its furniture. The box becomes two spines, each ending at the last labelled tick inside its data, so a spine's end always carries a value. The ticks fall on round numbers inside the data. The furniture fades to grey, and the ink goes to the data. Tufte's own frame, spines running to the data's exact edge, is one keyword away, and `line_labels` puts each line's name at its end, in its own colour, in place of the legend. The name is Dutch for self-evident, literally "self-speaking".
-
-The data themselves stay as you drew them. Tufte's line is your job,[^tufte] and the library keeps its hands off it: a line stays where you plotted it, a scatter keeps its colour, a bar its width. Everything around the data is a different matter, and Talbot, Lin and Hanrahan say why in the first sentences of their paper on tick labels.[^talbot]
-
-> The non-data components of a visualization, such as axes and legends, can often be just as important as the data itself. They provide contextual information essential to interpreting the data.
-
-Those are the parts vanzelfsprekend owns, and the only parts.
-
-The library is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/decisions/) and why.
+One call, `vzs.apply(ax)`, gives the axes a range frame and mutes its furniture. The box becomes two spines, each ending at the last labelled tick inside its data, so a spine's end always carries a value. The ticks fall on round numbers inside the data. The furniture fades to grey, and the ink goes to the data. The name is Dutch for self-evident, literally "self-speaking".
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios-dark.svg">
   <img src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.svg" alt="The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right">
 </picture>
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "nice"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1930)` to name the record where it starts.
+The same plotting calls twice, matplotlib's defaults on the left. The right panel adds `apply`, `line_labels` in place of the legend, and one `label` on the observed record; [the script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) draws both.
+
+The data are yours: you draw them, and you know which line is the message. Everything around the data is vanzelfsprekend's, to two ends. The range frame is Tufte's and shows the data above all else: each spine ends on a labelled value inside its data, with round numbers between,[^talbot] so the frame reports the range instead of boxing it.[^tufte] The muting and the direct labels are Doumont's and let the figure speak for itself: the furniture goes grey so the data stand out, and each line is named where it ends, so no legend is needed. His caption to a graph he redrew says both at once.[^doumont]
+
+> The graph shows the data and nothing but the data: tick marks are relevant, not arbitrarily equidistant; nondata lines are gray, to make the data prominent.
 
 ## Install
 
 ```sh
 uv add vanzelfsprekend
+# or
+pip install vanzelfsprekend
 ```
-
-or `pip install vanzelfsprekend`.
 
 ## Quickstart
 
@@ -57,9 +53,10 @@ fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 
 ## Documentation
 
-The documentation is at [vanzelfsprekend.johannesweytjens.be](https://vanzelfsprekend.johannesweytjens.be/): a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds four figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/frame-modes/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and [where the ideas come from](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/).
+The [documentation](https://vanzelfsprekend.johannesweytjens.be/) has a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds four figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/frame-modes/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and the explanation pages on [what the axis answers](https://vanzelfsprekend.johannesweytjens.be/explanation/axis/), [whose decision is which](https://vanzelfsprekend.johannesweytjens.be/explanation/decisions/) and [where the ideas come from](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/).
 
-The data are yours and stay as you drew them. The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
+The data are yours and [stay as you drew them](https://vanzelfsprekend.johannesweytjens.be/explanation/decisions/). The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
 
-[^tufte]: Edward R. Tufte, *The Visual Display of Quantitative Information* (Cheshire, Connecticut: Graphics Press, 1983), chapter 4, where the line heads his five principles of data-ink.
-[^talbot]: Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043. The quote opens the abstract.
+[^tufte]: Edward R. Tufte, *The Visual Display of Quantitative Information* (Cheshire, Connecticut: Graphics Press, 1983), chapter 4, where the epigraph heads his five principles of data-ink.
+[^doumont]: Jean-luc Doumont, *Trees, Maps, and Theorems: Effective Communication for Rational Minds* (Brussels: Principiae, 2009), from the caption to the graph he redraws.
+[^talbot]: The round numbers are chosen by Talbot, Lin and Hanrahan's search, and their paper opens with Doumont's point from the other side: "The non-data components of a visualization, such as axes and legends, can often be just as important as the data itself." Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043.
