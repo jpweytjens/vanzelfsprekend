@@ -76,9 +76,9 @@ nav:
       - Style: reference/style.md
       - Registration: reference/registration.md
   - Explanation:
-      - Where the frame stops: explanation/scope.md
-      - What the axis answers: explanation/axis.md
-      - The frame follows the axes: explanation/hook.md
-      - Whose decision is which: explanation/decisions.md
-      - Where the ideas come from: explanation/ideas.md
+      - Answers and comparisons: explanation/axis.md
+      - Why call order doesn't matter: explanation/hook.md
+      - Frame and meaning: explanation/decisions.md
+      - Sources and influences: explanation/ideas.md
+      - Scope and limits: explanation/scope.md
   - Changelog: changelog.md
