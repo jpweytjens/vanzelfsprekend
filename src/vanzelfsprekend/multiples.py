@@ -108,6 +108,9 @@ def small_multiples(
         The panels, in the order given.
     """
     panels = tuple(axes)
+    # stacklevel=4, one more than the direct callers use: the generator
+    # expression is its own frame, so the warning lands on the caller of
+    # small_multiples. Rewriting this as a plain loop would drop that frame.
     framable = tuple(
         ax for ax in panels if not skip_if_not_rectilinear(ax, stacklevel=4)
     )
