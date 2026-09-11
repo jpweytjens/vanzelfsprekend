@@ -2,11 +2,11 @@
 
 *Choose where each spine ends: at the outermost tick, at a round number bracketing the data, or at the data itself.*
 
-`apply(ax)` ends the spines at the outermost ticks, and so does `range_frame(ax)`, the framing step on its own; the two take the same arguments, so everything below holds for either. Two other modes:
+`apply(ax)` ends the spines at the outermost ticks, and so does `range_frame(ax)`, the framing step on its own; the two take the same arguments, so everything below holds for either. Two other modes end the spines at the data itself, or at round numbers bracketing it:
 
 ```python
-vzs.range_frame(ax, frame="data")  # spines end at the exact data min and max
-vzs.range_frame(ax, frame="loose")  # spines end at nice numbers bounding the data
+vzs.range_frame(ax, frame="data")
+vzs.range_frame(ax, frame="loose")
 ```
 
 The ticks and the spine are two separate decisions. The ticks are the locator's, nice numbers inside the data whatever the mode. Where the spine ends is the frame mode's, and only `nice` and `loose` make it follow the ticks:
@@ -43,12 +43,12 @@ The ticks follow the ends: the loose end takes the round number just beyond the 
 A spine with a `loose` end also stands off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart; a `None` in either slot keeps that spine's mode default:
 
 ```python
-vzs.range_frame(ax, frame="loose", offset=(8, 2))  # bottom well off, left just clear
+vzs.range_frame(ax, frame="loose", offset=(8, 2))
 ```
 
 How many ticks an axis carries follows its length. `range_frame` aims for a gap between ticks measured in tick-label heights, seven along x and four along y, so a postage-stamp panel gets two or three ticks, a full-width figure five or six, and a poster with 24 pt labels thins its ticks out without being told. `spacing` sets that gap, a number for both axes or a tuple `(x, y)`, and `n` asks for a count outright when you already know it:
 
 ```python
-vzs.range_frame(ax, spacing=(10, 4))  # x ticks further apart, y as before
-vzs.range_frame(ax, n=3)  # three ticks per axis, whatever the size
+vzs.range_frame(ax, spacing=(10, 4))
+vzs.range_frame(ax, n=3)
 ```

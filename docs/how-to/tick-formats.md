@@ -38,11 +38,11 @@ vzs.ylabel(ax, "revenue (millions)")
 
 The ticks read `2` through `8` either way. The difference is that "millions" now sits at the end of the axis in your own words, where `xlabel` and `ylabel` put it, instead of `1e6` in a corner that the range frame does not place: the corner text is matplotlib's, so on a numeric axis it can land far from a spine that stops at the data.
 
-Either rule turns off on its own, after `apply`:
+Either rule turns off on its own, after `apply`, the common factor with `style="plain"` and the common value with `useOffset=False`:
 
 ```python
-ax.ticklabel_format(axis="y", useOffset=False)  # no common value subtracted
-ax.ticklabel_format(axis="y", style="plain")  # no common factor divided out
+ax.ticklabel_format(axis="y", style="plain")
+ax.ticklabel_format(axis="y", useOffset=False)
 ```
 
 For a whole figure or session, `axes.formatter.useoffset` and `axes.formatter.limits` do the same as rc parameters.
