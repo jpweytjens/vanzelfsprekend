@@ -5,7 +5,7 @@
 Every figure comes from `examples/gallery.py`; regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in `examples/data`, each file naming its source and licence; what is not a measurement says so.
 
 <figure markdown>
-![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
+![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
 <figcaption markdown>**The warming scenarios.** The same plotting calls twice. One call trims the frame and the legend becomes names at the line ends, the record labelled where it starts.</figcaption>
 </figure>
 
@@ -40,8 +40,8 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 </figure>
 
 <figure markdown>
-![Four random-walk series that seaborn drew, distilled to two spines with no grid, the legend replaced by A to D at the line ends in their colours and the year shown once at the axis end](figures/seaborn_lineplot.svg)
-<figcaption markdown>**A seaborn line plot.** The treatment reads an axes, not the library that filled it. `distill` trims seaborn's `whitegrid` box to two spines and drops the grid; `line_labels` stands in for the legend, with the labels passed in because seaborn keeps its legend text on proxy artists.</figcaption>
+![Four random-walk series that seaborn drew, trimmed to two spines with no grid, the legend replaced by A to D at the line ends in their colours and the year shown once at the axis end](figures/seaborn_lineplot.svg)
+<figcaption markdown>**A seaborn line plot.** vanzelfsprekend reads an axes, not the library that filled it. `apply` trims seaborn's `whitegrid` box to two spines and drops the grid; `line_labels` stands in for the legend, with the labels passed in because seaborn keeps its legend text on proxy artists.</figcaption>
 </figure>
 
 <figure markdown>
@@ -68,7 +68,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 This index is written by hand until the gallery declares its own features; then it is generated from those declarations.
 
-- **One call, `distill`**: every figure; on its own in the warming scenarios and Old Faithful.
+- **One call, `apply`**: every figure; on its own in the warming scenarios and Old Faithful.
 - **`frame="data"`**: Old Faithful, waiting times, Anscombe, the grand tours.
 - **`frame="loose"` and the spine offset**: brain and body mass, the resonance peak, one panel of the frame modes.
 - **Ticks that follow the axis's length**: tick spacing.

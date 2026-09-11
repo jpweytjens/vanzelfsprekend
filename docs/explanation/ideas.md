@@ -1,6 +1,6 @@
 # Where the ideas come from
 
-*The treatment compresses a few small books' worth of advice, and each piece has a name.*
+*The library compresses a few small books' worth of advice, and each piece has a name.*
 
 Five ideas do the work, each with a source:
 

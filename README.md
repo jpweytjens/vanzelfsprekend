@@ -9,7 +9,7 @@
 
 *Above all else show the data.* — Edward Tufte
 
-One call, `vzs.distill(ax)`, puts the frame, the ticks and the labels around your data to work for the reader. The box becomes two spines that end where the data ends, so each spine shows its variable's span. The ticks fall on round numbers inside that span. The legend goes, and each line is named at its end in its own colour. The furniture fades to grey, and the ink goes to the data. The name is Dutch for self-evident, literally "self-speaking".
+One call, `vzs.apply(ax)`, gives the axes a range frame and mutes its furniture. The box becomes two spines, each ending at the last labelled tick inside its data, so a spine's end always carries a value. The ticks fall on round numbers inside the data. The furniture fades to grey, and the ink goes to the data. Tufte's own frame, spines running to the data's exact edge, is one keyword away, and `line_labels` puts each line's name at its end, in its own colour, in place of the legend. The name is Dutch for self-evident, literally "self-speaking".
 
 The data themselves stay as you drew them. Tufte's line is your job,[^tufte] and the library keeps its hands off it: a line stays where you plotted it, a scatter keeps its colour, a bar its width. Everything around the data is a different matter, and Talbot, Lin and Hanrahan say why in the first sentences of their paper on tick labels.[^talbot]
 
@@ -17,14 +17,14 @@ The data themselves stay as you drew them. Tufte's line is your job,[^tufte] and
 
 Those are the parts vanzelfsprekend owns, and the only parts.
 
-The treatment is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/boundary/) and why.
+The library is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-visual-display-of-quantitative-information/)'s range frame and [Doumont](https://www.principiae.be/)'s direct labels, with Talbot's tick search doing the counting, and it implements none of them to the letter. The docs credit [each piece](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/) and say [what the library will never do](https://vanzelfsprekend.johannesweytjens.be/explanation/boundary/) and why.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios-dark.svg">
-  <img src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.svg" alt="The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend treatment with each emission scenario labelled at its line's end on the right">
+  <img src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.svg" alt="The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right">
 </picture>
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `distill(ax, frame=("data", "loose"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1905)` to name the record where it starts.
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "loose"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1905)` to name the record where it starts.
 
 ## Install
 
@@ -47,13 +47,13 @@ import vanzelfsprekend as vzs
 rng = np.random.default_rng(0)
 fig, ax = plt.subplots(figsize=(5, 3.5))
 ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-vzs.distill(ax)
+vzs.apply(ax)
 vzs.xlabel(ax, "time (s)")
 vzs.ylabel(ax, "voltage")
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
-`distill` installs a draw hook that keeps the treatment glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly.
+`apply` installs a draw hook that keeps the frame glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly.
 
 ## Documentation
 

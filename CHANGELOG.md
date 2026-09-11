@@ -5,14 +5,14 @@
 First release.
 
 Range frame:
-- distill(ax) turns the box around a matplotlib plot into two spines that end at the data, so each spine shows its variable's span
+- apply(ax) gives a matplotlib plot a range frame and mutes its furniture: the box becomes two spines that end at the outermost ticks, so each spine shows its variable's span; range_frame and mute are the two steps on their own
 - The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis and per end of a spine, so a record that begins in 1903 can run from a round 1900 to its last observation
 - A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view's padding; a view pinned inside the data crops the frame to the data on screen
 - How many ticks an axis carries follows its length and its labels' size, a gap in tick-label heights rather than a fixed count, so a small panel gets few and a poster's large labels thin them out; a count can still be asked for outright
 - Linear, log and date axes are handled; anything else is left untouched with a warning
-- Panels that share an axis are distilled together, so a sharey pair keeps one scale and every tick lands on a spine; a twin axes is left out with a warning
-- Gridlines come off with the rest of the furniture, so a plot drawn under a grid theme like seaborn's whitegrid distills to a clean frame, and the bottom and left tick marks stay even when the theme had switched them off
+- Panels that share an axis are framed together, so a sharey pair keeps one scale and every tick lands on a spine; a twin axes is left out with a warning
+- Gridlines come off with the rest of the furniture, so a plot drawn under a grid theme like seaborn's whitegrid comes out as a clean frame, and the bottom and left tick marks stay even when the theme had switched them off
 
 Ticks:
 - Ticks can mark meaningful values instead of round numbers: the data's minimum, quartiles and maximum, a summary of one axis such as its mean, or a feature of the pair such as a peak
@@ -36,13 +36,13 @@ Small multiples:
 
 Colour:
 - The axis furniture fades to grey so the ink goes to the data
-- Marks drawn after distill stay near-black; colour is opted into with a cycle of Paul Tol's colour-blind-safe schemes, minus each scheme's bad-data grey
+- Marks drawn after apply stay near-black; colour is opted into with a cycle of Paul Tol's colour-blind-safe schemes, minus each scheme's bad-data grey
 - The scheme colours work anywhere matplotlib takes a colour, as tol:orange and friends
 - The three greys are named by role: one for marks, one for text, one for the frame
 
 Style:
-- A "vanzelfsprekend" matplotlib style for the plot you draw yourself: lighter lines, smaller marks, quieter titles. It sets no colour or frame property, so it composes with distill and the colour cycle without overlap
+- A "vanzelfsprekend" matplotlib style for the plot you draw yourself: lighter lines, smaller marks, quieter titles. It sets no colour or frame property, so it composes with apply and the colour cycle without overlap
 
 Undo:
-- restore(ax) puts the axes back exactly as they were, together with every panel that was distilled with it
-- An ax.vzs accessor on every axes, so ax.vzs.distill(), ax.vzs.set_xlabel() and the other entry points work anywhere
+- restore(ax) puts the axes back exactly as they were, together with every panel that was framed with it
+- An ax.vzs accessor on every axes, so ax.vzs.apply(), ax.vzs.set_xlabel() and the other entry points work anywhere
