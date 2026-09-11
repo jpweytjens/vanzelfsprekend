@@ -14,7 +14,7 @@ An axis can carry a scale the locator has no round numbers for, such as `symlog`
 
 An axes itself can be the wrong shape for a plane at all. Polar and 3D axes have no pair of cartesian spines to trim, so there the whole axes is declined, not just one side of it.
 
-Both paths raise a `UserWarning` and touch nothing. Framing a polar axes, for instance:
+Declining is the point, not a shortfall. A frame forced onto an axes it does not fit (three-dimensional data flattened onto ticks built for a plane) would corrupt the reading more quietly than drawing no frame at all, so vanzelfsprekend leaves the axes untouched and says why:
 
 ```python
 fig, ax = plt.subplots(subplot_kw={"projection": "polar"})
@@ -23,15 +23,11 @@ vzs.range_frame(ax)
 # rectilinear (x-y) axes are supported, leaving it untouched
 ```
 
-leaves `ax` exactly as plain matplotlib would have drawn it, spines, ticks and all. Nothing about the plot below the warning tells you the frame passed through it.
+The axes is left exactly as plain matplotlib would have drawn it, spines, ticks and all.
 
-## The seam this closes
+## If a redraw fails
 
-That was not always the outcome. A polar axes used to reach into `range_frame`'s cartesian assumptions and crash. A 3D axes was worse: no crash, but ticks and spines built for two dimensions applied to three, corrupting the plot instead of refusing it. Both are projections now, in the same sense the frame already used for scales, and both decline the same way an unsupported scale does: a warning, an untouched axes, nothing corrupted.
-
-## A stale frame still says so
-
-The frame keeps itself glued to the data on every redraw, and redraws happen off in matplotlib's event loop where nothing is watching for exceptions. Left alone, a failure there would just stop updating the frame with no sign anything had gone wrong. Instead the first draw-time failure on a given axes raises a `UserWarning` with the traceback attached; later draws on the same axes fail quietly, because the frame is already known to be stale and repeating the warning on every redraw would only be noise.
+The frame keeps itself glued to the data on every redraw. If one of those updates ever fails, the frame would just stop tracking the data with no sign anything had gone wrong, so the first failure on an axes raises a `UserWarning` with the traceback attached and later redraws stay quiet.
 
 ## `small_multiples` wants one shared plane
 
