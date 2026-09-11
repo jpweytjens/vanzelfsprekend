@@ -15,7 +15,7 @@ from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
 from vanzelfsprekend.frame import FrameMode
 from vanzelfsprekend.group import frame_unit, share_groups
-from vanzelfsprekend.hook import clear_state, disconnect, get_state
+from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.locator import SPACING
@@ -177,8 +177,7 @@ def apply(
         nice_numbers=nice_numbers,
         weights=weights,
     )
-    state = get_state(ax)
-    for member in state["group"]["unit"] if state else (ax,):
+    for member in ensure_state(ax)["group"]["unit"]:
         mute(member)
     return ax
 

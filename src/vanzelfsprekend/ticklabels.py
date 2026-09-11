@@ -18,6 +18,8 @@ from vanzelfsprekend import placement
 from vanzelfsprekend.hook import get_state
 
 _BASE_ATTR = "_vanzelfsprekend_base"
+_DEAD_BAND = 0.05
+"""Pixels. A shift smaller than this is not worth a transform, so a label stays put."""
 
 
 def _base_transform(text: Text) -> Transform:
@@ -116,11 +118,11 @@ def _separate_side(
             # -- which must be adopted as the new base so a user's
             # explicit styling isn't silently discarded.
             entry[0] = _base_transform(text)
-            if entry[0] is text.get_transform() and abs(offset) < 0.05:
+            if entry[0] is text.get_transform() and abs(offset) < _DEAD_BAND:
                 entry[1] = 0.0
                 entry[2] = entry[0]
                 continue
-        if not wears_untracked_shift and abs(offset - entry[1]) < 0.05:
+        if not wears_untracked_shift and abs(offset - entry[1]) < _DEAD_BAND:
             continue
         inches = float(offset) / ax.figure.dpi
         shift = (inches, 0.0) if name == "x" else (0.0, inches)
