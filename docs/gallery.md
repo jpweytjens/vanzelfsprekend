@@ -31,7 +31,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![The same rising warming curve twice, a wide axes with year labels every fifty years and a narrow one with only the first and last, both with the same four temperature ticks](figures/tick_spacing.svg)
-<figcaption markdown>**Tick spacing.** The same record at 12 cm and at 2 cm under the same call. The tick count follows the axis's length in tick-label heights, so the wide axes carries four year labels and the narrow one two, and the two y axes agree because they are the same height.</figcaption>
+<figcaption markdown>**Tick spacing.** The same record at 12 cm and at 2 cm under the same call. The tick count follows the axis's length in tick-label heights, so the wide axes carries four year labels and the narrow one two, and the two y axes agree because they are the same height. The [tick spacing how-to](how-to/tick-spacing.md) has the arguments.</figcaption>
 </figure>
 
 <figure markdown>

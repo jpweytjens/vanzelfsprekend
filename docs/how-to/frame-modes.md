@@ -45,10 +45,3 @@ A spine with a `loose` end also stands off the plot by 8 points: a loose frame r
 ```python
 vzs.range_frame(ax, frame="loose", offset=(8, 2))
 ```
-
-How many ticks an axis carries follows its length. `range_frame` aims for a gap between ticks measured in tick-label heights, seven along x and four along y, so a postage-stamp panel gets two or three ticks, a full-width figure five or six, and a poster with 24 pt labels thins its ticks out without being told. `spacing` sets that gap, a number for both axes or a tuple `(x, y)`, and `n` asks for a count outright when you already know it:
-
-```python
-vzs.range_frame(ax, spacing=(10, 4))
-vzs.range_frame(ax, n=3)
-```
