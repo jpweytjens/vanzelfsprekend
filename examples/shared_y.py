@@ -1,7 +1,7 @@
-"""Two panels under `sharey="row"`, distilled from one of them.
+"""Two panels under `sharey="row"`, framed from one of them.
 
 matplotlib's `sharey` gives both panels one y view and one set of y
-ticks, and `distill` treats them as one scale group: both left spines
+ticks, and `apply` treats them as one scale group: both left spines
 span the union of the panels' data, so the left panel's ticks at 4 and
 5 sit on its spine although its own line stops at 3. The x axes are
 not shared, and the right panel runs over a different x range to show
@@ -39,8 +39,8 @@ def main() -> None:
         left.plot(X_LEFT, LEFT, label="left", color=vzs.palettes.DATA_INK)
         right.plot(X_RIGHT, RIGHT, label="right", color=vzs.palettes.DATA_INK)
 
-    vzs.distill(a)
-    a.set_title('sharey="row", distill(a)')
+    vzs.apply(a)
+    a.set_title('sharey="row", apply(a)')
 
     vzs.small_multiples((c, d), compare="row")
     c.set_title('sharey="row", small_multiples(compare="row")')

@@ -64,7 +64,7 @@ def anscombe() -> None:
     numerals = ["I", "II", "III", "IV"]
     for i, (ax, numeral) in enumerate(zip(axes.flat, numerals, strict=True), 1):
         x, y = table[f"x{i}"], table[f"y{i}"]
-        vzs.distill(ax, frame="data")
+        vzs.apply(ax, frame="data")
         ax.scatter(x, y, s=12)
         ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
         ax.yaxis.set_major_locator(vzs.QuartileLocator(y))
@@ -93,8 +93,8 @@ def grand_tours() -> None:
         speeds[table["year"].astype(int) - first] = table[column]
         speeds_of[ax] = speeds
         ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
-    # Plot before distill: the axis becomes a date axis when date data
-    # arrives, and distill detects date-ness at call time.
+    # Plot before apply: the axis becomes a date axis when date data
+    # arrives, and apply detects date-ness at call time.
     vzs.small_multiples(
         axes,
         compare="column",
@@ -112,7 +112,7 @@ def grand_tours() -> None:
 
 
 def seaborn_lineplot() -> None:
-    """Distill a plot seaborn drew: the same treatment, another producer.
+    """Apply vanzelfsprekend to a plot seaborn drew: the same calls, another producer.
 
     The four series are a constructed random walk, not a measurement.
     seaborn keeps each legend entry's text on a proxy artist separate
@@ -127,14 +127,14 @@ def seaborn_lineplot() -> None:
     walks = rng.standard_normal((365, 4)).cumsum(axis=0)
     frame = pd.DataFrame(walks, index=dates, columns=list("ABCD")).rolling(7).mean()
     # seaborn's common whitegrid, scoped so it does not leak into the
-    # other gallery figures; distill strips the grid it draws.
+    # other gallery figures; apply strips the grid it draws.
     with sns.axes_style("whitegrid"):
         fig, ax = plt.subplots(figsize=(7, 3.5))
         sns.lineplot(data=frame, palette="tab10", linewidth=2.0, ax=ax)
-    # Plot before distill: the axis becomes a date axis when date data
-    # arrives, and distill detects date-ness at call time. line_labels
+    # Plot before apply: the axis becomes a date axis when date data
+    # arrives, and apply detects date-ness at call time. line_labels
     # replaces seaborn's legend, hiding it in the process.
-    vzs.distill(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "nice"))
     vzs.line_labels(ax, labels=list("ABCD"))
     save(fig, "seaborn_lineplot")
 
@@ -145,7 +145,7 @@ def brain_body() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.set_xscale("log")
     ax.set_yscale("log")
-    vzs.distill(ax, frame="loose")
+    vzs.apply(ax, frame="loose")
     ax.scatter(table["body_kg"], table["brain_g"], s=12)
     vzs.xlabel(ax, "body mass (kg)")
     vzs.ylabel(ax, "brain mass (g)")
@@ -156,7 +156,7 @@ def waiting_times() -> None:
     """Render the bimodal Old Faithful waiting times as a histogram."""
     table = load("old_faithful.csv")
     fig, ax = plt.subplots(figsize=(5, 3.5))
-    vzs.distill(ax, frame="data")
+    vzs.apply(ax, frame="data")
     ax.hist(table["waiting"], bins=27)
     vzs.xlabel(ax, "minutes to the next eruption")
     vzs.ylabel(ax, "eruptions", labelpad=10)
@@ -169,7 +169,7 @@ def old_faithful() -> None:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     # --8<-- [start:old_faithful]
     ax.scatter(table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK)
-    vzs.distill(ax, frame="data")
+    vzs.apply(ax, frame="data")
     vzs.xlabel(ax, "eruption length (min)")
     vzs.ylabel(ax, "minutes to the next")
     # --8<-- [end:old_faithful]
@@ -182,7 +182,7 @@ def frame_modes() -> None:
     fig, axes = plt.subplots(1, 3, figsize=(9, 2.8))
     fig.subplots_adjust(wspace=0.5)
     for ax, mode in zip(axes, ("nice", "loose", "data"), strict=True):
-        vzs.distill(ax, frame=mode)
+        vzs.apply(ax, frame=mode)
         ax.plot(table["year"], table["anomaly_c"])
         ax.set_title(f'frame="{mode}"', fontsize=10, color=vzs.palettes.TEXT_INK)
     vzs.ylabel(axes[0], "warming (°C)", place="beside")
@@ -196,7 +196,7 @@ def tick_spacing() -> None:
     grid = fig.add_gridspec(1, 2, width_ratios=[5, 1], wspace=0.4)
     for spec in grid:
         ax = fig.add_subplot(spec)
-        vzs.distill(ax)
+        vzs.apply(ax)
         ax.plot(table["year"], table["anomaly_c"])
         width_cm = ax.get_position().width * fig.get_figwidth() * 2.54
         ax.set_title(
@@ -229,7 +229,7 @@ def power_profiles() -> None:
     # The sprinter's one-second power runs above the outermost tick, so a
     # 'nice' y end would leave the curve spilling over the ylabel. A 'data'
     # end takes the spine, and with it the label, up past the peak.
-    vzs.distill(ax, frame=("data", "data"))
+    vzs.apply(ax, frame=("data", "data"))
     # Four peer series, so opt into colour: the muted scheme carries the
     # distinction, and line_labels names each curve in its own colour.
     ax.set_prop_cycle(vzs.palettes.cycle("muted"))
@@ -264,7 +264,7 @@ def resonance_peak() -> None:
     random_sampled = sampled + rng.normal(0, 0.04, sampled.size)
     measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
-    vzs.distill(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     ax.plot(
         frequency, calculated, color="tol:orange", linewidth=1.2, label="calculated"
     )

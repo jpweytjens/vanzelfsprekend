@@ -5,8 +5,8 @@ and `plt.style.context("vanzelfsprekend")` reach it, the same import-time
 registration as the `tol:` colour names. It is the geometry knob of the
 provision lane: lighter lines and smaller marks, quieter titles. It stays
 out of the other two lanes -- colour is `palettes.cycle`, the frame is
-`distill` -- so it sets no colour cycle and no spine or grid property.
-Draw, `distill` and save inside the context, since matplotlib reads these
+`range_frame` -- so it sets no colour cycle and no spine or grid property.
+Draw, `apply` and save inside the context, since matplotlib reads these
 params when it renders, not when you call `plot`.
 """
 

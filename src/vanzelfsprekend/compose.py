@@ -1,4 +1,7 @@
-"""The distill composer, teardown, and the `ax.vzs` accessor registration."""
+"""The `apply` door, the group-aware `range_frame`, and teardown.
+
+`register` puts the `ax.vzs` accessor on `Axes`; `unregister` takes it off.
+"""
 
 from collections.abc import Sequence
 from typing import Any, Literal
@@ -143,7 +146,7 @@ def range_frame(
     return ax
 
 
-def distill(
+def apply(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] = SPACING,
@@ -152,7 +155,10 @@ def distill(
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> Axes:
-    """`range_frame` then `mute`, with `range_frame`'s arguments.
+    """Apply vanzelfsprekend to `ax`: `range_frame`, then `mute`.
+
+    Takes `range_frame`'s arguments and forwards them. `restore` undoes
+    both steps.
 
     The ink follows the frame: every panel framed as one unit with `ax`
     is muted too, not just `ax`.
@@ -178,9 +184,9 @@ def distill(
 
 
 def restore(ax: Axes) -> None:
-    """Remove vanzelfsprekend's treatment from `ax` and every axes treated with it.
+    """Remove vanzelfsprekend from `ax` and every axes framed with it.
 
-    Panels that were distilled together, because they share an axis or
+    Panels that were framed together, because they share an axis or
     were passed to `small_multiples`, are restored together: the shared
     scale cannot survive losing a member. Disconnects each draw hook and
     restores exactly the properties vanzelfsprekend changed (the original
@@ -371,7 +377,7 @@ class _Accessor:
     def __init__(self, ax: Axes) -> None:
         self._ax = ax
 
-    def distill(
+    def apply(
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
         spacing: float | tuple[float, float] = SPACING,
@@ -380,8 +386,8 @@ class _Accessor:
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
-        """Distill the axes to the default treatment; see `vanzelfsprekend.distill`."""
-        return distill(
+        """Apply vanzelfsprekend to the axes; see `vanzelfsprekend.apply`."""
+        return apply(
             self._ax,
             frame=frame,
             spacing=spacing,
@@ -392,7 +398,7 @@ class _Accessor:
         )
 
     def restore(self) -> None:
-        """Remove the treatment; see `vanzelfsprekend.restore`."""
+        """Put the axes back; see `vanzelfsprekend.restore`."""
         return restore(self._ax)
 
     def range_frame(
@@ -475,7 +481,7 @@ class _Accessor:
 def register() -> None:
     """Add the `vzs` accessor to `matplotlib.axes.Axes`.
 
-    Importing `vanzelfsprekend` calls this once, so `ax.vzs.distill(...)`,
+    Importing `vanzelfsprekend` calls this once, so `ax.vzs.apply(...)`,
     `ax.vzs.set_xlabel(...)` and the other entry points work straight
     away, each delegating to the module function bound to that axes.
     Calling it again is a no-op; call it to restore the accessor after an

@@ -1,13 +1,13 @@
 # Axes
 
-::: vanzelfsprekend.distill
+::: vanzelfsprekend.apply
 
 ::: vanzelfsprekend.restore
 
 ::: vanzelfsprekend.range_frame
 
-::: vanzelfsprekend.small_multiples
-
 ::: vanzelfsprekend.mute
+
+::: vanzelfsprekend.small_multiples
 
 ::: vanzelfsprekend.tick_direction

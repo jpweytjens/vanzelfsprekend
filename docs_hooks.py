@@ -64,7 +64,7 @@ DEFINITION_CLASSES = ".nf, .nc, .fm"
 # least forgiving mark on the page.
 DARK_INKS = {"--ink-data": "#d4d4d4", "--ink-text": "#c3c3c3", "--ink-line": "#a4a4a4"}
 
-# matplotlib's furniture colour and ground on an axes nobody distilled.
+# matplotlib's furniture colour and ground on an axes nobody applied vanzelfsprekend to.
 # No palette owns them: they are the defaults the "before" figures show,
 # and on a dark page they must invert or the figure disappears.
 DEFAULT_TOKENS = {"#000000": "--ink", "#ffffff": "--ground"}
@@ -279,7 +279,7 @@ def ink_tokens(svg: str) -> str:
     The three ink roles and matplotlib's own black and white become CSS
     variables so the figure follows the page's ground; every other
     colour is left as drawn. The root carries a ``fill`` as well, since
-    an axes nobody distilled leaves its text glyphs to inherit one, and
+    an axes nobody applied vanzelfsprekend to leaves its text glyphs to inherit one, and
     the SVG default is a black that vanishes on a dark page. The XML
     prolog goes, and so do the fixed ``width`` and ``height`` on the
     root, so the stylesheet sizes the figure by its ``viewBox``.

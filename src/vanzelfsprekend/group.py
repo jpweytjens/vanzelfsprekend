@@ -280,8 +280,8 @@ def _drop_twins(entry: Axes, unit: list[Axes], stacklevel: int) -> list[Axes]:
     """Drop siblings that sit in a kept member's rectangle: twins, not panels.
 
     `twinx` and `twiny` create the twin in the host's own position, the
-    public tell for a twin. The entry axes is always kept, so distilling
-    a twin directly treats the twin and leaves the host out. A dropped
+    public tell for a twin. The entry axes is always kept, so passing
+    a twin directly frames the twin and leaves the host out. A dropped
     twin still shares the host's Ticker on the shared axis, so that
     axis follows the host, invisibly since matplotlib hides it on the
     twin; the twin's own axis and spines are untouched, and its box

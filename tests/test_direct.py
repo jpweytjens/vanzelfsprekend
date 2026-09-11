@@ -531,7 +531,7 @@ def test_label_validates_arguments():
 def test_label_composes_with_axis_labels_in_both_orders():
     for first in ("axis", "direct"):
         fig, ax = resonance()
-        vzs.distill(ax, frame="loose")
+        vzs.apply(ax, frame="loose")
         if first == "axis":
             vzs.xlabel(ax, "frequency (GHz)")
             vzs.ylabel(ax, "output power (mW)", place="above")
@@ -553,10 +553,10 @@ def test_label_composes_with_axis_labels_in_both_orders():
         plt.close(fig)
 
 
-def test_label_before_distill_survives_the_treatment():
+def test_label_before_apply_survives_it():
     fig, ax = resonance()
     texts = vzs.label(ax, "measured", x=17.2, side="right")
-    vzs.distill(ax, frame="loose")
+    vzs.apply(ax, frame="loose")
     fig.canvas.draw()
     assert_clear_of_ink(ax, texts)
     plt.close(fig)
@@ -567,7 +567,7 @@ def test_above_ylabel_is_furniture_not_ink(monkeypatch):
     # it to `_ink` as excluded, whatever else is on the axes.
     fig, ax = plt.subplots()
     ax.plot([0.0, 1.0], [1.0, 1.0], label="top")
-    vzs.distill(ax, frame="loose")
+    vzs.apply(ax, frame="loose")
     above = vzs.ylabel(ax, "output power (mW)", place="above")
     seen = []
     real_ink = direct._ink
@@ -852,7 +852,7 @@ def test_restore_removes_labels_and_brings_the_legend_back():
 def test_restore_after_axis_and_direct_labels_in_both_orders():
     for first in ("axis", "direct"):
         fig, ax = resonance()
-        vzs.distill(ax)
+        vzs.apply(ax)
         calls = [
             lambda ax=ax: vzs.ylabel(ax, "output power (mW)", place="above"),
             lambda ax=ax: vzs.label(ax, "calculated", x=17.5),

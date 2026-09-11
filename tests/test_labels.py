@@ -16,7 +16,7 @@ def _date_ax():
 
 def test_date_offset_aligns_with_the_xlabel_anchor():
     fig, ax = _date_ax()
-    vzs.distill(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "nice"))
     vzs.xlabel(ax, "t")
     fig.canvas.draw()
     off = ax.xaxis.get_offset_text()
@@ -27,7 +27,7 @@ def test_date_offset_aligns_with_the_xlabel_anchor():
 
 def test_date_offset_lifts_above_an_xlabel():
     fig, ax = _date_ax()
-    vzs.distill(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "nice"))
     fig.canvas.draw()
     off = ax.xaxis.get_offset_text()
     r = fig.canvas.get_renderer()
@@ -41,7 +41,7 @@ def test_date_offset_lifts_above_an_xlabel():
 
 def test_restore_resets_the_date_offset():
     fig, ax = _date_ax()
-    vzs.distill(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "nice"))
     vzs.xlabel(ax, "t")
     fig.canvas.draw()
     off = ax.xaxis.get_offset_text()

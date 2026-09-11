@@ -75,7 +75,7 @@ def main() -> None:
     plain.legend()
     plain.set_title("matplotlib")
 
-    vzs.distill(treated, frame=("data", "loose"))
+    vzs.apply(treated, frame=("data", "loose"))
     draw_data(treated)
     vzs.line_labels(treated)
     vzs.label(treated, "observed", x=1905)

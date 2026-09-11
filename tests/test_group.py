@@ -91,7 +91,7 @@ def _ticks_on_spine(ax, name):
 
 def test_sharey_pair_puts_every_tick_on_the_spine():
     fig, a, b = _pair()
-    vzs.distill(a)
+    vzs.apply(a)
     fig.canvas.draw()
     assert _ticks_on_spine(a, "y")
     assert _ticks_on_spine(b, "y")
@@ -103,7 +103,7 @@ def test_sharey_pair_puts_every_tick_on_the_spine():
 def test_entry_axes_does_not_matter():
     def bounds(entry):
         fig, a, b = _pair()
-        vzs.distill(b if entry == "b" else a)
+        vzs.apply(b if entry == "b" else a)
         fig.canvas.draw()
         out = (
             tuple(a.yaxis.get_majorticklocs()),
@@ -121,7 +121,7 @@ def test_restore_returns_the_shared_ticker_original():
     fig, a, b = _pair()
     original = a.yaxis.get_major_locator()
     assert b.yaxis.get_major_locator() is original
-    vzs.distill(a)
+    vzs.apply(a)
     fig.canvas.draw()
     vzs.restore(a)
     assert a.yaxis.get_major_locator() is original
@@ -133,9 +133,9 @@ def test_restore_returns_the_shared_ticker_original():
 
 def test_later_call_updates_the_group():
     fig, a, b = _pair()
-    vzs.distill(a)
+    vzs.apply(a)
     fig.canvas.draw()
-    vzs.distill(b, frame="data")
+    vzs.apply(b, frame="data")
     fig.canvas.draw()
     assert a.spines["left"].get_bounds() == (0.0, 5.0)
     assert b.spines["left"].get_bounds() == (0.0, 5.0)
@@ -147,7 +147,7 @@ def test_col_row_sharing_is_one_unit_with_two_scopes():
     spans = {(0, 0): (0, 1), (0, 1): (2, 5), (1, 0): (-3, 0), (1, 1): (4, 9)}
     for (r, c), (lo, hi) in spans.items():
         axes[r, c].plot([lo, hi], [lo, hi])
-    vzs.distill(axes[0, 0])
+    vzs.apply(axes[0, 0])
     fig.canvas.draw()
     assert all(hasattr(ax, "_vanzelfsprekend_state") for ax in axes.flat)
     for c in range(2):
@@ -167,7 +167,7 @@ def test_col_row_sharing_is_one_unit_with_two_scopes():
     plt.close(fig)
 
 
-def test_one_plumbing_small_multiples_matches_shared_distill():
+def test_one_plumbing_small_multiples_matches_shared_apply():
     def draw(shared):
         fig, axes = plt.subplots(2, 2, sharex=shared, sharey=shared)
         for ax, (lo, hi) in zip(
@@ -175,7 +175,7 @@ def test_one_plumbing_small_multiples_matches_shared_distill():
         ):
             ax.plot([lo, hi], [lo, hi])
         if shared:
-            vzs.distill(axes[0, 0])
+            vzs.apply(axes[0, 0])
         else:
             vzs.small_multiples(axes.flat)
         fig.canvas.draw()
@@ -198,7 +198,7 @@ def test_loose_shared_pair_autoscales_to_the_union_span():
     fig, (a, b) = plt.subplots(1, 2, sharex=True)
     a.plot([0, 1], [0, 1])
     b.plot([10, 11], [0, 1])
-    vzs.distill(a, frame="loose", n=5)
+    vzs.apply(a, frame="loose", n=5)
     fig.canvas.draw()
     assert a.get_xlim() == (0.0, 12.5)
     assert b.get_xlim() == (0.0, 12.5)
@@ -226,7 +226,7 @@ def test_empty_sibling_follows_the_date_kind():
     a.plot(days, range(5))
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
-        vzs.distill(b)  # the empty one installs last
+        vzs.apply(b)  # the empty one installs last
         fig.canvas.draw()
     assert not [w for w in record if "vanzelfsprekend" in str(w.message)]
     assert isinstance(a.xaxis.get_major_locator(), GroupLocator)
@@ -241,7 +241,7 @@ def test_shared_axis_that_mixes_dates_and_floats_warns_and_is_left_alone():
     a.plot(days, range(5))
     b.plot(range(5), range(5))
     with pytest.warns(UserWarning, match="shared x-axis") as record:
-        vzs.distill(a)
+        vzs.apply(a)
     assert len(record) == 1
     assert [w.filename for w in record] == [__file__]
     fig.canvas.draw()
@@ -260,7 +260,7 @@ def test_twin_is_left_out_of_the_group_with_a_warning():
     shared_x_original = host.xaxis.get_major_locator()
     assert twin.xaxis.get_major_locator() is shared_x_original
     with pytest.warns(UserWarning, match="twin") as record:
-        vzs.distill(host)
+        vzs.apply(host)
     assert len(record) == 1
     assert [w.filename for w in record] == [__file__]
     fig.canvas.draw()
@@ -287,7 +287,7 @@ def test_unsupported_scale_warns_at_the_call_site_for_every_entry_point():
     with warnings.catch_warnings(record=True) as record:
         warnings.simplefilter("always")
         vzs.range_frame(axes[0])
-        vzs.distill(axes[1])
+        vzs.apply(axes[1])
         vzs.small_multiples([axes[2]])
     assert len(record) == 3
     assert [w.filename for w in record] == [__file__] * 3
@@ -313,7 +313,7 @@ def test_loose_unequal_pair_view_matches_its_ticks():
     )
     axes[0].plot([0.3, 4.1], [0, 1])
     axes[1].plot([6.2, 9.7], [0, 1])
-    vzs.distill(axes[0], frame="loose")
+    vzs.apply(axes[0], frame="loose")
     fig.canvas.draw()
     for ax in axes:
         ticks = ax.xaxis.get_majorticklocs()
@@ -323,7 +323,7 @@ def test_loose_unequal_pair_view_matches_its_ticks():
 
 def test_cropped_shared_view_trims_the_union_to_the_visible_data():
     fig, a, b = _pair()
-    vzs.distill(a, frame="data")
+    vzs.apply(a, frame="data")
     a.set_ylim(1.5, 10.0)
     fig.canvas.draw()
     assert a.spines["left"].get_bounds() == (1.5, 5.0)
@@ -343,9 +343,9 @@ def test_range_frame_alone_groups_shared_axes():
     plt.close(fig)
 
 
-def test_distill_mutes_every_member_of_the_unit():
+def test_apply_mutes_every_member_of_the_unit():
     fig, a, b = _pair()
-    vzs.distill(a)
+    vzs.apply(a)
     fig.canvas.draw()
     for ax in (a, b):
         assert ax.spines["left"].get_edgecolor() == to_rgba(vzs.palettes.LINE_INK)

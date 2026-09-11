@@ -66,7 +66,7 @@ def test_unregistered_tol_name_still_raises():
 
 def test_axes_cycle_reads_the_cycle_on_this_matplotlib():
     # Pins the private attribute the reader relies on: a matplotlib
-    # release that moves it fails here, not silently in distill.
+    # release that moves it fails here, not silently in mute.
     fig, ax = plt.subplots()
     assert palettes.axes_cycle(ax) == list(mpl.rcParams["axes.prop_cycle"])
     ax.plot([0, 1], [0, 1])  # a consumed entry does not change the cycle

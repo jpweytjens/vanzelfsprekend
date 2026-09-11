@@ -18,7 +18,7 @@ ANSCOMBE_II_Y = np.array(
 def quartile_axes() -> tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.scatter(np.arange(ANSCOMBE_II_Y.size), ANSCOMBE_II_Y, s=12)
-    vzs.distill(ax, frame="data")
+    vzs.apply(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(ANSCOMBE_II_Y))
     ax.yaxis.set_major_formatter("{x:.1f}")
     return fig, ax
@@ -66,20 +66,20 @@ def test_well_spaced_labels_stay_put():
 
     fig, ax = plt.subplots()
     ax.plot([0, 1, 2], [0, 1, 4])
-    vzs.distill(ax)
+    vzs.apply(ax)
 
-    # The reference gets the identical treatment but never runs the
+    # The reference gets the identical calls but never runs the
     # applier, so any pixel the applier moves a well-spaced label shows
     # up as a measured difference -- not as the applier's own bookkeeping
     # claiming zero.
     fig_ref, ax_ref = plt.subplots()
     ax_ref.plot([0, 1, 2], [0, 1, 4])
-    vzs.distill(ax_ref)
+    vzs.apply(ax_ref)
     get_state(ax_ref)["appliers"].pop("tick_labels")
 
-    treated = boxes(ax)
-    assert treated
-    assert treated == boxes(ax_ref)
+    applied = boxes(ax)
+    assert applied
+    assert applied == boxes(ax_ref)
     plt.close(fig)
     plt.close(fig_ref)
 
@@ -115,7 +115,7 @@ def test_shrink_then_grow_does_not_compound_displacement():
 def _build_axes() -> tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.plot([0, 1], [0, 10])
-    vzs.distill(ax, frame="data")
+    vzs.apply(ax, frame="data")
     ax.yaxis.set_major_formatter("{x:.2f}")
     return fig, ax
 
@@ -153,7 +153,7 @@ def test_tick_params_after_draw_reseparates_labels():
 
 def test_grow_past_prior_max_does_not_inherit_shift():
     fig, ax = _build_axes()
-    # `distill` already materialized a tick pool for the default locator;
+    # `apply` already materialized a tick pool for the default locator;
     # growing past it is what forces matplotlib to mint brand-new ticks.
     pool_size = len(ax.yaxis.majorTicks)
 
@@ -185,7 +185,7 @@ def test_grow_past_prior_max_does_not_inherit_shift():
     plt.close(fig_ref)
 
 
-@pytest.mark.parametrize("entry", [vzs.distill, vzs.range_frame])
+@pytest.mark.parametrize("entry", [vzs.apply, vzs.range_frame])
 def test_colliding_x_labels_separate_horizontally(entry):
     # Data spans [5.0, 6.0] so the two FixedLocator ticks (0.05 apart) sit
     # close together on the data axis: wide 4-decimal labels there
@@ -247,7 +247,7 @@ def test_beside_ylabel_follows_displaced_top_label():
     values = np.array([0.0, 9.4, 9.5, 9.6, 10.0])
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.scatter(np.arange(values.size), values, s=12)
-    vzs.distill(ax, frame="data")
+    vzs.apply(ax, frame="data")
     ax.yaxis.set_major_locator(vzs.QuartileLocator(values))
     ax.yaxis.set_major_formatter("{x:.1f}")
     vzs.ylabel(ax, "value", place="beside")

@@ -834,8 +834,8 @@ def visible_interval(
 
     A view wider than the data leaves it unchanged, so an autoscaled
     axis reads its data as before. A view pinned inside the data crops
-    it to the data on screen, which is what a `set_xlim` after the
-    treatment means. A view lying entirely outside the data yields a
+    it to the data on screen, which is what a `set_xlim` after
+    `range_frame` means. A view lying entirely outside the data yields a
     non-finite pair, the same reading as no data at all. `interval`
     stands in for the data interval when the caller has already
     adjusted it, as a log axis does for a nonpositive minimum.

@@ -262,7 +262,7 @@ def test_labels_anchor_correctly_on_date_axes():
 def test_restore_removes_line_labels():
     fig, ax = plt.subplots()
     converging_lines(ax)
-    vzs.distill(ax)
+    vzs.apply(ax)
     vzs.line_labels(ax)
     vzs.line_labels(ax, at="start")
     fig.canvas.draw()
@@ -369,7 +369,7 @@ def test_restore_reinstates_the_legend():
     fig, ax = plt.subplots()
     converging_lines(ax)
     ax.legend()
-    vzs.distill(ax)
+    vzs.apply(ax)
     vzs.line_labels(ax)
     vzs.restore(ax)
     assert ax.get_legend().get_visible()

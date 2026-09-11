@@ -81,13 +81,13 @@ def main() -> None:
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
     # --8<-- [start:step2]
-    vzs.distill(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     # --8<-- [end:step2]
     ax.legend()
     save(fig, 2)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.distill(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     # --8<-- [start:step3]
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
@@ -96,7 +96,7 @@ def main() -> None:
     save(fig, 3)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.distill(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
     # --8<-- [start:step4]
@@ -117,7 +117,7 @@ def main() -> None:
     save(fig, 4)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.distill(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, -6))
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
     ax.xaxis.set_major_locator(

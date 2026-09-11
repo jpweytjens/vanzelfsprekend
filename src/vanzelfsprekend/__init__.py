@@ -6,7 +6,7 @@ from vanzelfsprekend import (
     palettes,
     style,  # noqa: F401  (import registers the style)
 )
-from vanzelfsprekend.compose import distill, range_frame, register, restore, unregister
+from vanzelfsprekend.compose import apply, range_frame, register, restore, unregister
 from vanzelfsprekend.direct import label
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
@@ -35,7 +35,7 @@ __all__ = [
     "QuartileLocator",
     "SummaryLocator",
     "TalbotLocator",
-    "distill",
+    "apply",
     "label",
     "line_labels",
     "mute",

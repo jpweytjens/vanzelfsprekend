@@ -152,7 +152,7 @@ def axes_cycle(ax: Axes) -> list[dict]:
     matplotlib offers no getter for it; the cycle lives on a private
     attribute of the axes' line factory, `_cycler_items` up to 3.10
     and inside `_prop_cycle` from 3.11. A test pins both, so a release
-    that moves it fails there rather than silently in `distill`.
+    that moves it fails there rather than silently in `mute`.
     """
     factory = ax._get_lines  # ty: ignore[unresolved-attribute]
     holder = getattr(factory, "_prop_cycle", factory)

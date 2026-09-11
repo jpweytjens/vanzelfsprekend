@@ -1,4 +1,4 @@
-"""Small multiples: one treatment for a grid of axes on a shared scale."""
+"""Small multiples: one range frame for a grid of axes on a shared scale."""
 
 from collections.abc import Iterable, Sequence
 from typing import Literal
@@ -73,9 +73,9 @@ def small_multiples(
     xlabel: str | Sequence[str] | None = None,
     ylabel: str | Sequence[str] | None = None,
 ) -> tuple[Axes, ...]:
-    """Treat a grid of axes as small multiples on a common scale.
+    """Frame a grid of axes as small multiples on a common scale.
 
-    Distills every panel, scopes scales by `compare`
+    Frames and mutes every panel, scopes scales by `compare`
     (`'figure'` shares both axes across all panels; `'row'` scopes y
     per row; `'column'` scopes x per column), and keeps axis furniture
     only on the left column and bottom row. Works on grids from
@@ -97,7 +97,7 @@ def small_multiples(
     compare : {'figure', 'row', 'column'}
         The smallest set of panels that are fully comparable.
     frame, spacing, n, offset, nice_numbers, weights
-        Forwarded to `distill` per panel; see `vanzelfsprekend.distill`.
+        Forwarded to `range_frame` per panel; see `vanzelfsprekend.range_frame`.
     xlabel, ylabel : str or sequence of str, optional
         Axis labels. A sequence is accepted only for an axis `compare`
         scopes to rows or columns, one entry per row or column.
