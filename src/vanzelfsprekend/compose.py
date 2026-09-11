@@ -36,13 +36,15 @@ def _frame(
 
     A unit already framed is framed again with the new settings; a new
     one is read from matplotlib's share groupers. Both public callers
-    sit one frame above this one, so the warning depths below point at
-    their caller.
+    sit one frame above this one, so the depths below count out to their
+    caller from each warn site: four frames for the warnings
+    `share_groups` raises, five for those `install_frame` raises one
+    call deeper.
     """
     state = get_state(ax)
     recorded = state["group"]["groups"] if state and "group" in state else None
     frame_unit(
-        share_groups(ax, stacklevel=5) if recorded is None else recorded,
+        share_groups(ax, stacklevel=4) if recorded is None else recorded,
         frame=frame,
         spacing=spacing,
         n=n,
@@ -152,6 +154,9 @@ def distill(
 ) -> Axes:
     """`range_frame` then `mute`, with `range_frame`'s arguments.
 
+    The ink follows the frame: every panel framed as one unit with `ax`
+    is muted too, not just `ax`.
+
     Returns
     -------
     matplotlib.axes.Axes
@@ -166,7 +171,9 @@ def distill(
         nice_numbers=nice_numbers,
         weights=weights,
     )
-    mute(ax)
+    state = get_state(ax)
+    for member in state["group"]["unit"] if state else (ax,):
+        mute(member)
     return ax
 
 

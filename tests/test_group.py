@@ -4,6 +4,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.colors import to_rgba
 from matplotlib.dates import ConciseDateFormatter
 
 import vanzelfsprekend as vzs
@@ -242,6 +243,7 @@ def test_shared_axis_that_mixes_dates_and_floats_warns_and_is_left_alone():
     with pytest.warns(UserWarning, match="shared x-axis") as record:
         vzs.distill(a)
     assert len(record) == 1
+    assert [w.filename for w in record] == [__file__]
     fig.canvas.draw()
     assert a.spines["bottom"].get_bounds() is None
     assert b.spines["bottom"].get_bounds() is None
@@ -260,6 +262,7 @@ def test_twin_is_left_out_of_the_group_with_a_warning():
     with pytest.warns(UserWarning, match="twin") as record:
         vzs.distill(host)
     assert len(record) == 1
+    assert [w.filename for w in record] == [__file__]
     fig.canvas.draw()
     # The twin owns its y axis and its spines; those are untouched.
     assert twin.yaxis.get_major_locator() is twin_y_locator
@@ -337,4 +340,13 @@ def test_range_frame_alone_groups_shared_axes():
     assert _ticks_on_spine(b, "y")
     assert a.spines["left"].get_bounds() == b.spines["left"].get_bounds()
     assert hasattr(b, "_vanzelfsprekend_state")
+    plt.close(fig)
+
+
+def test_distill_mutes_every_member_of_the_unit():
+    fig, a, b = _pair()
+    vzs.distill(a)
+    fig.canvas.draw()
+    for ax in (a, b):
+        assert ax.spines["left"].get_edgecolor() == to_rgba(vzs.palettes.LINE_INK)
     plt.close(fig)

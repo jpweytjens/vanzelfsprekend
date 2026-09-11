@@ -153,7 +153,7 @@ def frame_unit(
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
-    stacklevel: int = 4,
+    stacklevel: int,
 ) -> None:
     """Frame every key of `members` as one unit.
 
@@ -305,9 +305,7 @@ def _drop_twins(entry: Axes, unit: list[Axes], stacklevel: int) -> list[Axes]:
     return kept
 
 
-def share_groups(
-    ax: Axes, stacklevel: int = 3
-) -> dict[Axes, dict[str, list[Axes] | None]]:
+def share_groups(ax: Axes, stacklevel: int) -> dict[Axes, dict[str, list[Axes] | None]]:
     """Form `ax`'s scale groups from matplotlib's sharing.
 
     The unit is the connected component over the x and y share groupers
