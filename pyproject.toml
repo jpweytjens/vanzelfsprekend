@@ -37,6 +37,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/jpweytjens/vanzelfsprekend"
+Documentation = "https://vanzelfsprekend.johannesweytjens.be/"
 Repository = "https://github.com/jpweytjens/vanzelfsprekend"
 Issues = "https://github.com/jpweytjens/vanzelfsprekend/issues"
 Changelog = "https://github.com/jpweytjens/vanzelfsprekend/blob/main/CHANGELOG.md"
