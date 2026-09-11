@@ -24,7 +24,7 @@ Colour is yours. The neutral ink cycle keeps a lone series near-black, and Paul 
 
 Labels are named, not found. `line_labels` reads the `label=` you gave each line, and `label` places the text you name beside the artist you name, anchored where you say. Naming many points in one cloud, the problem [adjustText](https://github.com/Phlya/adjustText) and [textalloc](https://github.com/ckjellson/textalloc) solve, is a different task, and vanzelfsprekend does not attempt it. What it does instead is exact: a label slid the minimum distance to clear the other ink, solved rather than iterated.
 
-How a number reads is yours as well. A tick at five million can be written `5000000`, `5M`, or `5` under a label that says millions, and each is a further claim about what the reader is comparing. Matplotlib's formatter makes that claim already, and vanzelfsprekend does not overrule it.[^legibility]
+How a number reads is yours as well. A tick at five million can be written `5000000`, `5M`, or `5` under a label that says millions, and each is a further claim about what the reader is comparing. Matplotlib's formatter makes that claim already, and vanzelfsprekend does not overrule it; the [tick formats how-to](../how-to/tick-formats.md) has its two rules and how to take the decision back.[^legibility]
 
 The same rule is why bar charts and categorical axes are not handled yet. Positioning bars is drawing, and drawing is on the other side of the line; a categorical frame that respects the rule is work for a later release.
 
