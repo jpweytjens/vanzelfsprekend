@@ -13,7 +13,7 @@ The data are yours: you draw them, and you know which line is the message. Every
 
 Install it with `uv add vanzelfsprekend` or `pip install vanzelfsprekend`.
 
-Where to go next: the [tutorial](tutorial/old-faithful.md) builds three figures from scratch. The [how-to](how-to/frame-modes.md) pages answer one question each. The [gallery](gallery.md) shows what the range frame does to real data. The [reference](reference/axes.md) is generated from the docstrings, and the [explanation](explanation/ideas.md) pages say where the ideas come from.
+Where to go next: the [tutorial](tutorial/old-faithful.md) builds four figures from scratch. The [how-to](how-to/frame-modes.md) pages answer one question each. The [gallery](gallery.md) shows what the range frame does to real data. The [reference](reference/axes.md) is generated from the docstrings, and the [explanation](explanation/ideas.md) pages say where the ideas come from.
 
 The data are yours and [stay as you drew them](explanation/boundary.md). The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
 

@@ -54,6 +54,7 @@ nav:
   - Home: index.md
   - Tutorial:
       - Old Faithful: tutorial/old-faithful.md
+      - The warming scenarios: tutorial/warming-scenarios.md
       - The resonance peak: tutorial/resonance-peak.md
       - The grand tours: tutorial/grand-tours.md
   - How-to:

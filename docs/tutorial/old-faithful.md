@@ -59,4 +59,4 @@ All four calls, as the gallery script draws it:
 
 Save it with `fig.savefig("old_faithful.svg", bbox_inches="tight")`. The frame is installed as a draw hook, so it follows any later change to the limits or the ticks, and `vzs.restore(ax)` undoes it exactly.
 
-Next: [the resonance peak](resonance-peak.md), where the ticks stop being round numbers and start being the argument.
+Next: [the warming scenarios](warming-scenarios.md), where the legend goes and each line is named where it ends.
