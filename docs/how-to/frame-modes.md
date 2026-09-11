@@ -5,8 +5,8 @@
 `apply(ax)` ends the spines at the outermost ticks, and so does `range_frame(ax)`, the framing step on its own; the two take the same arguments, so everything below holds for either. Two other modes end the spines at the data itself, or at round numbers bracketing it:
 
 ```python
-vzs.range_frame(ax, frame="data")
-vzs.range_frame(ax, frame="loose")
+ax.vzs.range_frame(frame="data")
+ax.vzs.range_frame(frame="loose")
 ```
 
 The ticks and the spine are two separate decisions. The ticks are the locator's, nice numbers inside the data whatever the mode. Where the spine ends is the frame mode's, and only `nice` and `loose` make it follow the ticks:
@@ -29,13 +29,13 @@ Both columns read the data, never the view's padding: matplotlib's autoscale lea
 A tuple sets the modes per spine, `(x, y)`, so a measurement record can end exactly where the data does while the value axis keeps nice bounds:
 
 ```python
-vzs.range_frame(ax, frame=("data", "loose"))
+ax.vzs.range_frame(frame=("data", "loose"))
 ```
 
 Either entry can itself be a pair `(low, high)` that sets the two ends of one spine apart. A record that begins in 1903 reads better from a round 1900 yet should still stop at its last observation, which is one spine with a loose start and a data end:
 
 ```python
-vzs.range_frame(ax, frame=(("loose", "data"), "nice"))
+ax.vzs.range_frame(frame=(("loose", "data"), "nice"))
 ```
 
 The ticks follow the ends: the loose end takes the round number just beyond the data while the other end keeps its ticks inside, so that record gets ticks at 1900, 1950 and 2000 under a spine from 1900 to 2023.
@@ -43,5 +43,5 @@ The ticks follow the ends: the loose end takes the round number just beyond the 
 A spine with a `loose` end also stands off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so (`data` and `nice` sit flush). The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart; a `None` in either slot keeps that spine's mode default:
 
 ```python
-vzs.range_frame(ax, frame="loose", offset=(8, 2))
+ax.vzs.range_frame(frame="loose", offset=(8, 2))
 ```

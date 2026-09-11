@@ -12,8 +12,8 @@ How many ticks an axis carries is not fixed. `apply` and `range_frame` aim for a
 `spacing` sets that gap, a number for both axes or a tuple `(x, y)`, and `n` asks for a count outright when you already know it:
 
 ```python
-vzs.range_frame(ax, spacing=(10, 4))
-vzs.range_frame(ax, n=3)
+ax.vzs.range_frame(spacing=(10, 4))
+ax.vzs.range_frame(n=3)
 ```
 
 Both go to the default locator, so a locator you set afterwards replaces them along with the rest of it; the [locators how-to](locators.md) has that order. The count is read when the ticks are computed, not when you call `apply`, which is why the figure above needs no per-panel argument; [the frame follows the axes](../explanation/hook.md) says how.

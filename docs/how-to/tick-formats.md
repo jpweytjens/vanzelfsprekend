@@ -24,16 +24,16 @@ So make the claim yourself, and make it where the reader arrives: at the end of 
 
 ```python
 ax.plot(year, index)
-vzs.apply(ax)
-vzs.ylabel(ax, "index (deviation from 100)")
+ax.vzs.apply()
+ax.vzs.set_ylabel("index (deviation from 100)")
 ```
 
 When the level is the story, divide the data and name the unit:
 
 ```python
 ax.plot(year, revenue / 1e6)
-vzs.apply(ax)
-vzs.ylabel(ax, "revenue (millions)")
+ax.vzs.apply()
+ax.vzs.set_ylabel("revenue (millions)")
 ```
 
 The ticks read `2` through `8` either way. The difference is that "millions" now sits at the end of the axis in your own words, where `xlabel` and `ylabel` put it, instead of `1e6` in a corner that the range frame does not place: the corner text is matplotlib's, so on a numeric axis it can land far from a spine that stops at the data.
