@@ -57,7 +57,7 @@ fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 
 ## Documentation
 
-The documentation is at [vanzelfsprekend.johannesweytjens.be](https://vanzelfsprekend.johannesweytjens.be/): a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds three figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/frame-modes/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and [where the ideas come from](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/).
+The documentation is at [vanzelfsprekend.johannesweytjens.be](https://vanzelfsprekend.johannesweytjens.be/): a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds four figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/frame-modes/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and [where the ideas come from](https://vanzelfsprekend.johannesweytjens.be/explanation/ideas/).
 
 The data are yours and stay as you drew them. The frame, the ticks and the labels are vanzelfsprekend's, and their one job is to show the data.
 
