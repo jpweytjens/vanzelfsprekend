@@ -1,4 +1,5 @@
 import datetime as dt
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -283,8 +284,13 @@ def test_polar_axes_warns_and_is_left_untouched():
     fig = plt.figure()
     ax = fig.add_subplot(projection="polar")
     ax.plot([0, 1, 2, 3], [1, 2, 3, 4])
-    with pytest.warns(UserWarning, match="polar"):
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("always")
         range_frame(ax)
+    assert any("polar" in str(w.message) for w in record)
+    assert (
+        record[0].filename == __file__
+    )  # warning blames the caller, not library internals
     # Untouched: no vzs state, no crash on draw/restore.
     assert not hasattr(ax, "_vanzelfsprekend_state")
     fig.canvas.draw()

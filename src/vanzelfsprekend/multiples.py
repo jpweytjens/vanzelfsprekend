@@ -109,7 +109,7 @@ def small_multiples(
     """
     panels = tuple(axes)
     framable = tuple(
-        ax for ax in panels if not skip_if_not_rectilinear(ax, stacklevel=2)
+        ax for ax in panels if not skip_if_not_rectilinear(ax, stacklevel=4)
     )
     if not framable:
         return ()

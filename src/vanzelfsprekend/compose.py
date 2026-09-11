@@ -134,7 +134,7 @@ def range_frame(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    if skip_if_not_rectilinear(ax, stacklevel=2):
+    if skip_if_not_rectilinear(ax, stacklevel=3):
         return ax
     _frame(
         ax,
@@ -170,7 +170,7 @@ def apply(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    if skip_if_not_rectilinear(ax, stacklevel=2):
+    if skip_if_not_rectilinear(ax, stacklevel=3):
         return ax
     _frame(
         ax,
