@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.colors import to_rgba
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend.group import GroupLocator
@@ -195,6 +196,29 @@ def test_inner_panels_carry_no_furniture():
     assert not axes[0, 0].spines["bottom"].get_visible()
     assert axes[1, 1].spines["bottom"].get_visible()
     assert not axes[1, 1].spines["left"].get_visible()
+    plt.close(fig)
+
+
+def test_small_multiples_mutes_every_panel():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    for ax in axes.flat:
+        assert ax.spines["left"].get_edgecolor() == to_rgba(vzs.palettes.LINE_INK)
+    (line,) = axes[0, 0].plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba(vzs.palettes.DATA_INK)
+    plt.close(fig)
+
+
+def test_small_multiples_mutes_before_hiding_inner_furniture():
+    fig, axes = _grid22()
+    vzs.small_multiples(axes.flat)
+    fig.canvas.draw()
+    inner = axes[0, 1]  # top-right: neither left column nor bottom row
+    for tick in inner.xaxis.get_major_ticks():
+        assert tick.tick1line.get_visible() is False
+    for tick in inner.yaxis.get_major_ticks():
+        assert tick.tick1line.get_visible() is False
     plt.close(fig)
 
 

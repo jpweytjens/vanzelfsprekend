@@ -1,9 +1,10 @@
-"""Render the README figure: the same plot with matplotlib defaults and treated.
+"""Render the README figure: the same plot with matplotlib defaults and vanzelfsprekend.
 
 Observed global mean temperature (HadCRUT5, rebaselined to 1850-1900)
 scatters up to the present; the five assessed IPCC AR6 scenarios fan out
 from it to 2100. Both panels run the same plotting calls; the right one
-adds the treatment, with `line_labels` in place of the legend.
+adds `apply`, `line_labels` in place of the legend, and `label` on the
+observed record.
 """
 
 import io

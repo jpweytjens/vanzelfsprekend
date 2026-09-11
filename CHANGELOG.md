@@ -5,7 +5,8 @@
 First release.
 
 Range frame:
-- apply(ax) gives a matplotlib plot a range frame and mutes its furniture: the box becomes two spines that end at the outermost ticks, so each spine shows its variable's span; range_frame and mute are the two steps on their own
+- apply(ax) gives a matplotlib plot a range frame and mutes its furniture: the box becomes two spines that end at the outermost ticks, and the ink goes to the data
+- range_frame and mute are the two steps on their own; restore undoes both
 - The spines end at the outermost ticks, at the exact data extremes, or at round numbers just beyond the data, settable per axis and per end of a spine, so a record that begins in 1903 can run from a round 1900 to its last observation
 - A spine can stand off the plot by a chosen distance, so a loose frame reads as a reference scale rather than the data's own edge
 - Ticks land on round numbers strictly inside the data range, computed from the data rather than the view's padding; a view pinned inside the data crops the frame to the data on screen

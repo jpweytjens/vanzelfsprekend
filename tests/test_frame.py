@@ -394,7 +394,7 @@ def test_offset_tuple_wrong_length_raises(scatter_ax):
         range_frame(scatter_ax, offset=(1, 2, 3))
 
 
-def test_one_hook_shared_by_frame_and_labels():
+def test_one_hook_shared_by_every_applier():
     import vanzelfsprekend as vzs
 
     fig, ax = plt.subplots()
