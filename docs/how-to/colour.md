@@ -12,7 +12,7 @@ A single colour comes from Paul Tol's schemes through matplotlib's named-colour 
 
 <!-- palette-sheet -->
 
-What you reach for depends on what you bring. Hand a finished plot to `apply` and it trims the frame and greys the furniture, touching nothing you drew — that is the only step. When you draw the plot yourself and want it restrained from the start, three orthogonal knobs shape the ink: `apply` (`range_frame` and `mute` on their own) owns the frame, `cycle` owns the colour, and the `vanzelfsprekend` style owns the marks' geometry — lighter lines, smaller marks, quieter titles. Each answers one question and none overlaps, so you compose the ones you want and `apply` is always the last word:
+What you reach for depends on what you bring. Hand a finished plot to `apply` and it trims the frame and greys the furniture, touching nothing you drew — that is the only step. When you draw the plot yourself and want it restrained from the start, three orthogonal knobs shape the ink: `apply`, or `range_frame` and `mute` as separate steps, owns the frame and its ink, `cycle` owns the colour, and the `vanzelfsprekend` style owns the marks' geometry — lighter lines, smaller marks, quieter titles. Each answers one question and none overlaps, so you compose the ones you want and `apply` is always the last word:
 
 ```python
 with plt.style.context("vanzelfsprekend"):  # geometry knob

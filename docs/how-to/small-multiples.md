@@ -2,7 +2,7 @@
 
 *Treat a grid of panels as one figure: shared scales, furniture only where it is read.*
 
-Panels tied with `sharex` or `sharey` are framed together, whichever one you pass: each shared axis is ticked and framed from the union of the panels' data, so the two stay comparable and every tick lands on a spine. `restore` undoes them together. A twin from `twinx` or `twiny` is left out with a warning and keeps its box. For a grid, `small_multiples` is the range frame and the muted furniture for a whole grid, with the inner furniture hidden.
+Panels tied with `sharex` or `sharey` are framed together, whichever one you pass: each shared axis is ticked and framed from the union of the panels' data, so the two stay comparable and every tick lands on a spine. `restore` undoes them together. A twin from `twinx` or `twiny` is left out with a warning and keeps its box. For a grid, `small_multiples` does both steps on every panel and hides the inner furniture.
 
 Monthly CO₂ at four NOAA stations from the Arctic to the South Pole in a 2x2 grid under `small_multiples`, sharing one scale. Every panel keeps its plotted line, but only the left column and bottom row keep spines, ticks and axis labels, so the seasonal swing shrinking toward the pole reads on equal terms without repeating furniture. The panels are 7 cm wide, which the default spacing reads as two year labels; a tighter x spacing asks for a label every two years instead:
 
