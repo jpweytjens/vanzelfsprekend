@@ -13,7 +13,7 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
-from vanzelfsprekend.frame import FrameMode
+from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import frame_unit, share_groups
 from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
@@ -134,6 +134,8 @@ def range_frame(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    if skip_if_not_rectilinear(ax, stacklevel=2):
+        return ax
     _frame(
         ax,
         frame=frame,
@@ -168,6 +170,8 @@ def apply(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    if skip_if_not_rectilinear(ax, stacklevel=2):
+        return ax
     _frame(
         ax,
         frame=frame,

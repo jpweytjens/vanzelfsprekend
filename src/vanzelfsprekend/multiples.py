@@ -7,7 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.gridspec import GridSpecBase, SubplotSpec
 
 from vanzelfsprekend import labels as labels_
-from vanzelfsprekend.frame import FrameMode
+from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import axis_kinds, frame_unit
 from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
 from vanzelfsprekend.locator import SPACING
@@ -108,15 +108,20 @@ def small_multiples(
         The panels, in the order given.
     """
     panels = tuple(axes)
+    framable = tuple(
+        ax for ax in panels if not skip_if_not_rectilinear(ax, stacklevel=2)
+    )
+    if not framable:
+        return ()
     if compare not in ("figure", "row", "column"):
         raise ValueError(
             f"compare must be 'figure', 'row' or 'column', got {compare!r}"
         )
-    specs = _subplotspecs_or_raise(panels)
+    specs = _subplotspecs_or_raise(framable)
     _check_spanning(specs, compare)
-    groups = _scale_groups(panels, specs, compare)
+    groups = _scale_groups(framable, specs, compare)
     _check_group_agreement(groups)
-    _check_sharing(panels, groups)
+    _check_sharing(framable, groups)
     gridspec = specs[0].get_gridspec()
     _check_label(ylabel, "ylabel", scoped=compare == "row", count=gridspec.nrows)
     _check_label(xlabel, "xlabel", scoped=compare == "column", count=gridspec.ncols)
@@ -130,7 +135,7 @@ def small_multiples(
     frame_unit(
         {
             ax: {name: groups[name][key_of[(name, id(ax))]] for name in ("x", "y")}
-            for ax in panels
+            for ax in framable
         },
         frame=frame,
         spacing=spacing,
@@ -140,10 +145,10 @@ def small_multiples(
         weights=weights,
         stacklevel=4,
     )
-    for ax in panels:
+    for ax in framable:
         mute(ax)
-    grid = {"panels": panels, "torn_down": False}
-    for ax, ss in zip(panels, specs, strict=True):
+    grid = {"panels": framable, "torn_down": False}
+    for ax, ss in zip(framable, specs, strict=True):
         state = ensure_state(ax)
         state["multiples"] = {"grid": grid, "snapshot": {"furniture": {}}}
         carries = _carries_furniture(ss, gridspec)
@@ -164,14 +169,14 @@ def small_multiples(
                 which="both",
                 **{side: False, f"label{side}": False},
             )
-    prior_labels = _place_labels(panels, specs, gridspec, xlabel, ylabel)
-    for ax in panels:
+    prior_labels = _place_labels(framable, specs, gridspec, xlabel, ylabel)
+    for ax in framable:
         ensure_state(ax)["multiples"]["snapshot"]["labels"] = prior_labels.get(
             id(ax), {}
         )
-    for ax in panels:
+    for ax in framable:
         run_appliers(ax)
-    return panels
+    return framable
 
 
 def _teardown_grid(grid: dict) -> None:

@@ -279,6 +279,30 @@ def test_categorical_axis_warns_and_is_skipped():
     plt.close(fig)
 
 
+def test_polar_axes_warns_and_is_left_untouched():
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="polar")
+    ax.plot([0, 1, 2, 3], [1, 2, 3, 4])
+    with pytest.warns(UserWarning, match="polar"):
+        range_frame(ax)
+    # Untouched: no vzs state, no crash on draw/restore.
+    assert not hasattr(ax, "_vanzelfsprekend_state")
+    fig.canvas.draw()
+    vzs.restore(ax)  # clean no-op
+    plt.close(fig)
+
+
+def test_threed_axes_warns_and_is_left_untouched():
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    ax.plot([0, 1, 2], [0, 1, 4], [0, 1, 8])
+    with pytest.warns(UserWarning, match="3d"):
+        range_frame(ax)
+    assert not hasattr(ax, "_vanzelfsprekend_state")
+    fig.canvas.draw()
+    plt.close(fig)
+
+
 @pytest.fixture
 def date_plot_ax():
     fig, ax = plt.subplots()

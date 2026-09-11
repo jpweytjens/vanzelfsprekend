@@ -143,6 +143,25 @@ def axis_kind(axis: Axis) -> AxisKind:
     return AxisKind(scale, is_date, supported)
 
 
+def skip_if_not_rectilinear(ax: Axes, stacklevel: int) -> bool:
+    """Warn and return True if `ax` is a projection the frame cannot fit.
+
+    The range frame assumes the four cartesian spines and an x-y data
+    plane; only matplotlib's `'rectilinear'` projection has them. Polar,
+    3D and the rest are declined here and left untouched, the same
+    contract as an unsupported scale. `stacklevel` points the warning at
+    the public caller.
+    """
+    if ax.name == "rectilinear":
+        return False
+    warnings.warn(
+        f"vanzelfsprekend: axes uses the {ax.name!r} projection; only "
+        "rectilinear (x-y) axes are supported, leaving it untouched",
+        stacklevel=stacklevel,
+    )
+    return True
+
+
 def install_frame(
     ax: Axes,
     mode: dict[str, tuple[str, str]],
