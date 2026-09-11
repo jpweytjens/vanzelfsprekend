@@ -68,7 +68,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 This index is written by hand until the gallery declares its own features; then it is generated from those declarations.
 
-- **One call, `apply`**: every figure; on its own in Old Faithful.
+- **One call, `apply`**: every figure.
 - **`frame="data"`**: Old Faithful, waiting times, Anscombe, the grand tours.
 - **`frame="loose"` and the spine offset**: brain and body mass, the resonance peak, one panel of the frame modes.
 - **Ticks that follow the axis's length**: tick spacing.
