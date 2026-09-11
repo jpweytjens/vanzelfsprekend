@@ -1,4 +1,4 @@
-# The frame follows the axes
+# Why call order doesn't matter
 
 *`apply` is a standing arrangement, not an edit. The library re-reads the axes at every draw, which is why the order of your calls stops mattering, why the ticks follow the figure's size, and why `restore` is exact.*
 
@@ -14,7 +14,7 @@ The tick count is the locator's doing, not the hook's, and it works for the same
 
 ## Restore is exact
 
-A hook that only reads and writes furniture can be undone. `apply` records the state of everything it is about to touch, the spines, ticks, tick labels, axis labels and colour cycle, and `restore` puts the record back and disconnects the hook. Nothing else was touched, so nothing else needs putting back, and the marks were never touched at all. [Whose decision is which](decisions.md) is the rule that keeps that true.
+A hook that only reads and writes furniture can be undone. `apply` records the state of everything it is about to touch, the spines, ticks, tick labels, axis labels and colour cycle, and `restore` puts the record back and disconnects the hook. Nothing else was touched, so nothing else needs putting back, and the marks were never touched at all. [Frame and meaning](decisions.md) is the rule that keeps that true.
 
 ## The cost
 

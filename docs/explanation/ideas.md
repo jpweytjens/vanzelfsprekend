@@ -1,4 +1,4 @@
-# Where the ideas come from
+# Sources and influences
 
 *The library compresses a few small books' worth of advice, and each piece has a name.*
 

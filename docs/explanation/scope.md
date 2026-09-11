@@ -1,4 +1,4 @@
-# Where the frame stops
+# Scope and limits
 
 *The range frame assumes an x-y plane: two cartesian spines, each on a scale it can put round numbers on. Where that assumption fails, vanzelfsprekend declines rather than guesses, and says so once.*
 

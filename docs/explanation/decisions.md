@@ -1,8 +1,8 @@
-# Whose decision is which
+# Frame and meaning
 
 *The marks are yours. The frame and the ticks are the library's, and they are two decisions, not one. Anything that says what a number means stays yours.*
 
-[What the axis answers](axis.md) says what the furniture is for. This page says who decides each part of it, because that answer is what makes the library safe to apply to a finished figure.
+[Answers and comparisons](axis.md) says what the furniture is for. This page says who decides each part of it, because that answer is what makes the library safe to apply to a finished figure.
 
 ## The marks are yours
 

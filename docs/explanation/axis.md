@@ -1,4 +1,4 @@
-# What the axis answers
+# Answers and comparisons
 
 *A graph answers a question about the data. In one graph the ticks can carry the answer, and across graphs a shared scale carries the comparison.*
 
@@ -18,6 +18,6 @@ Comparing comparisons takes panels, and panels compare only on a shared scale. `
 
 ## The seam
 
-None of this the library can choose. It cannot know whether the peak or the band matters, whether the slowest winner is a story, whether three races are to be compared or read alone. The locator, the anchor and the scope are yours. The library's part is that once you have chosen, the frame, the ticks and the labels make the answer legible without a caption. [Whose decision is which](decisions.md) draws that line in full.
+None of this the library can choose. It cannot know whether the peak or the band matters, whether the slowest winner is a story, whether three races are to be compared or read alone. The locator, the anchor and the scope are yours. The library's part is that once you have chosen, the frame, the ticks and the labels make the answer legible without a caption. [Frame and meaning](decisions.md) draws that line in full.
 
 [^doumont]: Jean-luc Doumont, *Trees, Maps, and Theorems: Effective Communication for Rational Minds* (Brussels: Principiae, 2009), on graphs, where the list of questions opens the discussion.
