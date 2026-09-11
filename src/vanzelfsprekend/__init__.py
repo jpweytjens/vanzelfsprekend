@@ -6,9 +6,8 @@ from vanzelfsprekend import (
     palettes,
     style,  # noqa: F401  (import registers the style)
 )
-from vanzelfsprekend.compose import distill, register, restore, unregister
+from vanzelfsprekend.compose import distill, range_frame, register, restore, unregister
 from vanzelfsprekend.direct import label
-from vanzelfsprekend.frame import range_frame
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.locator import (

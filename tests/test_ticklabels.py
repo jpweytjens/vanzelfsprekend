@@ -2,6 +2,7 @@ from itertools import pairwise
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from matplotlib.ticker import FixedLocator
 
 import vanzelfsprekend as vzs
@@ -184,13 +185,14 @@ def test_grow_past_prior_max_does_not_inherit_shift():
     plt.close(fig_ref)
 
 
-def test_colliding_x_labels_separate_horizontally():
+@pytest.mark.parametrize("entry", [vzs.distill, vzs.range_frame])
+def test_colliding_x_labels_separate_horizontally(entry):
     # Data spans [5.0, 6.0] so the two FixedLocator ticks (0.05 apart) sit
     # close together on the data axis: wide 4-decimal labels there
     # genuinely overlap without the applier.
     fig, ax = plt.subplots(figsize=(4, 3))
     ax.plot([5.0, 6.0], [0, 1])
-    vzs.distill(ax, frame="data")
+    entry(ax, frame="data")
     ax.xaxis.set_major_locator(FixedLocator([5.0, 5.05]))
     ax.xaxis.set_major_formatter("{x:.4f}")
     fig.canvas.draw()

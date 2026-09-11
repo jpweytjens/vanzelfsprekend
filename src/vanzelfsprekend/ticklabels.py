@@ -100,7 +100,11 @@ def _separate_side(
         # an inherited sibling shift at first sighting, or a transform
         # matplotlib rebuilt underneath us (e.g. `tick_params(pad=...)`
         # via `Tick._apply_params`) -- is an untracked shift that must be
-        # reconciled regardless of whether the offset itself changed.
+        # reconciled regardless of whether the offset itself changed. A
+        # rebuild that carries no shift of its own, on a label that wants
+        # none either, is adopted as the new base outright rather than
+        # reinstalled as a zero shift, so ink that only rebuilds a
+        # transform (`mute`) leaves the label's pixels exactly as they were.
         wears_untracked_shift = text.get_transform() is not entry[2]
         if wears_untracked_shift:
             # Re-derive the base rather than trusting the one captured at
@@ -112,6 +116,10 @@ def _separate_side(
             # -- which must be adopted as the new base so a user's
             # explicit styling isn't silently discarded.
             entry[0] = _base_transform(text)
+            if entry[0] is text.get_transform() and abs(offset) < 0.05:
+                entry[1] = 0.0
+                entry[2] = entry[0]
+                continue
         if not wears_untracked_shift and abs(offset - entry[1]) < 0.05:
             continue
         inches = float(offset) / ax.figure.dpi

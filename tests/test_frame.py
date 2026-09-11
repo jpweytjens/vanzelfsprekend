@@ -404,7 +404,13 @@ def test_one_hook_shared_by_frame_and_labels():
     vzs.xlabel(ax, "t")
     vzs.ylabel(ax, "v")
     state = ax._vanzelfsprekend_state
-    assert set(state["appliers"]) == {"frame", "labels"}
+    assert set(state["appliers"]) == {
+        "frame",
+        "labels",
+        "tick_labels",
+        "date_offset",
+        "limits",
+    }
     assert isinstance(state["cid"], int)
     plt.close(fig)
 

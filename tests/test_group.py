@@ -327,3 +327,14 @@ def test_cropped_shared_view_trims_the_union_to_the_visible_data():
     assert b.spines["left"].get_bounds() == (1.5, 5.0)
     assert a.yaxis.get_majorticklocs().min() >= 1.5
     plt.close(fig)
+
+
+def test_range_frame_alone_groups_shared_axes():
+    fig, a, b = _pair()
+    vzs.range_frame(a)
+    fig.canvas.draw()
+    assert _ticks_on_spine(a, "y")
+    assert _ticks_on_spine(b, "y")
+    assert a.spines["left"].get_bounds() == b.spines["left"].get_bounds()
+    assert hasattr(b, "_vanzelfsprekend_state")
+    plt.close(fig)

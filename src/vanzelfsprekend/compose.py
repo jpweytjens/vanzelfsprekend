@@ -10,8 +10,8 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
-from vanzelfsprekend.frame import FrameMode, range_frame
-from vanzelfsprekend.group import share_groups, treat
+from vanzelfsprekend.frame import FrameMode
+from vanzelfsprekend.group import frame_unit, share_groups
 from vanzelfsprekend.hook import clear_state, disconnect, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
@@ -20,6 +20,125 @@ from vanzelfsprekend.multiples import _teardown_grid
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
 from vanzelfsprekend.ticks import _rc, tick_direction
+
+
+def _frame(
+    ax: Axes,
+    *,
+    frame: FrameMode | tuple[FrameMode, FrameMode],
+    spacing: float | tuple[float, float],
+    n: int | None,
+    offset: float | tuple[float | None, float | None] | None,
+    nice_numbers: Sequence[float] | None,
+    weights: dict[str, float] | None,
+) -> None:
+    """Frame `ax` and the panels that share its scales as one unit.
+
+    A unit already framed is framed again with the new settings; a new
+    one is read from matplotlib's share groupers. Both public callers
+    sit one frame above this one, so the warning depths below point at
+    their caller.
+    """
+    state = get_state(ax)
+    recorded = state["group"]["groups"] if state and "group" in state else None
+    frame_unit(
+        share_groups(ax, stacklevel=5) if recorded is None else recorded,
+        frame=frame,
+        spacing=spacing,
+        n=n,
+        offset=offset,
+        nice_numbers=nice_numbers,
+        weights=weights,
+        stacklevel=5,
+    )
+
+
+def range_frame(
+    ax: Axes,
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+    spacing: float | tuple[float, float] = SPACING,
+    n: int | None = None,
+    offset: float | tuple[float | None, float | None] | None = None,
+    nice_numbers: Sequence[float] | None = None,
+    weights: dict[str, float] | None = None,
+) -> Axes:
+    """Turn `ax` into a range frame.
+
+    Installs `TalbotLocator` (linear axes), `LogBreaksLocator` (log
+    axes), or `DateBreaksLocator` plus a `ConciseDateFormatter` (date
+    axes) on both axes, hiding minor ticks on log axes, hides the top
+    and right spines, and keeps the left and bottom spine bounds glued
+    to the data on every draw. Where tick labels crowd, they drift
+    apart just enough to stay readable, keeping their order; the tick
+    marks stay exactly at their values. The ink is left alone: the
+    spines keep their colour and the axes its colour cycle, which is
+    what `mute` changes. Safe to call repeatedly; later calls update
+    the settings instead of stacking hooks.
+
+    Panels that share an axis (`sharex`, `sharey`, `ax.sharex(other)`)
+    are framed together, whichever one you pass: each shared axis is
+    ticked and framed from the union of the panels' data, so the panels
+    stay comparable and every tick lands on a spine. `restore` undoes
+    them together, and a later `range_frame` on any of them updates
+    them all. A twin made with `twinx` or `twiny` is left out with a
+    warning and keeps its box. `small_multiples` does the same for a
+    grid, with the inner furniture hidden.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        The axes to modify, in place.
+    frame : {'nice', 'data', 'loose'} or tuple of two of them
+        `'nice'` ends the spines at the outermost ticks, `'data'` at
+        the exact data minimum and maximum. `'loose'` ends the spines
+        at nice numbers bounding the data (frame may extend up to one
+        tick step beyond the data). A tuple `(x_mode, y_mode)` sets
+        the bottom and left spine independently, and either entry may
+        itself be a pair `(low, high)` setting that spine's two ends
+        on their own: `(("loose", "data"), "nice")` runs the bottom
+        spine from the tick below the data to the last observation.
+        All three read the data cut back to the view, so a view pinned
+        inside the data with `set_xlim` crops the frame to the data on
+        screen, and a view wider than the data changes nothing.
+    spacing : float or tuple of two floats
+        The gap to aim for between ticks, in tick-label heights, so the
+        number of ticks follows the axis's length and the labels' size:
+        a small panel gets few, a poster's large labels thin them out.
+        A tuple `(x_spacing, y_spacing)` sets the axes independently;
+        the default `(7, 4)` is 70 pt and 40 pt at 10 pt labels, about
+        2.5 cm and 1.4 cm, since an x label is three to five heights
+        wide along its axis and a y label one. Halving the spacing
+        doubles the ticks.
+    n : int, optional
+        The number of ticks to aim for per axis, overriding `spacing`.
+    offset : float or tuple of (float or None), optional
+        Outward displacement of the left and bottom spines, in points.
+        A single number moves both spines; a tuple `(x_offset,
+        y_offset)` moves the bottom and left spine independently, like
+        `frame`. `None` (the whole argument, or either tuple element)
+        resolves to 8 for a spine with a `'loose'` end and 0 otherwise.
+    nice_numbers : sequence of float, optional
+        Advanced pass-through to `TalbotLocator`; see there for details.
+        Applies to linear axes only; ignored on log and date axes.
+    weights : dict, optional
+        Advanced pass-through to `TalbotLocator`; see there for details.
+        Applies to linear axes only; ignored on log and date axes.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The same axes, for chaining.
+    """
+    _frame(
+        ax,
+        frame=frame,
+        spacing=spacing,
+        n=n,
+        offset=offset,
+        nice_numbers=nice_numbers,
+        weights=weights,
+    )
+    return ax
 
 
 def distill(
@@ -31,35 +150,15 @@ def distill(
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
 ) -> Axes:
-    """Distill `ax` to vanzelfsprekend's default treatment.
-
-    The top-level entry point: the range frame with its defaults, the
-    axis furniture greyed, and the neutral ink cycle installed, so a
-    mark drawn after `distill` is `DATA_INK` until you opt into colour
-    with a scheme cycle of your own (`palettes.cycle`). A custom
-    per-axes cycle set before `distill` is restored to the rc default,
-    not recovered. Where tick labels crowd, they drift apart just enough
-    to stay readable, keeping their order; the tick marks stay exactly
-    at their values. Takes the same arguments as `range_frame`.
-
-    Panels that share an axis (`sharex`, `sharey`, `ax.sharex(other)`)
-    are distilled together, whichever one you pass: each shared axis is
-    ticked and framed from the union of the panels' data, so the panels
-    stay comparable and every tick lands on a spine. `restore` undoes
-    them together, and a later `distill` on any of them updates them
-    all. A twin made with `twinx` or `twiny` is left out with a warning
-    and keeps its box. `small_multiples` is the same treatment for a
-    grid, with the inner furniture hidden.
+    """`range_frame` then `mute`, with `range_frame`'s arguments.
 
     Returns
     -------
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
-    state = get_state(ax)
-    recorded = state["group"]["groups"] if state and "group" in state else None
-    treat(
-        share_groups(ax) if recorded is None else recorded,
+    _frame(
+        ax,
         frame=frame,
         spacing=spacing,
         n=n,
@@ -67,6 +166,7 @@ def distill(
         nice_numbers=nice_numbers,
         weights=weights,
     )
+    mute(ax)
     return ax
 
 
@@ -297,7 +397,7 @@ class _Accessor:
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
     ) -> Axes:
-        """Draw the range frame with every knob; see `vanzelfsprekend.range_frame`."""
+        """Turn the axes into a range frame; see `vanzelfsprekend.range_frame`."""
         return range_frame(
             self._ax,
             frame=frame,

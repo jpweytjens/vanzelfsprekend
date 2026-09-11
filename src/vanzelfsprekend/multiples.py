@@ -8,9 +8,10 @@ from matplotlib.gridspec import GridSpecBase, SubplotSpec
 
 from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.frame import FrameMode
-from vanzelfsprekend.group import axis_kinds, treat
+from vanzelfsprekend.group import axis_kinds, frame_unit
 from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
 from vanzelfsprekend.locator import SPACING
+from vanzelfsprekend.mute import mute
 
 
 def _carries_furniture(ss: SubplotSpec, gridspec: GridSpecBase) -> dict[str, bool]:
@@ -126,7 +127,7 @@ def small_multiples(
         for key, members in per_key.items()
         for ax in members
     }
-    treat(
+    frame_unit(
         {
             ax: {name: groups[name][key_of[(name, id(ax))]] for name in ("x", "y")}
             for ax in panels
@@ -139,6 +140,8 @@ def small_multiples(
         weights=weights,
         stacklevel=4,
     )
+    for ax in panels:
+        mute(ax)
     grid = {"panels": panels, "torn_down": False}
     for ax, ss in zip(panels, specs, strict=True):
         state = ensure_state(ax)

@@ -395,3 +395,14 @@ def test_restore_returns_the_cycle_set_before_distill():
     (line,) = ax.plot([0, 1], [0, 1])
     assert to_rgba(line.get_color()) == to_rgba("#4477AA")
     plt.close(fig)
+
+
+def test_range_frame_alone_leaves_ink_and_cycle_alone():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1, 2], [0, 1, 4])
+    vzs.range_frame(ax)
+    fig.canvas.draw()
+    (line,) = ax.plot([0, 1], [0, 1])
+    assert to_rgba(line.get_color()) == to_rgba("#ff7f0e")  # matplotlib's default C1
+    assert ax.spines["left"].get_edgecolor() == to_rgba("black")
+    plt.close(fig)

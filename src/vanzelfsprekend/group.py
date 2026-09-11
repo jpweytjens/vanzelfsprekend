@@ -1,6 +1,6 @@
 """Scale groups: the panels whose data union feeds one axis's ticks and spine.
 
-`distill` reads a group from matplotlib's share groupers; `small_multiples`
+`range_frame` reads a group from matplotlib's share groupers; `small_multiples`
 reads one from the gridspec and `compare`. Both hand their groups to this
 module, which unions the members' data so the frame and the locators span
 it. Nothing here is exported; `__init__` leaves this module alone.
@@ -33,7 +33,6 @@ from vanzelfsprekend.locator import (
     TalbotLocator,
     visible_interval,
 )
-from vanzelfsprekend.mute import mute
 from vanzelfsprekend.ticklabels import _apply_tick_labels
 
 BreaksLocator = TalbotLocator | LogBreaksLocator | DateBreaksLocator
@@ -145,7 +144,7 @@ def axis_kinds(members: Sequence[Axes], name: str) -> set[AxisKind]:
     return {axis_kind(axis) for axis in (with_data or axes)}
 
 
-def treat(
+def frame_unit(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
@@ -156,25 +155,25 @@ def treat(
     weights: dict[str, float] | None = None,
     stacklevel: int = 4,
 ) -> None:
-    """Distill every key of `members` as one unit.
+    """Frame every key of `members` as one unit.
 
     `members[ax][name]` lists the axes whose data feed `ax`'s `name`
     axis (`ax` itself for a lone axes), or is `None` to leave that axis
     alone. An axis whose group is one axes is pinned to nothing: it
-    takes the frame's own path, exactly as `range_frame` would.
+    takes the frame's own path and pins nothing.
     `state["group"]["members"]` records the pinned axes and nothing
     else, and is the one authority every later step reads. Snapshots
     are taken for every member before any member is modified, so axes
     that share a `Ticker` record their true original once; then each
     member gets the frame for its group's kind, its pinned locators
     wrapped to read the group's data union, the spine ended at that
-    union, the muted furniture, the neutral ink cycle, and the
-    appliers. Once every member has its locator installed, each member
-    with a pinned axis is autoscaled once so a loose frame lands edge
-    to edge. `stacklevel` is the caller's depth for the warnings
-    `install_frame` raises. The keys together are what `restore` undoes,
-    and `members` itself is recorded so a later `distill` on any key
-    treats the same unit again with the new settings.
+    union, and the appliers. Once every member has its locator
+    installed, each member with a pinned axis is autoscaled once so a
+    loose frame lands edge to edge. `stacklevel` is the caller's depth
+    for the warnings `install_frame` raises. The keys together are what
+    `restore` undoes, and `members` itself is recorded so a later
+    `range_frame` on any key frames the same unit again with the new
+    settings.
     """
     mode, offsets = parse_frame_args(frame, offset)
     spacings = parse_spacing(spacing)
@@ -243,7 +242,6 @@ def treat(
             inner = cast("BreaksLocator", axis.get_major_locator())
             axis.set_major_locator(GroupLocator(inner, group, name))
             intervals[name] = partial(data_union, group, name)
-        mute(ax)
         state.setdefault("tick_labels", {"applied": {"x": {}, "y": {}}})
         add_applier(ax, "tick_labels", _apply_tick_labels)
         add_applier(ax, "date_offset", _apply_date_offset)
@@ -278,7 +276,7 @@ def _apply_limits(ax: Axes) -> bool:
     return changed
 
 
-def _drop_twins(entry: Axes, unit: list[Axes]) -> list[Axes]:
+def _drop_twins(entry: Axes, unit: list[Axes], stacklevel: int) -> list[Axes]:
     """Drop siblings that sit in a kept member's rectangle: twins, not panels.
 
     `twinx` and `twiny` create the twin in the host's own position, the
@@ -302,12 +300,14 @@ def _drop_twins(entry: Axes, unit: list[Axes]) -> list[Axes]:
         warnings.warn(
             "vanzelfsprekend: the axes has a twin (twinx/twiny); twins are "
             "not supported, the twin keeps its frame",
-            stacklevel=4,
+            stacklevel=stacklevel,
         )
     return kept
 
 
-def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
+def share_groups(
+    ax: Axes, stacklevel: int = 3
+) -> dict[Axes, dict[str, list[Axes] | None]]:
     """Form `ax`'s scale groups from matplotlib's sharing.
 
     The unit is the connected component over the x and y share groupers
@@ -319,8 +319,11 @@ def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
     When the data-holding members of one group disagree on kind (dates
     beside plain numbers), a common scale means nothing: warn once and
     set that axis to `None` for every member, which leaves it untouched.
+
+    `stacklevel` is the caller's depth for the warnings raised here and
+    in `_drop_twins`.
     """
-    unit = _drop_twins(ax, _component(ax))
+    unit = _drop_twins(ax, _component(ax), stacklevel + 1)
     groups: dict[Axes, dict[str, list[Axes] | None]] = {}
     for member in unit:
         per_axis: dict[str, list[Axes] | None] = {}
@@ -345,7 +348,7 @@ def share_groups(ax: Axes) -> dict[Axes, dict[str, list[Axes] | None]]:
                         f"vanzelfsprekend: shared {name}-axis mixes panels of "
                         "different scale or date-ness; a common scale means "
                         "nothing, leaving it untouched",
-                        stacklevel=3,
+                        stacklevel=stacklevel,
                     )
             if not agree[key]:
                 per_axis[name] = None

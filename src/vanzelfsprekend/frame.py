@@ -10,9 +10,8 @@ from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.ticker import NullLocator
 
-from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
+from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
-    SPACING,
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
@@ -23,91 +22,6 @@ FrameMode = str | tuple[str, str]
 """One axis's frame mode: a mode for both ends, or a `(low, high)` pair."""
 
 MODES = ("nice", "data", "loose")
-
-
-def range_frame(
-    ax: Axes,
-    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
-    n: int | None = None,
-    offset: float | tuple[float | None, float | None] | None = None,
-    nice_numbers: Sequence[float] | None = None,
-    weights: dict[str, float] | None = None,
-) -> Axes:
-    """Turn `ax` into a range frame.
-
-    Installs `TalbotLocator` (linear axes), `LogBreaksLocator` (log
-    axes), or `DateBreaksLocator` plus a `ConciseDateFormatter` (date
-    axes) on both axes, hiding minor ticks on log axes, hides the top
-    and right spines, and keeps the left and bottom spine bounds glued
-    to the data on every draw. Safe to call repeatedly; later calls
-    update the settings instead of stacking hooks.
-
-    Parameters
-    ----------
-    ax : matplotlib.axes.Axes
-        The axes to modify, in place.
-    frame : {'nice', 'data', 'loose'} or tuple of two of them
-        `'nice'` ends the spines at the outermost ticks, `'data'` at
-        the exact data minimum and maximum. `'loose'` ends the spines
-        at nice numbers bounding the data (frame may extend up to one
-        tick step beyond the data). A tuple `(x_mode, y_mode)` sets
-        the bottom and left spine independently, and either entry may
-        itself be a pair `(low, high)` setting that spine's two ends
-        on their own: `(("loose", "data"), "nice")` runs the bottom
-        spine from the tick below the data to the last observation.
-        All three read the data cut back to the view, so a view pinned
-        inside the data with `set_xlim` crops the frame to the data on
-        screen, and a view wider than the data changes nothing.
-    spacing : float or tuple of two floats
-        The gap to aim for between ticks, in tick-label heights, so the
-        number of ticks follows the axis's length and the labels' size:
-        a small panel gets few, a poster's large labels thin them out.
-        A tuple `(x_spacing, y_spacing)` sets the axes independently;
-        the default `(7, 4)` is 70 pt and 40 pt at 10 pt labels, about
-        2.5 cm and 1.4 cm, since an x label is three to five heights
-        wide along its axis and a y label one. Halving the spacing
-        doubles the ticks.
-    n : int, optional
-        The number of ticks to aim for per axis, overriding `spacing`.
-    offset : float or tuple of (float or None), optional
-        Outward displacement of the left and bottom spines, in points.
-        A single number moves both spines; a tuple `(x_offset,
-        y_offset)` moves the bottom and left spine independently, like
-        `frame`. `None` (the whole argument, or either tuple element)
-        resolves to 8 for a spine with a `'loose'` end and 0 otherwise.
-    nice_numbers : sequence of float, optional
-        Advanced pass-through to `TalbotLocator`; see there for details.
-        Applies to linear axes only; ignored on log and date axes.
-    weights : dict, optional
-        Advanced pass-through to `TalbotLocator`; see there for details.
-        Applies to linear axes only; ignored on log and date axes.
-
-    Returns
-    -------
-    matplotlib.axes.Axes
-        The same axes, for chaining.
-    """
-    mode, offsets = parse_frame_args(frame, offset)
-    spacings = parse_spacing(spacing)
-    snapshot_frame(ax)
-    kinds: dict[str, AxisKind | None] = {
-        "x": axis_kind(ax.xaxis),
-        "y": axis_kind(ax.yaxis),
-    }
-    install_frame(
-        ax,
-        mode,
-        offsets,
-        n=n,
-        spacing=spacings,
-        nice_numbers=nice_numbers,
-        weights=weights,
-        kinds=kinds,
-        stacklevel=3,
-    )
-    run_appliers(ax)
-    return ax
 
 
 def parse_frame_args(
@@ -172,7 +86,7 @@ def snapshot_frame(ax: Axes) -> None:
     Taken before any locator is replaced. On axes that share a `Ticker`
     the snapshot of every sibling must exist before any sibling installs,
     or a later sibling records the first one's locator as its original;
-    `group.treat` orders the calls that way.
+    `group.frame_unit` orders the calls that way.
     """
     state = ensure_state(ax)
     if "frame" in state:
