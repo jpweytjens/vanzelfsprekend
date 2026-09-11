@@ -68,21 +68,18 @@ def draw_data(ax: plt.Axes) -> None:
 
 def main() -> None:
     """Render the figure into `docs/`, once for each ground."""
-    fig, (plain, treated) = plt.subplots(1, 2, figsize=(10, 3.5))
-    fig.subplots_adjust(wspace=0.8)
+    fig, (plain, treated) = plt.subplots(1, 2, figsize=(8, 3.5))
+    fig.subplots_adjust(wspace=0.4)
 
     draw_data(plain)
     plain.set_ylabel("warming (°C vs 1850–1900)")
     plain.legend()
-    plain.set_title("matplotlib")
 
-    vzs.apply(treated, frame=("data", "loose"))
+    vzs.apply(treated, frame=("data", "nice"))
     draw_data(treated)
     vzs.line_labels(treated)
-    vzs.label(treated, "observed", x=1905)
-    # the panel carries a title, so the label keeps to the side
-    vzs.ylabel(treated, "warming\n(°C vs 1850–1900)", place="beside")
-    treated.set_title("vanzelfsprekend")
+    vzs.label(treated, "observed", x=1930)
+    vzs.ylabel(treated, "warming (°C vs 1850–1900)")
 
     # a committed SVG: fixed element ids and no date, so a rerun is a no-op
     plt.rcParams["svg.hashsalt"] = "vanzelfsprekend"

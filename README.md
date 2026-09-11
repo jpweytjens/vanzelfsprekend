@@ -24,7 +24,7 @@ The library is in the tradition of [Tufte](https://www.edwardtufte.com/book/the-
   <img src="https://raw.githubusercontent.com/jpweytjens/vanzelfsprekend/main/docs/warming_scenarios.svg" alt="The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right">
 </picture>
 
-[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "loose"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1905)` to name the record where it starts.
+[The script behind the figure](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py) produces both axes from the same plotting calls, drawing the observed warming record and the five assessed IPCC scenarios; the right one adds `apply(ax, frame=("data", "nice"))`, `line_labels(ax)` in place of the legend, and `label(ax, "observed", x=1930)` to name the record where it starts.
 
 ## Install
 

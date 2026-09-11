@@ -81,4 +81,4 @@ This index is written by hand until the gallery declares its own features; then 
 - **A label beside a point or curve**: the resonance peak.
 - **Colour opted in**: power profiles (a scheme cycle), the grand tours (the jerseys).
 - **Small multiples**: the grand tours (`compare="column"`), the CO₂ grid.
-- **Axis labels raised and flush**: every figure with labels; `place="beside"` where a title takes the space above the frame, in the frame modes and the warming scenarios.
+- **Axis labels raised and flush**: every figure with labels; `place="beside"` where a title takes the space above the frame, in the frame modes.
