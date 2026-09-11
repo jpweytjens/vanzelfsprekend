@@ -16,4 +16,4 @@ vzs.range_frame(ax, spacing=(10, 4))
 vzs.range_frame(ax, n=3)
 ```
 
-Both go to the default locator, so a locator you set afterwards replaces them along with the rest of it; the [locators how-to](locators.md) has that order. The count is read when the ticks are computed, not when you call `apply`, which is why the figure above needs no per-panel argument.
+Both go to the default locator, so a locator you set afterwards replaces them along with the rest of it; the [locators how-to](locators.md) has that order. The count is read when the ticks are computed, not when you call `apply`, which is why the figure above needs no per-panel argument; [the frame follows the axes](../explanation/hook.md) says how.

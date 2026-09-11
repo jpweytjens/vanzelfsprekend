@@ -77,6 +77,7 @@ nav:
       - Registration: reference/registration.md
   - Explanation:
       - What the axis answers: explanation/axis.md
+      - The frame follows the axes: explanation/hook.md
       - Whose decision is which: explanation/decisions.md
       - Where the ideas come from: explanation/ideas.md
   - Changelog: changelog.md
