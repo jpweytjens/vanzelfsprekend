@@ -178,7 +178,7 @@ def kepler() -> None:
         )
         vzs.apply(ax, frame="loose")
         vzs.xlabel(ax, "semi-major axis (AU)")
-        vzs.ylabel(ax, "orbital period (yr)")
+        vzs.ylabel(ax, "orbital period (year)")
         vzs.label(ax, "Earth")
         save(fig, "kepler")
 
