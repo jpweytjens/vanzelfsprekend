@@ -61,4 +61,4 @@ All four calls, as the gallery script draws it:
 
 Save it with `fig.savefig("old_faithful.svg", bbox_inches="tight")`. The frame is installed as a draw hook, so it follows any later change to the limits or the ticks, and `vzs.restore(ax)` undoes it exactly.
 
-Next: [the warming scenarios](warming-scenarios.md), where the legend goes and each line is named where it ends.
+Next: [Kepler's third law](kepler.md), where one planet is picked out of eight and named in its colour.
