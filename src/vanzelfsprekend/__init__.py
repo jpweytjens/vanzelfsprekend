@@ -20,6 +20,7 @@ from vanzelfsprekend.locator import (
 )
 from vanzelfsprekend.multiples import small_multiples
 from vanzelfsprekend.mute import mute
+from vanzelfsprekend.secondary import secondary_frame
 from vanzelfsprekend.ticks import tick_direction
 
 __version__ = version("vanzelfsprekend")
@@ -43,6 +44,7 @@ __all__ = [
     "range_frame",
     "register",
     "restore",
+    "secondary_frame",
     "small_multiples",
     "tick_direction",
     "unregister",
