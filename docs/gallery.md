@@ -25,8 +25,8 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 </figure>
 
 <figure markdown>
-![Log-log scatter of mammal brain mass against body mass, offset spines ending at powers of ten bounding the data](figures/brain_body.svg)
-<figcaption markdown>**Brain and body mass.** Sixty-two mammals on log-log axes under `frame="loose"`: offset spines end at the powers of ten bounding the data, the minor ticks disappear, and the allometry reads as the straight line it is.</figcaption>
+![Log-log scatter of orbital period against semi-major axis for the eight planets, the points on a straight line of slope three-halves, Earth alone in blue and named, offset spines ending at powers of ten](figures/kepler.svg)
+<figcaption markdown>**Kepler's third law.** The eight planets on log-log axes under `frame="loose"`: offset spines end at the powers of ten bounding the data, and period against semi-major axis falls on the line _T_ = _a_<sup>3/2</sup>. Earth alone takes a colour, and `label` names it in that same colour — one mark picked out of the grey.</figcaption>
 </figure>
 
 <figure markdown>
@@ -70,15 +70,16 @@ This index is written by hand until the gallery declares its own features; then 
 
 - **One call, `apply`**: every figure drawn on one axes; the two grids go through `small_multiples`, which does the same per panel.
 - **`frame="data"`**: Old Faithful, waiting times, Anscombe, the grand tours.
-- **`frame="loose"` and the spine offset**: brain and body mass, the resonance peak, one panel of the frame modes.
+- **`frame="loose"` and the spine offset**: Kepler's third law, the resonance peak, one panel of the frame modes.
 - **Ticks that follow the axis's length**: tick spacing.
 - **Ticks as a summary of the data**: Anscombe (`QuartileLocator`), the grand tours (`SummaryLocator`).
 - **Ticks as annotation**: the resonance peak (`FeatureLocator`, `SummaryLocator`).
-- **Log axes**: brain and body mass, power profiles.
+- **Log axes**: Kepler's third law, power profiles.
 - **Date axes**: the seaborn line plot, the grand tours.
 - **A figure another library drew**: the seaborn line plot.
 - **Line labels in place of a legend**: the warming scenarios, the seaborn line plot, power profiles, the grand tours.
-- **A label beside a point or curve**: the resonance peak.
-- **Colour opted in**: power profiles (a scheme cycle), the grand tours (the jerseys).
+- **A label beside a point or curve**: the resonance peak, Kepler's third law.
+- **Colour opted in**: power profiles (a scheme cycle), the grand tours (the jerseys), Kepler's third law (one mark).
+- **A single mark picked out**: Kepler's third law — Earth in a Tol blue against the grey, named in that colour.
 - **Small multiples**: the grand tours (`compare="column"`), the CO₂ grid.
 - **Axis labels raised and flush**: every figure with labels; `place="beside"` where a title takes the space above the frame, in the frame modes.
