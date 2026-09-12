@@ -616,3 +616,62 @@ def test_date_count_follows_axis_length():
     wide = _drawn_ticks((10, 3), DateBreaksLocator(), scale="date")
     narrow = _drawn_ticks((1.5, 3), DateBreaksLocator(), scale="date")
     assert len(narrow) < len(wide)
+
+
+def test_unit_pi_full_turn_places_pi_fractions():
+    ticks = TalbotLocator(unit=np.pi).tick_values(0.0, 2 * np.pi)
+    np.testing.assert_allclose(ticks, [0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi])
+
+
+def test_unit_pi_half_turn_places_quarters():
+    ticks = TalbotLocator(unit=np.pi).tick_values(0.0, np.pi)
+    np.testing.assert_allclose(ticks, [0, np.pi / 4, np.pi / 2, 3 * np.pi / 4, np.pi])
+
+
+def test_unit_identity_is_bit_identical_to_default():
+    # unit=1.0 divides and multiplies by 1.0 (exact in IEEE), so the tick
+    # path is unchanged. Pin against the direct mizani call -- the same
+    # reference test_matches_mizani_directly uses for the default.
+    for vmin, vmax in [(0.3, 9.7), (0.4, 9.6), (-3.2, 7.1), (1.0, 2.0)]:
+        expected = breaks_extended(n=5, only_inside=True)((vmin, vmax))
+        result = TalbotLocator(n=5, unit=1.0).tick_values(vmin, vmax)
+        np.testing.assert_array_equal(result, expected)
+        np.testing.assert_array_equal(
+            result, TalbotLocator(n=5).tick_values(vmin, vmax)
+        )
+
+
+def test_unit_is_scale_invariant_with_loose():
+    # unit composes with loose: the search runs in unit-space, so scaling
+    # the inputs down and the ticks back up reproduces the same grid.
+    u = np.pi
+    scaled = TalbotLocator(unit=u, loose=True).tick_values(0.3, 6.0)
+    plain = TalbotLocator(loose=True).tick_values(0.3 / u, 6.0 / u)
+    np.testing.assert_allclose(scaled, u * plain)
+
+
+def test_unit_is_scale_invariant_with_nice_numbers():
+    u = np.pi
+    nn = (1, 2.5, 5)
+    scaled = TalbotLocator(unit=u, nice_numbers=nn).tick_values(0.4, 9.6)
+    plain = TalbotLocator(nice_numbers=nn).tick_values(0.4 / u, 9.6 / u)
+    np.testing.assert_allclose(scaled, u * plain)
+
+
+@pytest.mark.parametrize("bad", [0.0, -1.0, np.inf, -np.inf, np.nan])
+def test_unit_nonpositive_or_nonfinite_raises(bad):
+    with pytest.raises(ValueError, match="unit"):
+        TalbotLocator(unit=bad)
+
+
+def test_round_numbers_view_limits_honor_unit():
+    # Non-loose unit=pi locator under round_numbers: the view must round to
+    # the pi family so the axis ends on a tick. Calibrated: (0.3, 6.0) ->
+    # (0, 2*pi), i.e. edges / pi == [0, 2]. The decimal answer would be
+    # (0.0, 6.0), where 6.0 is not a pi-multiple.
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator(unit=np.pi).view_limits(0.3, 6.0)
+    assert lo <= 0.3
+    assert hi >= 6.0
+    np.testing.assert_allclose([lo, hi], [0.0, 2 * np.pi])
+    assert hi != pytest.approx(6.0)

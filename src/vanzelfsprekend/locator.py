@@ -132,6 +132,16 @@ class TalbotLocator(BreaksLocator):
         "coverage": 0.2, "density": 0.5, "legibility": 0.05}` (mizani's
         `w`). Keys must be a subset of `{"simplicity", "coverage",
         "density", "legibility"}`.
+    unit : float
+        Place ticks on nice numbers measured in units of `unit`: the
+        search runs on `(vmin / unit, vmax / unit)` and the result is
+        multiplied back. With `unit=np.pi` the plain decimal nice numbers
+        (0.5, 0.25) become `np.pi / 2`, `np.pi / 4`, ticks that follow the
+        axis width the way the default ticks do, where a fixed
+        `MultipleLocator(np.pi / 2)` would not. Must be finite and
+        strictly positive; the default `1.0` is an exact identity that
+        leaves the default tick path unchanged. A tick is *placed*, not
+        labelled "pi/2" -- write the fraction with a `FuncFormatter`.
     """
 
     def __init__(
@@ -141,8 +151,11 @@ class TalbotLocator(BreaksLocator):
         loose: bool | tuple[bool, bool] = False,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
+        unit: float = 1.0,
     ) -> None:
         super().__init__(spacing, n)
+        if not np.isfinite(unit) or unit <= 0:
+            raise ValueError(f"unit must be finite and strictly positive, got {unit!r}")
         valid_keys = set(_DEFAULT_WEIGHTS)
         if weights is not None:
             bad_keys = set(weights) - valid_keys
@@ -160,17 +173,19 @@ class TalbotLocator(BreaksLocator):
             merged_weights["legibility"],
         )
         self._loose = _loose_ends(loose)
+        self._unit = float(unit)
 
     def _breaks(self, n: int, only_inside: bool | tuple[bool, bool]) -> Callable:
         return breaks_extended(n=n, Q=self._q, only_inside=only_inside, w=self._w)
 
     def _ticks(self, vmin: float, vmax: float, n: int) -> np.ndarray:
         """Search with each end held inside unless loose, then cover the loose ends."""
+        u = self._unit
         inside = (not self._loose[0], not self._loose[1])
-        ticks = self._breaks(n, only_inside=inside)((vmin, vmax))
+        ticks = self._breaks(n, only_inside=inside)((vmin / u, vmax / u))
         if any(self._loose) and ticks.size >= 2:
-            ticks = _extend_to_cover(ticks, vmin, vmax, self._loose)
-        return ticks
+            ticks = _extend_to_cover(ticks, vmin / u, vmax / u, self._loose)
+        return ticks * u
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis's visible data."""
@@ -304,10 +319,11 @@ class TalbotLocator(BreaksLocator):
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:
-            ticks = cover((vmin, vmax))
+            u = self._unit
+            ticks = cover((vmin / u, vmax / u))
             if ticks.size >= 2:
-                ticks = _extend_to_cover(ticks, vmin, vmax)
-                return float(ticks[0]), float(ticks[-1])
+                ticks = _extend_to_cover(ticks, vmin / u, vmax / u)
+                return float(ticks[0]) * u, float(ticks[-1]) * u
         except (OverflowError, ValueError, FloatingPointError):
             pass
         return super().view_limits(vmin, vmax)
