@@ -157,7 +157,7 @@ def kepler() -> None:
     )
     axis, period, earth = (
         table["semi_major_axis_au"],
-        table["orbital_period_yr"],
+        table["orbital_period_year"],
         table["name"] == "Earth",
     )
     with plt.style.context("vanzelfsprekend"):

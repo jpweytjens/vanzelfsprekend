@@ -2,7 +2,7 @@
 # NASA Planetary Fact Sheet, https://nssdc.gsfc.nasa.gov/planetary/factsheet/
 # Period in years = orbital period (days) / 365.25. The two obey Kepler's
 # third law, T^2 = a^3, in these units; the drawn line is that law.
-name,semi_major_axis_au,orbital_period_yr
+name,semi_major_axis_au,orbital_period_year
 Mercury,0.387,0.241
 Venus,0.723,0.615
 Earth,1.000,1.000
