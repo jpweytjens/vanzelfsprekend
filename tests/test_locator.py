@@ -662,3 +662,16 @@ def test_unit_is_scale_invariant_with_nice_numbers():
 def test_unit_nonpositive_or_nonfinite_raises(bad):
     with pytest.raises(ValueError, match="unit"):
         TalbotLocator(unit=bad)
+
+
+def test_round_numbers_view_limits_honor_unit():
+    # Non-loose unit=pi locator under round_numbers: the view must round to
+    # the pi family so the axis ends on a tick. Calibrated: (0.3, 6.0) ->
+    # (0, 2*pi), i.e. edges / pi == [0, 2]. The decimal answer would be
+    # (0.0, 6.0), where 6.0 is not a pi-multiple.
+    with plt.rc_context({"axes.autolimit_mode": "round_numbers"}):
+        lo, hi = TalbotLocator(unit=np.pi).view_limits(0.3, 6.0)
+    assert lo <= 0.3
+    assert hi >= 6.0
+    np.testing.assert_allclose([lo, hi], [0.0, 2 * np.pi])
+    assert hi != pytest.approx(6.0)

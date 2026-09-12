@@ -319,10 +319,11 @@ class TalbotLocator(BreaksLocator):
         if not np.isfinite([vmin, vmax]).all() or vmin == vmax:
             return super().view_limits(vmin, vmax)
         try:
-            ticks = cover((vmin, vmax))
+            u = self._unit
+            ticks = cover((vmin / u, vmax / u))
             if ticks.size >= 2:
-                ticks = _extend_to_cover(ticks, vmin, vmax)
-                return float(ticks[0]), float(ticks[-1])
+                ticks = _extend_to_cover(ticks, vmin / u, vmax / u)
+                return float(ticks[0]) * u, float(ticks[-1]) * u
         except (OverflowError, ValueError, FloatingPointError):
             pass
         return super().view_limits(vmin, vmax)
