@@ -3,7 +3,7 @@
 `register` puts the `ax.vzs` accessor on `Axes`; `unregister` takes it off.
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 from matplotlib.artist import Artist
@@ -22,6 +22,7 @@ from vanzelfsprekend.locator import SPACING
 from vanzelfsprekend.multiples import _teardown_grid
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.secondary import secondary_frame
 from vanzelfsprekend.ticks import _rc, tick_direction
 
 
@@ -480,6 +481,14 @@ class _Accessor:
         return mute(
             self._ax, text_ink=text_ink, line_ink=line_ink, line_width=line_width
         )
+
+    def secondary_frame(
+        self,
+        functions: tuple[Callable, Callable],
+        where: str = "top",
+    ) -> Axes:
+        """Add a mirrored second-unit axis; see `vanzelfsprekend.secondary_frame`."""
+        return secondary_frame(self._ax, functions, where=where)
 
     def tick_direction(self, direction: str = "out") -> Axes:
         """Point the tick marks; see `vanzelfsprekend.tick_direction`."""

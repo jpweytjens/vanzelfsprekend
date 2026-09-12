@@ -93,3 +93,11 @@ def test_restore_removes_the_secondary():
     fig.canvas.draw()  # must not raise after teardown
     assert secax not in ax.child_axes
     plt.close(fig)
+
+
+def test_accessor_secondary_frame():
+    fig, ax = _sin_axes()
+    secax = ax.vzs.secondary_frame((np.rad2deg, np.deg2rad))
+    fig.canvas.draw()
+    np.testing.assert_allclose(secax.xaxis.get_majorticklocs(), [0, 90, 180, 270, 360])
+    plt.close(fig)
