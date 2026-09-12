@@ -70,7 +70,7 @@ def anscombe() -> None:
         ax.yaxis.set_major_locator(vzs.QuartileLocator(y))
         ax.xaxis.set_major_formatter("{x:.0f}")
         ax.yaxis.set_major_formatter("{x:.1f}")
-        ax.set_title(numeral, fontsize=10, color=vzs.palettes.TEXT_INK)
+        ax.set_title(numeral, color=vzs.palettes.TEXT_INK)
     save(fig, "anscombe")
 
 
@@ -92,7 +92,7 @@ def grand_tours() -> None:
         speeds = np.full(years.size, np.nan)
         speeds[table["year"].astype(int) - first] = table[column]
         speeds_of[ax] = speeds
-        ax.plot(dates, speeds, color=color, linewidth=1.2, label=label)
+        ax.plot(dates, speeds, color=color, label=label)
     # Plot before apply: the axis becomes a date axis when date data
     # arrives, and apply detects date-ness at call time.
     vzs.small_multiples(
@@ -145,8 +145,8 @@ def kepler() -> None:
     Period against semi-major axis for the eight planets; in AU and years
     the law is T = a**1.5, so the planets are collinear on log-log axes.
     Joining them draws the line, Earth alone is coloured, and `label` names
-    it in that colour. Drawn inside the `vanzelfsprekend` style, so the line
-    width and mark size come from there, not from this figure.
+    it in that colour. The gallery renders under the `vanzelfsprekend` style,
+    so the line width and mark size come from there, not from this figure.
     """
     # planets.csv carries a name column, so read it with per-column dtypes
     # rather than the all-numeric `load`; the comment strip is load's.
@@ -160,27 +160,26 @@ def kepler() -> None:
         table["orbital_period_year"],
         table["name"] == "Earth",
     )
-    with plt.style.context("vanzelfsprekend"):
-        fig, ax = plt.subplots(figsize=(5, 3.5))
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        # The planets in order of distance, joined into the law they obey.
-        ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
-        # Earth alone in a Tol blue, a larger mark, named in its colour.
-        ax.plot(
-            axis[earth],
-            period[earth],
-            marker="o",
-            markersize=7,
-            linestyle="none",
-            color="tol:bright.blue",
-            label="Earth",
-        )
-        vzs.apply(ax, frame="loose")
-        vzs.xlabel(ax, "semi-major axis (AU)")
-        vzs.ylabel(ax, "orbital period (year)")
-        vzs.label(ax, "Earth")
-        save(fig, "kepler")
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    # The planets in order of distance, joined into the law they obey.
+    ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
+    # Earth alone in a Tol blue, a larger mark, named in its colour.
+    ax.plot(
+        axis[earth],
+        period[earth],
+        marker="o",
+        markersize=7,
+        linestyle="none",
+        color="tol:bright.blue",
+        label="Earth",
+    )
+    vzs.apply(ax, frame="loose")
+    vzs.xlabel(ax, "semi-major axis (AU)")
+    vzs.ylabel(ax, "orbital period (year)")
+    vzs.label(ax, "Earth")
+    save(fig, "kepler")
 
 
 def waiting_times() -> None:
@@ -215,7 +214,7 @@ def frame_modes() -> None:
     for ax, mode in zip(axes, ("nice", "loose", "data"), strict=True):
         vzs.apply(ax, frame=mode)
         ax.plot(table["year"], table["anomaly_c"])
-        ax.set_title(f'frame="{mode}"', fontsize=10, color=vzs.palettes.TEXT_INK)
+        ax.set_title(f'frame="{mode}"', color=vzs.palettes.TEXT_INK)
     vzs.ylabel(axes[0], "warming (°C)", place="beside")
     save(fig, "frame_modes")
 
@@ -230,9 +229,7 @@ def tick_spacing() -> None:
         vzs.apply(ax)
         ax.plot(table["year"], table["anomaly_c"])
         width_cm = ax.get_position().width * fig.get_figwidth() * 2.54
-        ax.set_title(
-            f"{width_cm:.0f} cm wide", fontsize=10, color=vzs.palettes.TEXT_INK
-        )
+        ax.set_title(f"{width_cm:.0f} cm wide", color=vzs.palettes.TEXT_INK)
     vzs.ylabel(fig.axes[0], "warming (°C)")
     save(fig, "tick_spacing")
 
@@ -266,7 +263,7 @@ def power_profiles() -> None:
     ax.set_prop_cycle(vzs.palettes.cycle("muted"))
     for label, (cp, w_prime, p_max) in ARCHETYPES.items():
         power = cp + w_prime / (seconds + w_prime / (p_max - cp))
-        ax.plot(seconds, power, linewidth=1.2, label=label)
+        ax.plot(seconds, power, label=label)
     vzs.line_labels(ax)
     vzs.xlabel(ax, "duration (s)")
     vzs.ylabel(ax, "power (W)")
@@ -296,9 +293,7 @@ def resonance_peak() -> None:
     measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
     vzs.apply(ax, frame="loose", offset=(24, -6))
-    ax.plot(
-        frequency, calculated, color="tol:orange", linewidth=1.2, label="calculated"
-    )
+    ax.plot(frequency, calculated, color="tol:orange", label="calculated")
     ax.scatter(
         random_sampled,
         measured,
@@ -355,7 +350,7 @@ def small_multiples_grid() -> None:
     fig, axes = plt.subplots(2, 2, figsize=(7, 5))
     for ax, (column, title) in zip(axes.flat, panels, strict=True):
         ax.plot(dates, table[column], color=vzs.palettes.DATA_INK)
-        ax.set_title(title, fontsize=10, color=vzs.palettes.TEXT_INK)
+        ax.set_title(title, color=vzs.palettes.TEXT_INK)
     vzs.small_multiples(
         axes.flat, frame=("data", "nice"), spacing=(5, 4), ylabel="CO₂ (ppm)"
     )
@@ -387,6 +382,9 @@ def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
     FIGURES.mkdir(exist_ok=True)
+    # The gallery draws under vanzelfsprekend's style, the one authority for
+    # line width and mark size; figures set only what deviates from it.
+    plt.style.use("vanzelfsprekend")
     anscombe()
     grand_tours()
     seaborn_lineplot()
