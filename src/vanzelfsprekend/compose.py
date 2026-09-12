@@ -364,6 +364,11 @@ def _restore_member(ax: Axes) -> None:
     if cycle_state is not None:
         ax.set_prop_cycle(cycle_state["snapshot"])
 
+    secondary_state = state.get("secondary")
+    if secondary_state is not None:
+        for entry in secondary_state:
+            entry["secax"].remove()
+
     clear_state(ax)
     ax.figure.canvas.draw_idle()
 

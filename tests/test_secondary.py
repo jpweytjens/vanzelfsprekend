@@ -82,3 +82,14 @@ def test_invalid_where_raises(bad):
     with pytest.raises(ValueError, match="where"):
         vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad), where=bad)
     plt.close(fig)
+
+
+def test_restore_removes_the_secondary():
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    fig.canvas.draw()
+    assert secax in ax.child_axes
+    vzs.restore(ax)
+    fig.canvas.draw()  # must not raise after teardown
+    assert secax not in ax.child_axes
+    plt.close(fig)
