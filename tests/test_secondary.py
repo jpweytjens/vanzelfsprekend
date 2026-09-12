@@ -95,6 +95,16 @@ def test_restore_removes_the_secondary():
     plt.close(fig)
 
 
+def test_secondary_spine_matches_host_offset():
+    # _sin_axes applies a loose frame, which stands the host axis spine off
+    # by a few points; the secondary must take the same offset to match.
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    assert secax.spines["top"].get_position() == ax.spines["bottom"].get_position()
+    assert ax.spines["bottom"].get_position() == ("outward", 8)
+    plt.close(fig)
+
+
 def test_accessor_secondary_frame():
     fig, ax = _sin_axes()
     secax = ax.vzs.secondary_frame((np.rad2deg, np.deg2rad))

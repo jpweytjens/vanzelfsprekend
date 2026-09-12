@@ -68,6 +68,14 @@ def secondary_frame(
     secax.tick_params(
         which="both", color=LINE_INK, width=LINE_WIDTH, labelcolor=TEXT_INK
     )
+    # Match the frame's stand-off: a loose `range_frame` pushes the host's
+    # axis spine outward by a few points, so mirror that offset onto the
+    # secondary and the two feel the same. Points are resize-invariant, so
+    # this is one-shot like the colours.
+    host_spine = "bottom" if axis_name == "x" else "left"
+    position = ax.spines[host_spine].get_position()
+    if isinstance(position, tuple) and position[0] == "outward":
+        spine.set_position(("outward", position[1]))
 
     state = ensure_state(ax)
     state.setdefault("secondary", []).append(
