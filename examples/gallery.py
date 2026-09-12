@@ -378,6 +378,52 @@ def _apca_lc(text: tuple[int, int, int], background: tuple[int, int, int]) -> fl
     return lc * 100
 
 
+def radian_axes() -> None:
+    """Render phase-shifted sinusoids on a pi-fraction axis, degrees on top.
+
+    A constructed set in the spirit of a Doumont RLC figure, not data:
+    the lead and lag are quarter-turn phase shifts and V_tot is the exact
+    sum of the other three.
+    """
+    fig, ax = plt.subplots(figsize=(6.5, 3.2))
+    # --8<-- [start:radian_axes]
+    from fractions import Fraction
+
+    from matplotlib.ticker import FuncFormatter
+
+    pi = np.pi  # one authority: the locator and the formatter both read it
+
+    def pi_fraction(value: float, _pos: int) -> str:
+        turns = Fraction(value / pi).limit_denominator(100)
+        if turns == 0:
+            return "0"
+        sign = "-" if turns < 0 else ""
+        num, den = abs(turns.numerator), turns.denominator
+        head = "π" if num == 1 else f"{num}π"
+        return f"{sign}{head}" if den == 1 else f"{sign}{head}/{den}"
+
+    theta = np.linspace(0, 2 * pi, 400)
+    v_l = 1.3 * np.sin(theta + pi / 2)  # leads by a quarter turn
+    v_c = 1.1 * np.sin(theta - pi / 2)  # lags by a quarter turn
+    v_r = 0.75 * np.sin(theta)
+    v_tot = v_l + v_r + v_c  # their exact sum
+    orange = "tol:orange"
+    ax.plot(theta, v_l, color=orange, alpha=0.5, label="$V_L$")
+    ax.plot(theta, v_c, color=orange, alpha=0.5, label="$V_C$")
+    ax.plot(theta, v_tot, color=vzs.palettes.DATA_INK, label="$V_{tot}$")
+    ax.plot(theta, v_r, color=orange, label="$V_R$")
+    vzs.apply(ax, frame="loose")
+    vzs.tick_direction(ax, "in")
+    ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
+    ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    secax.tick_params(direction="in")
+    vzs.xlabel(ax, "phase (rad)")
+    vzs.line_labels(ax)
+    # --8<-- [end:radian_axes]
+    save(fig, "radian_axes")
+
+
 def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
@@ -396,6 +442,7 @@ def main() -> None:
     small_multiples_grid()
     tick_spacing()
     frame_modes()
+    radian_axes()
     seaborn_lineplot()
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
