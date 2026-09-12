@@ -26,7 +26,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![Log-log scatter of orbital period against semi-major axis for the eight planets, the points on a straight line of slope three-halves, Earth alone in blue and named, offset spines ending at powers of ten](figures/kepler.svg)
-<figcaption markdown>**Kepler's third law.** The eight planets on log-log axes under `frame="loose"`: offset spines end at the powers of ten bounding the data, and period against semi-major axis falls on the line _T_ = _a_<sup>3/2</sup>. Earth alone takes a colour, and `label` names it in that same colour — one mark picked out of the grey.</figcaption>
+<figcaption markdown>**Kepler's third law.** The eight planets on log-log axes under `frame="loose"`: offset spines end at the powers of ten bounding the data, and period against semi-major axis falls on the line _T_ = _a_<sup>3/2</sup>. Earth alone takes a colour, and `label` names it in that same colour: one mark picked out of the grey. The [tutorial](tutorial/kepler.md) builds it one call at a time.</figcaption>
 </figure>
 
 <figure markdown>
@@ -80,6 +80,6 @@ This index is written by hand until the gallery declares its own features; then 
 - **Line labels in place of a legend**: the warming scenarios, the seaborn line plot, power profiles, the grand tours.
 - **A label beside a point or curve**: the resonance peak, Kepler's third law.
 - **Colour opted in**: power profiles (a scheme cycle), the grand tours (the jerseys), Kepler's third law (one mark).
-- **A single mark picked out**: Kepler's third law — Earth in a Tol blue against the grey, named in that colour.
+- **A single mark picked out**: Kepler's third law, Earth in a Tol blue against the grey, named in that colour.
 - **Small multiples**: the grand tours (`compare="column"`), the CO₂ grid.
 - **Axis labels raised and flush**: every figure with labels; `place="beside"` where a title takes the space above the frame, in the frame modes.
