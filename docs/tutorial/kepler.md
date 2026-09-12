@@ -2,7 +2,7 @@
 
 *Colour one planet and name it, and the eye finds it before a word is read.*
 
-The eight planets obey Kepler's third law: the square of a planet's orbital period equals the cube of its semi-major axis. In astronomical units and years the constant is one, so T = a<sup>3/2</sup>, and on log-log axes the planets fall on a single straight line. This lesson builds the gallery's `kepler` one call at a time, drawing that line and picking Earth out of the other seven. The measurements are the NASA Planetary Fact Sheet, and the script is `examples/tutorial_kepler.py`.
+The eight planets obey Kepler's third law: the square of a planet's orbital period _T_ equals the cube of its semi-major axis _a_. In astronomical units and years the constant is one, so _T_ = _a_<sup>3/2</sup>, and on log-log axes the planets fall on a single straight line. This lesson builds the gallery's `kepler` one call at a time, drawing that line and picking Earth out of the other seven. The measurements are the NASA Planetary Fact Sheet, and the script is `examples/tutorial_kepler.py`.
 
 ## The data and the default figure
 
@@ -36,22 +36,22 @@ Three things decide how restrained a figure looks, and vanzelfsprekend keeps the
 <figcaption markdown>Step two. The box becomes two offset spines at powers of ten, the labels sit at their ends, and the line and marks are lighter.</figcaption>
 </figure>
 
-The style is matplotlib's own, reached through `plt.style.context`. It sets the line width and mark size and nothing else, no colour and no spine, so it composes with `apply` rather than overriding it. Draw and save inside the context, since matplotlib reads these defaults when it renders the figure, not when you call `plot`.
+The style is matplotlib's own, reached through `plt.style.context`. It sets the line width and mark size and nothing else, no colour and no spine, so it composes with `apply` rather than overriding it. Draw and save inside the context, since matplotlib reads these defaults when it renders the figure, not when you call `plot`. `apply` greys the spines and ticks and leaves the data line as you drew it, still in matplotlib's default colour; the colour of the data is yours to set, and the next step sets it.
 
 ## Pick Earth out of the grey
 
-A single mark in colour against a field of grey is found before anything is read. Overplotting Earth as one Tol-blue mark, a little larger than the rest, picks it out.
+A single mark in colour is found first only when the rest recede. Muting the seven planets to a neutral grey and giving Earth one Tol-blue mark, a little larger, does both at once: the field steps back and the one planet comes forward.
 
 ```{.python}
 --8<-- "tutorial_kepler.py:step3"
 ```
 
 <figure markdown>
-![The same line with every planet grey except Earth, drawn as one larger blue mark at one astronomical unit and one year](../figures/kepler_step_3.svg)
-<figcaption markdown>Step three. Earth in blue. The eye lands on it before reading the axes, and the other seven carry the line.</figcaption>
+![The same line with the seven planets in grey and Earth in one larger blue mark at one astronomical unit and one year](../figures/kepler_step_3.svg)
+<figcaption markdown>Step three. The seven go grey and Earth takes a Tol blue, so the eye lands on the one before reading the axes.</figcaption>
 </figure>
 
-Colour is spent on the one planet the figure is about; the rest stay in the data ink and hold the shape of the law.
+This is the point of the muting. Colour spent on every planet names none of them; spent on one, it says which planet the figure is about.
 
 ## Name it
 

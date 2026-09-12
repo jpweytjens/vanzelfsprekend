@@ -40,14 +40,37 @@ def data() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def draw(axis: np.ndarray, period: np.ndarray) -> tuple[plt.Figure, plt.Axes]:
-    """Join the planets on fresh log-log axes."""
+    """Join the planets on fresh log-log axes, in matplotlib's default colour."""
     # --8<-- [start:draw]
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.set_xscale("log")
     ax.set_yscale("log")
     # The planets in order of distance, joined into the line they obey.
-    ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
+    ax.plot(axis, period, marker="o")
     # --8<-- [end:draw]
+    return fig, ax
+
+
+def draw_muted(
+    axis: np.ndarray, period: np.ndarray, earth: np.ndarray
+) -> tuple[plt.Figure, plt.Axes]:
+    """Draw the planets in the muted data ink, Earth picked out in a Tol blue."""
+    fig, ax = plt.subplots(figsize=(5, 3.5))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    # --8<-- [start:step3]
+    # Mute the seven to grey so the one coloured mark carries the eye.
+    ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
+    ax.plot(
+        axis[earth],
+        period[earth],
+        marker="o",
+        markersize=7,
+        linestyle="none",
+        color="tol:bright.blue",
+        label="Earth",
+    )
+    # --8<-- [end:step3]
     return fig, ax
 
 
@@ -78,40 +101,20 @@ def main() -> None:
         # --8<-- [end:step2]
         save(fig, 2)
 
-    # Step three: pick Earth out of the grey.
+    # Step three: mute the field to grey and pick Earth out in colour.
     with plt.style.context("vanzelfsprekend"):
-        fig, ax = draw(axis, period)
+        fig, ax = draw_muted(axis, period, earth)
         vzs.apply(ax, frame="loose")
         vzs.xlabel(ax, "semi-major axis (AU)")
         vzs.ylabel(ax, "orbital period (year)")
-        # --8<-- [start:step3]
-        ax.plot(
-            axis[earth],
-            period[earth],
-            marker="o",
-            markersize=7,
-            linestyle="none",
-            color="tol:bright.blue",
-            label="Earth",
-        )
-        # --8<-- [end:step3]
         save(fig, 3)
 
     # Step four: name it in its own colour.
     with plt.style.context("vanzelfsprekend"):
-        fig, ax = draw(axis, period)
+        fig, ax = draw_muted(axis, period, earth)
         vzs.apply(ax, frame="loose")
         vzs.xlabel(ax, "semi-major axis (AU)")
         vzs.ylabel(ax, "orbital period (year)")
-        ax.plot(
-            axis[earth],
-            period[earth],
-            marker="o",
-            markersize=7,
-            linestyle="none",
-            color="tol:bright.blue",
-            label="Earth",
-        )
         # --8<-- [start:step4]
         vzs.label(ax, "Earth")
         # --8<-- [end:step4]
