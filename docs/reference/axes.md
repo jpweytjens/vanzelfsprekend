@@ -6,6 +6,8 @@
 
 ::: vanzelfsprekend.range_frame
 
+::: vanzelfsprekend.secondary_frame
+
 ::: vanzelfsprekend.mute
 
 ::: vanzelfsprekend.small_multiples
