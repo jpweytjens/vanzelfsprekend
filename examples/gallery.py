@@ -143,8 +143,10 @@ def kepler() -> None:
     """Render Kepler's third law on log-log axes, Earth picked out in Tol blue.
 
     Period against semi-major axis for the eight planets; in AU and years
-    the law is T = a**1.5, so the planets fall on the drawn line. Earth
-    alone is coloured, and `label` names it in that same colour.
+    the law is T = a**1.5, so the planets are collinear on log-log axes.
+    Joining them draws the line, Earth alone is coloured, and `label` names
+    it in that colour. Drawn inside the `vanzelfsprekend` style, so the line
+    width and mark size come from there, not from this figure.
     """
     # planets.csv carries a name column, so read it with per-column dtypes
     # rather than the all-numeric `load`; the comment strip is load's.
@@ -158,29 +160,27 @@ def kepler() -> None:
         table["orbital_period_yr"],
         table["name"] == "Earth",
     )
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    vzs.apply(ax, frame="loose")
-    # The law itself, T = a**1.5, drawn as the line the planets fall on.
-    span = np.geomspace(axis.min(), axis.max(), 200)
-    ax.plot(span, span**1.5, color=vzs.palettes.LINE_INK, linewidth=1.0, zorder=1)
-    # Every planet in the data ink; Earth alone in a Tol blue, named in it.
-    ax.scatter(
-        axis[~earth], period[~earth], s=14, color=vzs.palettes.DATA_INK, zorder=2
-    )
-    ax.scatter(
-        axis[earth],
-        period[earth],
-        s=16,
-        color="tol:bright.blue",
-        zorder=3,
-        label="Earth",
-    )
-    vzs.xlabel(ax, "semi-major axis (AU)")
-    vzs.ylabel(ax, "orbital period (yr)")
-    vzs.label(ax, "Earth")
-    save(fig, "kepler")
+    with plt.style.context("vanzelfsprekend"):
+        fig, ax = plt.subplots(figsize=(5, 3.5))
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        # The planets in order of distance, joined into the law they obey.
+        ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
+        # Earth alone in a Tol blue, a larger mark, named in its colour.
+        ax.plot(
+            axis[earth],
+            period[earth],
+            marker="o",
+            markersize=7,
+            linestyle="none",
+            color="tol:bright.blue",
+            label="Earth",
+        )
+        vzs.apply(ax, frame="loose")
+        vzs.xlabel(ax, "semi-major axis (AU)")
+        vzs.ylabel(ax, "orbital period (yr)")
+        vzs.label(ax, "Earth")
+        save(fig, "kepler")
 
 
 def waiting_times() -> None:
