@@ -755,3 +755,24 @@ def test_augmented_locator_is_public():
 
     assert vzs.AugmentedLocator is _Direct
     assert "AugmentedLocator" in vzs.__all__
+
+
+def test_augmented_feature_tick_after_range_frame():
+    fig, ax = plt.subplots()
+    x, y = _lorentzian_peak()
+    ax.plot(x, y)
+    range_frame(ax)
+    ax.xaxis.set_major_locator(
+        AugmentedLocator(
+            TalbotLocator(loose=True),
+            FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]]),
+        )
+    )
+    fig.canvas.draw()
+    ticks = ax.xaxis.get_majorticklocs()
+    assert 17.2 in ticks  # the peak, from the extra
+    assert len(ticks) > 1  # plus nice ticks, from the base
+    lo, hi = ax.get_xlim()
+    assert lo <= x.min()  # spine/view still bounds the data
+    assert hi >= x.max()  # spine/view still bounds the data
+    plt.close(fig)
