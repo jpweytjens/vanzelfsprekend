@@ -4,9 +4,11 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from matplotlib.ticker import FixedLocator
 from mizani.breaks import breaks_extended
 
 from vanzelfsprekend import (
+    AugmentedLocator,
     DateBreaksLocator,
     FeatureLocator,
     LogBreaksLocator,
@@ -675,3 +677,40 @@ def test_round_numbers_view_limits_honor_unit():
     assert hi >= 6.0
     np.testing.assert_allclose([lo, hi], [0.0, 2 * np.pi])
     assert hi != pytest.approx(6.0)
+
+
+def test_augmented_unions_base_and_extra():
+    loc = AugmentedLocator(FixedLocator([0.0, 1.0, 2.0]), [1.5])
+    np.testing.assert_allclose(loc(), [0.0, 1.0, 1.5, 2.0])
+
+
+def test_augmented_collapses_coincident():
+    loc = AugmentedLocator(FixedLocator([0.0, 1.0, 2.0]), [1.0])
+    np.testing.assert_allclose(loc(), [0.0, 1.0, 2.0])
+
+
+def test_augmented_accepts_sequence_extra():
+    loc = AugmentedLocator(FixedLocator([0.0]), [0.5])
+    np.testing.assert_allclose(loc(), [0.0, 0.5])
+
+
+def test_augmented_drops_non_finite_extra():
+    loc = AugmentedLocator(FixedLocator([0.5]), [np.nan, np.inf, -np.inf])
+    np.testing.assert_allclose(loc(), [0.5])
+
+
+def test_augmented_empty_extra_is_base_only():
+    loc = AugmentedLocator(FixedLocator([0.0, 1.0]), [])
+    np.testing.assert_allclose(loc(), [0.0, 1.0])
+
+
+def test_augmented_out_of_range_extra_is_kept():
+    loc = AugmentedLocator(FixedLocator([0.0, 1.0]), [5.0])
+    np.testing.assert_allclose(loc(), [0.0, 1.0, 5.0])
+
+
+def test_augmented_tick_values_unions():
+    loc = AugmentedLocator(TalbotLocator(n=5), [0.5])
+    ticks = loc.tick_values(0.0, 1.0)
+    assert 0.5 in ticks
+    assert ticks.min() <= 0.5 <= ticks.max()

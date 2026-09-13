@@ -11,6 +11,7 @@ from vanzelfsprekend.direct import label
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.locator import (
+    AugmentedLocator,
     DateBreaksLocator,
     FeatureLocator,
     LogBreaksLocator,
@@ -30,6 +31,7 @@ __version__ = version("vanzelfsprekend")
 register()
 
 __all__ = [
+    "AugmentedLocator",
     "DateBreaksLocator",
     "FeatureLocator",
     "LogBreaksLocator",

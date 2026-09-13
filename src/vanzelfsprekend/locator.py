@@ -822,6 +822,61 @@ class QuartileLocator(SummaryLocator):
         super().__init__(data, (lambda v: np.quantile(v, (0, 0.25, 0.5, 0.75, 1)),))
 
 
+class AugmentedLocator(Locator):
+    """Place ticks at the union of a base locator's ticks and fixed extra ticks.
+
+    The `base` locator is the live side: its ticks are read fresh each
+    draw (a `TalbotLocator`/`LogBreaksLocator`/`DateBreaksLocator` reads
+    the axis data interval), and it alone owns the view limits and
+    singularity handling. `extra` is the fixed side, any `FixedLocator`
+    (so `FeatureLocator`, `SummaryLocator`, `QuartileLocator` fit
+    directly) or a bare sequence of positions, wrapped in a
+    `FixedLocator`. The two tick sets are concatenated, non-finite
+    positions dropped, and coincident positions collapsed to a single
+    tick.
+
+    Extra ticks are expected to lie within the view; an out-of-range
+    extra tick is kept as given and behaves like any out-of-range tick.
+    Ticks are not projected across axes: the base and extra are read on
+    the axis this locator is attached to.
+
+    Parameters
+    ----------
+    base : matplotlib.ticker.Locator
+        The live locator whose ticks the extra ticks augment; owns the
+        view limits and singularity handling.
+    extra : matplotlib.ticker.Locator or sequence of float
+        Fixed extra tick positions. A `FixedLocator` (or a `FeatureLocator`
+        / `SummaryLocator` / `QuartileLocator`, which subclass it), or a
+        sequence taken as fixed positions.
+    """
+
+    def __init__(self, base: Locator, extra: Locator | Sequence[float]) -> None:
+        self._base = base
+        self._extra = extra if isinstance(extra, Locator) else FixedLocator(list(extra))
+
+    def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
+        """Return the union of the base and extra tick positions."""
+        return np.asarray(
+            self.raise_if_exceeds(_union(self._base(), self._extra()).tolist())
+        )
+
+    def tick_values(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float
+    ) -> np.ndarray:
+        """Return the union of the base and extra ticks over `[vmin, vmax]`."""
+        return _union(
+            self._base.tick_values(vmin, vmax), self._extra.tick_values(vmin, vmax)
+        )
+
+
+def _union(*locs: ArrayLike) -> np.ndarray:
+    """Concatenate tick arrays, drop non-finite, collapse coincident, sort."""
+    parts = [np.asarray(a, dtype=float).ravel() for a in locs]
+    values = np.concatenate(parts) if parts else np.empty(0)
+    return np.unique(values[np.isfinite(values)])
+
+
 def _tick_positions(
     reducers: Sequence[Callable[..., ArrayLike] | ArrayLike], *data: np.ndarray
 ) -> list[float]:
