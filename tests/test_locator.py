@@ -8,7 +8,6 @@ from matplotlib.ticker import FixedLocator
 from mizani.breaks import breaks_extended
 
 from vanzelfsprekend import (
-    AugmentedLocator,
     DateBreaksLocator,
     FeatureLocator,
     LogBreaksLocator,
@@ -17,6 +16,7 @@ from vanzelfsprekend import (
     TalbotLocator,
     range_frame,
 )
+from vanzelfsprekend.locator import AugmentedLocator
 
 
 def test_matches_mizani_directly():
@@ -714,3 +714,8 @@ def test_augmented_tick_values_unions():
     ticks = loc.tick_values(0.0, 1.0)
     assert 0.5 in ticks
     assert ticks.min() <= 0.5 <= ticks.max()
+
+
+def test_augmented_accepts_locator_extra():
+    loc = AugmentedLocator(FixedLocator([0.0, 2.0]), FixedLocator([1.0]))
+    np.testing.assert_allclose(loc(), [0.0, 1.0, 2.0])
