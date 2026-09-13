@@ -249,9 +249,11 @@ pre {
    leans on what follows: the list is its own, the prose above is not. */
 p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 .doc-section-title { font-style: italic; color: var(--ink-soft); font-weight: 600; }
-/* An entry is a name and its gloss; the parentheses, the default and the
-   dash between them are apparatus, and take the quieter ink. */
-.doc-section-item { list-style: none; margin: 0 0 0.6rem 1.5rem; color: var(--ink-soft); }
+/* An entry is a name and its gloss; the parentheses and the default are
+   apparatus, and take the quieter ink. The dash that once joined the two
+   is the entry's only uncoloured text, so it drops against the ground and
+   leaves the gloss to open its own line. */
+.doc-section-item { list-style: none; margin: 0 0 0.6rem 1.5rem; color: transparent; }
 .doc-section-item > b, .doc-section-item .doc-md-description { color: var(--ink); }
 /* A return has no name, so its type stands in the name's place and takes
    the name's ink. */
@@ -259,9 +261,10 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 /* mkdocstrings sets only the type and the default as code, leaving the
    parentheses, the comma and the word "default:" bare, so the fragment
    alternates faces. docs_hooks.type_annotations wraps it to be set in one. */
-.doc-annotation { font-family: "Monaspace Neon", ui-monospace, Menlo, monospace; font-size: var(--code-size); }
+.doc-annotation { font-family: "Monaspace Neon", ui-monospace, Menlo, monospace; font-size: var(--code-size); color: var(--ink-soft); }
 .doc-annotation code { font-size: 1em; }
-.doc-md-description { display: inline; }
+/* The description drops onto its own line under the name and type. */
+.doc-md-description { display: block; margin-top: 0.1rem; }
 .doc-md-description p { display: inline; margin: 0; }
 .doc-contents ul { padding-left: 0; }
 .admonition { margin: 1.4rem 0; }
