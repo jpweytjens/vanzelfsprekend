@@ -407,6 +407,7 @@ def radian_axes() -> None:
     v_c = 6.7 * np.sin(theta - pi / 3)  # lags
     v_r = 8.7 * np.sin(theta - pi / 8)
     v_tot = (v_l + v_r + v_c) / np.sqrt(3)  # their exact sum
+
     yellow = "tol:high_contrast.yellow"
     ax.hlines(
         xmin=0, xmax=4 * pi, y=0, color=vzs.palettes.DATA_INK, linewidth=1, alpha=0.15
@@ -415,13 +416,18 @@ def radian_axes() -> None:
     ax.plot(theta, v_c, color=yellow, alpha=0.3, label="$V_C$")
     ax.plot(theta, v_tot, color=vzs.palettes.DATA_INK, alpha=0.15, label="$V_{tot}$")
     ax.plot(theta, v_r, color=yellow, label="$V_R$")
+
     vzs.apply(ax, frame=("data", "data"), offset=(10, 5))
     vzs.tick_direction(ax, "in")
+
     ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
     ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
+
     secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
     secax.tick_params(direction="in")
+
     ax.yaxis.set_major_locator(vzs.FeatureLocator(theta, v_r, [-10, 0, 10]))
+
     vzs.xlabel(ax, "phase (rad)")
     vzs.ylabel(ax, "voltage (V)", place="beside")
     vzs.line_labels(ax)
