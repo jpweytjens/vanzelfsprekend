@@ -719,3 +719,31 @@ def test_augmented_tick_values_unions():
 def test_augmented_accepts_locator_extra():
     loc = AugmentedLocator(FixedLocator([0.0, 2.0]), FixedLocator([1.0]))
     np.testing.assert_allclose(loc(), [0.0, 1.0, 2.0])
+
+
+def test_augmented_set_axis_forwards_to_base():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 50)
+    ax.plot(x, np.sin(x))
+    ax.xaxis.set_major_locator(AugmentedLocator(TalbotLocator(), [3.3]))
+    fig.canvas.draw()
+    ticks = ax.xaxis.get_majorticklocs()
+    assert 3.3 in ticks  # the extra tick
+    assert len(ticks) > 1  # base produced nice ticks -> set_axis reached it
+    plt.close(fig)
+
+
+def test_augmented_view_limits_delegate_to_base():
+    fig, ax = plt.subplots()
+    ax.plot([0.0, 10.0], [0.0, 1.0])
+    base = TalbotLocator(loose=True)
+    loc = AugmentedLocator(base, [3.0])
+    ax.xaxis.set_major_locator(loc)  # binds the axis to loc and, via set_axis, to base
+    np.testing.assert_allclose(loc.view_limits(0.0, 10.0), base.view_limits(0.0, 10.0))
+    plt.close(fig)
+
+
+def test_augmented_nonsingular_delegates_to_base():
+    base = LogBreaksLocator()
+    loc = AugmentedLocator(base, [1.0])
+    assert loc.nonsingular(5.0, 5.0) == base.nonsingular(5.0, 5.0)

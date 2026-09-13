@@ -869,6 +869,22 @@ class AugmentedLocator(Locator):
             self._base.tick_values(vmin, vmax), self._extra.tick_values(vmin, vmax)
         )
 
+    def set_axis(self, axis: Axis) -> None:  # ty: ignore[invalid-method-override]
+        """Bind the axis, forwarding to base and extra so both can read it."""
+        super().set_axis(axis)
+        self._base.set_axis(axis)
+        self._extra.set_axis(axis)
+
+    def view_limits(self, vmin: float, vmax: float) -> tuple[float, float]:
+        """View limits from the base alone; the extra never moves the view."""
+        return self._base.view_limits(vmin, vmax)
+
+    def nonsingular(  # ty: ignore[invalid-method-override]
+        self, vmin: float, vmax: float
+    ) -> tuple[float, float]:
+        """Delegate degenerate-interval handling to the base."""
+        return self._base.nonsingular(vmin, vmax)
+
 
 def _union(*locs: ArrayLike) -> np.ndarray:
     """Concatenate tick arrays, drop non-finite, collapse coincident, sort."""
