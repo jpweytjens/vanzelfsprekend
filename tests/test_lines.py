@@ -2,6 +2,7 @@ import datetime
 import itertools
 import warnings
 
+import matplotlib.colors
 import matplotlib.dates
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,6 +112,18 @@ def test_labels_take_line_colors(converging_ax):
     ax, texts = converging_ax
     for line, text in zip(ax.get_lines(), texts, strict=True):
         assert text.get_color() == line.get_color()
+
+
+def test_labels_take_line_alpha():
+    fig, ax = plt.subplots()
+    x = np.linspace(0.0, 10.0, 200)
+    ax.plot(x, 1.0 - np.exp(-x), color="red", alpha=0.25, label="alpha")
+    vzs.range_frame(ax)
+    (text,) = vzs.line_labels(ax)
+    assert matplotlib.colors.to_rgba(text.get_color()) == matplotlib.colors.to_rgba(
+        "red", 0.25
+    )
+    plt.close(fig)
 
 
 def test_separated_labels_stay_at_their_lines():

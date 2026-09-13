@@ -9,7 +9,7 @@ import numpy as np
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
 from matplotlib.collections import Collection
-from matplotlib.colors import is_color_like
+from matplotlib.colors import is_color_like, to_rgba
 from matplotlib.lines import Line2D
 from matplotlib.text import Annotation
 from matplotlib.textpath import TextPath
@@ -166,10 +166,14 @@ def _anchor(line: Line2D, at: str) -> tuple[float, float] | None:
 def _artist_color(artist: Artist) -> ColorType:
     """Return the colour an artist's label takes.
 
-    A line's colour, or a scatter's face colour, else its edge colour.
+    A line's colour with its alpha folded in, or a scatter's face colour,
+    else its edge colour.
     """
     if isinstance(artist, Line2D):
-        return artist.get_color()
+        alpha = artist.get_alpha()
+        if alpha is None:
+            return artist.get_color()
+        return to_rgba(artist.get_color(), alpha)
     collection = cast("Collection", artist)
     faces = np.asarray(collection.get_facecolor())
     if len(faces) and faces[0][3] > 0:
