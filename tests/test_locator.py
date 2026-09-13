@@ -915,3 +915,35 @@ def test_named_positions_without_finite_positions_raises():
 
     with pytest.raises(ValueError, match="finite"):
         _named_positions([lambda v: np.nan], np.array([0.0, 1.0]))
+
+
+def test_feature_locator_sequence_form_has_empty_feature_names():
+    x, y = _lorentzian_peak()
+    locator = FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])
+    assert locator.feature_names == {}
+
+
+def test_feature_locator_mapping_form_names_the_feature():
+    x, y = _lorentzian_peak()
+    locator = FeatureLocator(x, y, {"peak": lambda x, y: x[np.argmax(y)]})
+    np.testing.assert_allclose(locator(), [17.2])
+    (position,) = locator.feature_names
+    np.testing.assert_allclose(position, 17.2)
+    assert locator.feature_names[position] == ("peak",)
+
+
+def test_summary_locator_mapping_form_names_each_reducer():
+    locator = SummaryLocator(
+        np.array([0.0, 1.0, 2.0, 3.0, 4.0]),
+        {"lo": np.min, "mean": np.mean, "hi": np.max},
+    )
+    np.testing.assert_allclose(locator(), [0.0, 2.0, 4.0])
+    assert locator.feature_names == {0.0: ("lo",), 2.0: ("mean",), 4.0: ("hi",)}
+
+
+def test_summary_locator_mapping_form_accepts_a_plain_number():
+    locator = SummaryLocator(
+        np.array([1.0, 2.0, 3.0]), {"mean": np.mean, "target": 5.0}
+    )
+    np.testing.assert_allclose(locator(), [2.0, 5.0])
+    assert locator.feature_names == {2.0: ("mean",), 5.0: ("target",)}

@@ -810,11 +810,19 @@ class FeatureLocator(FixedLocator):
         self,
         x: ArrayLike,
         y: ArrayLike,
-        features: Sequence[Callable[..., ArrayLike] | ArrayLike],
+        features: Sequence[Callable[..., ArrayLike] | ArrayLike]
+        | Mapping[str, Callable[..., float] | float],
     ) -> None:
         xs = np.asarray(x, dtype=float).ravel()
         ys = np.asarray(y, dtype=float).ravel()
-        super().__init__(_tick_positions(features, xs, ys))
+        positions, names = _named_positions(features, xs, ys)
+        super().__init__(positions)
+        self._feature_names = names
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """Map from each named feature's position to its name(s); empty if nameless."""
+        return dict(self._feature_names)
 
 
 class SummaryLocator(FixedLocator):
@@ -847,13 +855,21 @@ class SummaryLocator(FixedLocator):
     def __init__(
         self,
         values: ArrayLike,
-        reducers: Sequence[Callable[..., ArrayLike] | ArrayLike],
+        reducers: Sequence[Callable[..., ArrayLike] | ArrayLike]
+        | Mapping[str, Callable[..., float] | float],
     ) -> None:
         vals = np.asarray(values, dtype=float).ravel()
         vals = vals[np.isfinite(vals)]
         if vals.size == 0:
             raise ValueError("data has no finite values")
-        super().__init__(_tick_positions(reducers, vals))
+        positions, names = _named_positions(reducers, vals)
+        super().__init__(positions)
+        self._feature_names = names
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """Map from each named reducer's position to its name(s); empty if nameless."""
+        return dict(self._feature_names)
 
 
 class QuartileLocator(SummaryLocator):
