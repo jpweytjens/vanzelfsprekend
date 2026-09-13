@@ -947,3 +947,21 @@ def test_summary_locator_mapping_form_accepts_a_plain_number():
     )
     np.testing.assert_allclose(locator(), [2.0, 5.0])
     assert locator.feature_names == {2.0: ("mean",), 5.0: ("target",)}
+
+
+def test_quartile_locator_names_the_five_number_summary():
+    locator = QuartileLocator(np.arange(101.0))
+    assert locator.feature_names == {
+        0.0: ("min",),
+        25.0: ("Q1",),
+        50.0: ("median",),
+        75.0: ("Q3",),
+        100.0: ("max",),
+    }
+
+
+def test_quartile_locator_coincident_names_collapse_to_a_tuple():
+    locator = QuartileLocator([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19])
+    assert list(locator()) == [8.0, 19.0]
+    assert locator.feature_names[8.0] == ("min", "Q1", "median", "Q3")
+    assert locator.feature_names[19.0] == ("max",)

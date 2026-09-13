@@ -895,7 +895,11 @@ class QuartileLocator(SummaryLocator):
     """
 
     def __init__(self, data: ArrayLike) -> None:
-        super().__init__(data, (lambda v: np.quantile(v, (0, 0.25, 0.5, 0.75, 1)),))
+        quantiles = {"min": 0.0, "Q1": 0.25, "median": 0.5, "Q3": 0.75, "max": 1.0}
+        super().__init__(
+            data,
+            {name: (lambda v, p=p: np.quantile(v, p)) for name, p in quantiles.items()},
+        )
 
 
 class AugmentedLocator(Locator):
