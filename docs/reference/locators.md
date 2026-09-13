@@ -13,3 +13,5 @@ Each locator works on its own, on any matplotlib axes. Set it after `apply` or `
 ::: vanzelfsprekend.SummaryLocator
 
 ::: vanzelfsprekend.QuartileLocator
+
+::: vanzelfsprekend.AugmentedLocator
