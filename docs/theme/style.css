@@ -249,7 +249,7 @@ pre {
    to an inline box, so the paragraph is the one that can carry the air. It
    leans on what follows: the list is its own, the prose above is not. */
 p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
-.doc-section-title { font-style: italic; color: var(--ink-soft); font-weight: 600; }
+.doc-section-title { color: var(--ink); font-weight: 800; }
 /* An entry is a name and its gloss; the parentheses and the default are
    apparatus, and take the quieter ink. The dash that once joined the two
    is the entry's only uncoloured text, so it drops against the ground and
