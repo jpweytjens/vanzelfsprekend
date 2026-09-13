@@ -41,7 +41,7 @@ ax.xaxis.set_major_locator(vzs.TalbotLocator(nice_numbers=(9, 4.5, 3, 1.5, 6)))
 
 No unit, no formatter. The two dials do not overlap: `nice_numbers` swaps `q` but keeps the powers of ten, so it lands any decimal-scaled set (degrees, dozens) and never a π grid; `unit` rescales the whole step, and only that reaches a unit off the decimal ladder. The [locators reference](../reference/locators.md) lists both arguments.
 
-The figure below sets `unit` and the degree axis on the same plot, as the gallery script draws it:
+The figure below sets `unit` and the degree axis on the same plot, as the gallery script draws it[^doumont]:
 
 ```{.python}
 --8<-- "gallery.py:radian_axes"
@@ -52,4 +52,4 @@ The figure below sets `unit` and the degree axis on the same plot, as the galler
 <figcaption markdown>Radians below, degrees above, both reading off the same ticks.</figcaption>
 </figure>
 
-The figure is built in the spirit of an RLC phasor example from Jean-luc Doumont's *Trees, maps, and theorems*, the source of the y-label placements the range frame follows.
+[^doumont]: Jean-luc Doumont, *Trees, Maps, and Theorems: Effective Communication for Rational Minds* (Brussels: Principiae, 2009), whose RLC phasor example this figure follows, and whose y-label placements the range frame takes.
