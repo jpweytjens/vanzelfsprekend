@@ -65,6 +65,7 @@ nav:
       - Locators: how-to/locators.md
       - Tick spacing: how-to/tick-spacing.md
       - Tick formats: how-to/tick-formats.md
+      - Radian axes: how-to/radian-axes.md
       - Colour: how-to/colour.md
       - Small multiples: how-to/small-multiples.md
       - Restore: how-to/restore.md
