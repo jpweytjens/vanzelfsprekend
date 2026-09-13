@@ -5,12 +5,18 @@ from collections.abc import Callable, Sequence
 
 import matplotlib as mpl
 import numpy as np
+from dateutil.relativedelta import relativedelta
 from matplotlib.axis import Axis
 from matplotlib.dates import date2num, num2date
 from matplotlib.font_manager import FontProperties
 from matplotlib.ticker import AutoLocator, FixedLocator, Locator, LogLocator
 from matplotlib.transforms import Bbox
-from mizani.breaks import breaks_date, breaks_extended, breaks_log
+from mizani.breaks import (
+    breaks_date,
+    breaks_date_width,
+    breaks_extended,
+    breaks_log,
+)
 from numpy.typing import ArrayLike
 
 from vanzelfsprekend.ticks import _rc
@@ -525,6 +531,56 @@ class LogBreaksLocator(BreaksLocator):
         return super().view_limits(vmin, vmax)
 
 
+# mizani's by_n floors each grid to the data's start unless the interval is
+# a multiple of a parent unit. Two of its intervals fall on the wrong side
+# of that rule: a 2-month grid floors to the data's month and a 2-hour grid
+# to the data's hour, so both follow the start's parity and can skip 1
+# January or midnight. Every other interval either floors to a parent
+# (anchoring it) or visits every sub-unit. We keep mizani's choice
+# everywhere except those two, replacing each with the anchoring interval of
+# the same unit whose tick count is nearest the target.
+_DRIFTING_STEPS = {
+    # relativedelta (years, months, days, hours, mins, secs, us) -> anchoring
+    (0, 2, 0, 0, 0, 0, 0): ("months", (1, 3, 4, 6)),
+    (0, 0, 0, 2, 0, 0, 0): ("hours", (1, 3, 4, 6, 12)),
+}
+_UNIT_SECONDS = {"months": 30.44 * 86400.0, "hours": 3600.0}
+
+
+def _anchoring_width(
+    dates: Sequence[datetime.datetime],
+    lo: datetime.datetime,
+    hi: datetime.datetime,
+    n: int,
+) -> str | None:
+    """Width to use in place of a grid that drifts with the data start.
+
+    Returns ``None`` when mizani's grid does not drift, so the caller keeps
+    it unchanged. When the grid is one of the two drifting steps, returns
+    the ``"<multiple> <unit>"`` width of the same-unit interval whose tick
+    count over ``lo``..``hi`` is closest to ``n``.
+    """
+    if len(dates) < 2:
+        return None
+    step = relativedelta(dates[1], dates[0])
+    key = (
+        step.years,
+        step.months,
+        step.days,
+        step.hours,
+        step.minutes,
+        step.seconds,
+        step.microseconds,
+    )
+    match = _DRIFTING_STEPS.get(key)
+    if match is None:
+        return None
+    unit, multiples = match
+    span = (hi - lo).total_seconds() / _UNIT_SECONDS[unit]
+    best = min(multiples, key=lambda m: abs(span / m - n))
+    return f"{best} {unit}"
+
+
 class DateBreaksLocator(BreaksLocator):
     """Place ticks on calendar-nice dates inside the data range of a date axis.
 
@@ -704,7 +760,11 @@ class DateBreaksLocator(BreaksLocator):
         return super().view_limits(vmin, vmax)
 
     def _covering_breaks(self, vmin: float, vmax: float, n: int) -> np.ndarray:
-        dates = breaks_date(n=n)((num2date(vmin), num2date(vmax)))
+        lo, hi = num2date(vmin), num2date(vmax)
+        dates = breaks_date(n=n)((lo, hi))
+        width = _anchoring_width(dates, lo, hi, n)
+        if width is not None:
+            dates = breaks_date_width(width)((lo, hi))
         return np.asarray(date2num(dates), dtype=float)
 
 
