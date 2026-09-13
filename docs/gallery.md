@@ -6,7 +6,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)
-<figcaption markdown>**The warming scenarios.** The same plotting calls twice. [`apply`](reference/axes.md) trims the frame, [`line_labels`](how-to/direct-labels.md) turns the legend into names at the line ends, and one `label` names the observed record where it starts. The [tutorial](tutorial/warming-scenarios.md) builds the right panel one call at a time.</figcaption>
+<figcaption markdown>**The warming scenarios.** The same plotting calls twice. [`apply`](reference/axes.md#vanzelfsprekend.apply) trims the frame, [`line_labels`](how-to/direct-labels.md) turns the legend into names at the line ends, and one `label` names the observed record where it starts. The [tutorial](tutorial/warming-scenarios.md) builds the right panel one call at a time.</figcaption>
 </figure>
 
 <figure markdown>
@@ -41,7 +41,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![Four random-walk series that seaborn drew, trimmed to two spines with no grid, the legend replaced by A to D at the line ends in their colours and the year shown once at the axis end](figures/seaborn_lineplot.svg)
-<figcaption markdown>**A seaborn line plot.** vanzelfsprekend reads an axes, not the library that filled it. [`apply`](reference/axes.md) trims seaborn's `whitegrid` box to two spines and drops the grid; [`line_labels`](how-to/direct-labels.md) stands in for the legend, with the labels passed in because seaborn keeps its legend text on proxy artists.</figcaption>
+<figcaption markdown>**A seaborn line plot.** vanzelfsprekend reads an axes, not the library that filled it. [`apply`](reference/axes.md#vanzelfsprekend.apply) trims seaborn's `whitegrid` box to two spines and drops the grid; [`line_labels`](how-to/direct-labels.md) stands in for the legend, with the labels passed in because seaborn keeps its legend text on proxy artists.</figcaption>
 </figure>
 
 <figure markdown>
@@ -56,7 +56,7 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 
 <figure markdown>
 ![Phase-shifted sinusoids on an axis ticked in multiples of π, a matching degree axis along the top, the resistor curve picked out and the rest faded](figures/radian_axes.svg)
-<figcaption markdown>**Ticks in π.** Phase-shifted voltages on an axis ticked in multiples of π instead of round decimals: `TalbotLocator(unit=...)` runs the nice-number search in units of π, and [`secondary_frame`](reference/axes.md) mirrors those ticks as whole degrees along the top. `V_R` is picked out and the other three fade to grey. The [radian-axes how-to](how-to/radian-axes.md) has the arguments.</figcaption>
+<figcaption markdown>**Ticks in π.** Phase-shifted voltages on an axis ticked in multiples of π instead of round decimals: `TalbotLocator(unit=...)` runs the nice-number search in units of π, and [`secondary_frame`](reference/axes.md#vanzelfsprekend.secondary_frame) mirrors those ticks as whole degrees along the top. `V_R` is picked out and the other three fade to grey. The [radian-axes how-to](how-to/radian-axes.md) has the arguments.</figcaption>
 </figure>
 
 <figure markdown>
