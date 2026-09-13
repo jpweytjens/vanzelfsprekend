@@ -40,7 +40,7 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - toc:
-      permalink: false
+      permalink: true
   - pymdownx.highlight:
       use_pygments: true
       pygments_lang_class: true

@@ -74,6 +74,20 @@ h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 
 .subtitle, h1 + p > em:only-child, article > p:first-child > em:only-child { font-style: italic; color: var(--ink-soft); }
 h1 + p { margin-bottom: 2rem; }
 article > p:first-child { margin: 2.2rem 0 2rem; }
+
+/* Permalink: a quiet pilcrow that surfaces only when its heading is
+   hovered or focused, so a reader can grab the anchor without it
+   sitting beside every heading the rest of the time. */
+.headerlink {
+  opacity: 0;
+  margin-left: 0.3em;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--ink-soft);
+  transition: opacity 0.12s;
+}
+h1:hover > .headerlink, h2:hover > .headerlink, h3:hover > .headerlink,
+.headerlink:focus { opacity: 0.55; }
 a { color: var(--link); text-decoration: none; }
 a:hover { color: var(--link-hover); }
 hr { border: 0; height: 1px; background: var(--rule); margin: 3rem 0; }
