@@ -935,6 +935,16 @@ class AugmentedLocator(Locator):
         self._base = base
         self._extra = extra if isinstance(extra, Locator) else FixedLocator(list(extra))
 
+    @property
+    def extra(self) -> Locator:
+        """The fixed side whose ticks augment the base."""
+        return self._extra
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """The `extra` side's `position -> names` map, or empty if it has none."""
+        return getattr(self._extra, "feature_names", {})
+
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return the union of the base and extra tick positions."""
         return np.asarray(

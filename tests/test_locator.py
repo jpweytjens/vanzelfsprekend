@@ -965,3 +965,19 @@ def test_quartile_locator_coincident_names_collapse_to_a_tuple():
     assert list(locator()) == [8.0, 19.0]
     assert locator.feature_names[8.0] == ("min", "Q1", "median", "Q3")
     assert locator.feature_names[19.0] == ("max",)
+
+
+def test_augmented_locator_exposes_its_extra():
+    extra = QuartileLocator(np.arange(101.0))
+    locator = AugmentedLocator(TalbotLocator(), extra)
+    assert locator.extra is extra
+
+
+def test_augmented_locator_forwards_feature_names():
+    locator = AugmentedLocator(TalbotLocator(), QuartileLocator(np.arange(101.0)))
+    assert locator.feature_names[50.0] == ("median",)
+
+
+def test_augmented_locator_feature_names_empty_for_bare_positions():
+    locator = AugmentedLocator(TalbotLocator(), [1.0, 2.0, 3.0])
+    assert locator.feature_names == {}
