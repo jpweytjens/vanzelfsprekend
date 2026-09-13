@@ -402,23 +402,28 @@ def radian_axes() -> None:
         head = "π" if num == 1 else f"{num}π"
         return f"{sign}{head}" if den == 1 else f"{sign}{head}/{den}"
 
-    theta = np.linspace(0, 2 * pi, 400)
-    v_l = 1.3 * np.sin(theta + pi / 2)  # leads by a quarter turn
-    v_c = 1.1 * np.sin(theta - pi / 2)  # lags by a quarter turn
-    v_r = 0.75 * np.sin(theta)
-    v_tot = v_l + v_r + v_c  # their exact sum
-    orange = "tol:orange"
-    ax.plot(theta, v_l, color=orange, alpha=0.5, label="$V_L$")
-    ax.plot(theta, v_c, color=orange, alpha=0.5, label="$V_C$")
-    ax.plot(theta, v_tot, color=vzs.palettes.DATA_INK, label="$V_{tot}$")
-    ax.plot(theta, v_r, color=orange, label="$V_R$")
-    vzs.apply(ax, frame="loose")
+    theta = np.linspace(0, 4 * pi, 400)
+    v_l = 10.0 * np.sin(theta + pi / 3)  # leads
+    v_c = 6.7 * np.sin(theta - pi / 3)  # lags
+    v_r = 8.7 * np.sin(theta - pi / 8)
+    v_tot = (v_l + v_r + v_c) / np.sqrt(3)  # their exact sum
+    yellow = "tol:high_contrast.yellow"
+    ax.hlines(
+        xmin=0, xmax=4 * pi, y=0, color=vzs.palettes.DATA_INK, linewidth=1, alpha=0.15
+    )
+    ax.plot(theta, v_l, color=yellow, alpha=0.3, label="$V_L$")
+    ax.plot(theta, v_c, color=yellow, alpha=0.3, label="$V_C$")
+    ax.plot(theta, v_tot, color=vzs.palettes.DATA_INK, alpha=0.15, label="$V_{tot}$")
+    ax.plot(theta, v_r, color=yellow, label="$V_R$")
+    vzs.apply(ax, frame=("data", "data"), offset=(10, 5))
     vzs.tick_direction(ax, "in")
     ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
     ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
     secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
     secax.tick_params(direction="in")
+    ax.yaxis.set_major_locator(vzs.FeatureLocator(theta, v_r, [-10, 0, 10]))
     vzs.xlabel(ax, "phase (rad)")
+    vzs.ylabel(ax, "voltage (V)", place="beside")
     vzs.line_labels(ax)
     # --8<-- [end:radian_axes]
     save(fig, "radian_axes")
