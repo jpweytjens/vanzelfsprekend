@@ -863,3 +863,55 @@ def test_augmented_feature_tick_after_range_frame():
     assert lo <= x.min()  # spine/view still bounds the data
     assert hi >= x.max()  # spine/view still bounds the data
     plt.close(fig)
+
+
+def test_named_positions_sequence_form_has_no_names():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions([np.min, np.max], np.array([0.0, 1.0, 2.0]))
+    assert positions == [0.0, 2.0]
+    assert names == {}
+
+
+def test_named_positions_mapping_form_maps_each_name():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"lo": np.min, "hi": np.max}, np.array([0.0, 1.0, 2.0])
+    )
+    assert positions == [0.0, 2.0]
+    assert names == {0.0: ("lo",), 2.0: ("hi",)}
+
+
+def test_named_positions_coincident_names_collapse_to_a_tuple():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"a": lambda v: v.min(), "b": lambda v: v[0]}, np.array([5.0, 6.0])
+    )
+    assert positions == [5.0]
+    assert names == {5.0: ("a", "b")}
+
+
+def test_named_positions_named_array_result_raises():
+    from vanzelfsprekend.locator import _named_positions
+
+    with pytest.raises(ValueError, match="one position"):
+        _named_positions({"q": lambda v: np.quantile(v, (0.25, 0.75))}, np.arange(10.0))
+
+
+def test_named_positions_drops_non_finite_and_its_name():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"ok": lambda v: v[0], "bad": lambda v: np.nan}, np.array([3.0, 4.0])
+    )
+    assert positions == [3.0]
+    assert names == {3.0: ("ok",)}
+
+
+def test_named_positions_without_finite_positions_raises():
+    from vanzelfsprekend.locator import _named_positions
+
+    with pytest.raises(ValueError, match="finite"):
+        _named_positions([lambda v: np.nan], np.array([0.0, 1.0]))

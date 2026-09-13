@@ -1,7 +1,7 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
 import datetime
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 import matplotlib as mpl
 import numpy as np
@@ -972,6 +972,49 @@ def _tick_positions(
     # tolist: FixedLocator's stub wants Sequence[float], which an ndarray
     # does not satisfy structurally.
     return np.unique(values).tolist()
+
+
+def _named_positions(
+    entries: Sequence[Callable[..., ArrayLike] | ArrayLike]
+    | Mapping[str, Callable[..., float] | float],
+    *data: np.ndarray,
+) -> tuple[list[float], dict[float, tuple[str, ...]]]:
+    """Positions plus a `position -> names` map from named or nameless entries.
+
+    A `Mapping` names each entry (one name, one scalar position); a
+    `Sequence` is nameless and may yield arrays. Positions follow the
+    same flatten, drop-non-finite, collapse-coincident pipeline as
+    `_tick_positions`; the map carries identity past the collapse, so
+    coincident named positions collapse to a tuple of their names.
+    """
+    if isinstance(entries, Mapping):
+        items: list[tuple[str | None, Callable[..., ArrayLike] | ArrayLike]] = [
+            (name, entry) for name, entry in entries.items()
+        ]
+    else:
+        items = [(None, entry) for entry in entries]
+
+    pairs: list[tuple[float, str | None]] = []
+    for name, entry in items:
+        # ty: ignore[call-top-callable]; same top-callable narrowing as _tick_positions.
+        arr = np.asarray(
+            entry(*data) if callable(entry) else entry, dtype=float
+        ).ravel()
+        if name is not None and arr.size != 1:
+            raise ValueError(
+                f"named feature {name!r} must yield one position, got {arr.size}"
+            )
+        pairs.extend((float(value), name) for value in arr)
+
+    finite = [(v, n) for v, n in pairs if np.isfinite(v)]
+    if not finite:
+        raise ValueError("reducers produced no finite tick positions")
+    positions = np.unique([v for v, _ in finite]).tolist()
+    names: dict[float, tuple[str, ...]] = {}
+    for value, name in finite:
+        if name is not None:
+            names[value] = (*names.get(value, ()), name)
+    return positions, names
 
 
 def visible_interval(
