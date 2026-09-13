@@ -4,6 +4,9 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from dateutil.relativedelta import relativedelta
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from mizani.breaks import breaks_extended
 
 from vanzelfsprekend import (
@@ -616,6 +619,90 @@ def test_date_count_follows_axis_length():
     wide = _drawn_ticks((10, 3), DateBreaksLocator(), scale="date")
     narrow = _drawn_ticks((1.5, 3), DateBreaksLocator(), scale="date")
     assert len(narrow) < len(wide)
+
+
+def test_date_even_month_start_still_lands_on_january():
+    # A ~14-month span starting in an even month used to select mizani's
+    # 2-month grid, which floors to the start month and keeps its parity
+    # (June -> even months), so it never lands on 1 January. Dropping the
+    # 2-month step falls back to the year-anchored quarterly grid.
+    vmin, vmax = _date_interval(dt.datetime(2019, 6, 10), dt.datetime(2020, 8, 5))
+    ticks = DateBreaksLocator().tick_values(vmin, vmax, 6)
+    expected = mdates.date2num(
+        [
+            dt.datetime(2019, 7, 1),
+            dt.datetime(2019, 10, 1),
+            dt.datetime(2020, 1, 1),
+            dt.datetime(2020, 4, 1),
+            dt.datetime(2020, 7, 1),
+        ]
+    )
+    np.testing.assert_allclose(ticks, expected)
+
+
+def test_date_odd_hour_start_still_lands_on_midnight():
+    # The intraday analogue: a span starting on an odd hour used to select
+    # the 2-hour grid, which keeps the start hour's parity and skips
+    # midnight. Dropping 2-hour falls back to the day-anchored 3-hour grid.
+    vmin, vmax = _date_interval(
+        dt.datetime(2024, 3, 1, 21, 0), dt.datetime(2024, 3, 2, 11, 0)
+    )
+    ticks = DateBreaksLocator().tick_values(vmin, vmax, 6)
+    expected = mdates.date2num(
+        [
+            dt.datetime(2024, 3, 1, 21),
+            dt.datetime(2024, 3, 2, 0),
+            dt.datetime(2024, 3, 2, 3),
+            dt.datetime(2024, 3, 2, 6),
+            dt.datetime(2024, 3, 2, 9),
+        ]
+    )
+    np.testing.assert_allclose(ticks, expected)
+
+
+@settings(max_examples=200, deadline=None)
+@given(
+    year=st.integers(2000, 2050),
+    month=st.integers(1, 12),
+    day=st.integers(1, 28),
+    length_months=st.integers(13, 24),
+    n=st.integers(4, 10),
+)
+def test_date_span_over_a_year_always_lands_on_january(
+    year, month, day, length_months, n
+):
+    # A span of 13 months or more always straddles a 1 January, and with
+    # the drifting steps gone the chosen grid (monthly, quarterly,
+    # half-yearly or yearly) always lands a tick on it, wherever the data
+    # starts.
+    start = dt.datetime(year, month, day)
+    end = start + relativedelta(months=length_months)
+    vmin, vmax = _date_interval(start, end)
+    ticks = mdates.num2date(DateBreaksLocator().tick_values(vmin, vmax, n))
+    assert any(d.month == 1 and d.day == 1 for d in ticks)
+
+
+@settings(max_examples=100, deadline=None)
+@given(
+    year=st.integers(2000, 2050),
+    length_months=st.integers(13, 24),
+    n=st.integers(4, 10),
+)
+def test_date_january_presence_does_not_depend_on_start_month(year, length_months, n):
+    # The 2-month drift made January's presence hinge on the start month's
+    # parity: even starts rode the even months and skipped it. Sliding the
+    # start across all twelve months must not change whether January gets a
+    # tick. (The grid's resolution may still shift between monthly and
+    # quarterly near a boundary, since equal month counts are unequal
+    # durations, but both land on January.)
+    def has_january(start_month):
+        start = dt.datetime(year, start_month, 1)
+        end = start + relativedelta(months=length_months)
+        vmin, vmax = _date_interval(start, end)
+        ticks = mdates.num2date(DateBreaksLocator().tick_values(vmin, vmax, n))
+        return any(d.month == 1 and d.day == 1 for d in ticks)
+
+    assert {has_january(m) for m in range(1, 13)} == {True}
 
 
 def test_unit_pi_full_turn_places_pi_fractions():
