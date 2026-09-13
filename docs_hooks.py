@@ -39,11 +39,13 @@ HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{6}")
 IMG_TAG = re.compile(r"(?:<p>)?<img\b(?P<attrs>[^>]*?)/?>(?:</p>)?")
 ATTRIBUTE = re.compile(r'(?P<name>\w+)="(?P<value>[^"]*)"')
 
-# Pygments short class names, grouped into Alabaster's four categories.
+# Pygments short class names, grouped into six categories.
 STRING_CLASSES = ".s, .s1, .s2, .sa, .sb, .sc, .se, .sh, .si, .sx, .sr, .ss, .dl"
 COMMENT_CLASSES = ".c, .c1, .cm, .cs, .ch, .cp, .cpf, .sd"
 CONSTANT_CLASSES = ".m, .mi, .mf, .mh, .mo, .mb, .il, .kc"
 DEFINITION_CLASSES = ".nf, .nc, .fm"
+KEYWORD_CLASSES = ".k, .kd, .kn, .kp, .kr"
+BUILTIN_CLASSES = ".nb, .kt"
 
 # The site's own dark counterparts to the three ink roles. If the package
 # ever gains dark-ground inks, these go and both sets come from palettes.
@@ -218,9 +220,9 @@ def palette_css() -> str:
     the two names that point somewhere share one colour on both grounds,
     and it turns to that scheme's warm accent on hover, a hue away from
     every colour the page uses at rest. The three ink roles get a token
-    each so an inlined figure can follow the page's ground. Only four
-    token categories are coloured: strings, comments and docstrings,
-    constants, definitions. Everything else stays body ink.
+    each so an inlined figure can follow the page's ground. Six token
+    categories are coloured: strings, comments and docstrings, constants,
+    definitions, keywords, and builtins. Everything else stays body ink.
 
     Returns
     -------
@@ -235,6 +237,8 @@ def palette_css() -> str:
         "--code-comment": palettes.MUTED["green"],
         "--code-constant": palettes.MUTED["purple"],
         "--code-definition": palettes.MUTED["indigo"],
+        "--code-keyword": palettes.MUTED["teal"],
+        "--code-builtin": palettes.MEDIUM_CONTRAST["dark_yellow"],
         "--ink-data": palettes.DATA_INK,
         "--ink-text": palettes.TEXT_INK,
         "--ink-line": palettes.LINE_INK,
@@ -247,6 +251,8 @@ def palette_css() -> str:
         "--code-comment": palettes.LIGHT["mint"],
         "--code-constant": palettes.LIGHT["light_cyan"],
         "--code-definition": palettes.LIGHT["light_blue"],
+        "--code-keyword": palettes.LIGHT["pear"],
+        "--code-builtin": palettes.LIGHT["light_yellow"],
         **DARK_INKS,
     }
 
@@ -262,6 +268,8 @@ def palette_css() -> str:
         f"{COMMENT_CLASSES} {{ color: var(--code-comment); font-style: italic; }}\n"
         f"{CONSTANT_CLASSES} {{ color: var(--code-constant); }}\n"
         f"{DEFINITION_CLASSES} {{ color: var(--code-definition); font-weight: 600; }}\n"
+        f"{KEYWORD_CLASSES} {{ color: var(--code-keyword); }}\n"
+        f"{BUILTIN_CLASSES} {{ color: var(--code-builtin); }}\n"
     )
 
 

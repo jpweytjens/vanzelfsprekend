@@ -29,9 +29,27 @@
   </nav>
   {% endif %}
 
+  {% set is_reference = page.url and page.url.startswith('reference/') %}
+  {% if is_reference %}
+  <div class="with-toc">
+    <article>
+      {{ page.content }}
+    </article>
+    <nav class="page-toc" aria-label="On this page">
+      <ul>
+        {% for section in page.toc %}
+          {% for entry in section.children %}
+          <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </nav>
+  </div>
+  {% else %}
   <article>
     {{ page.content }}
   </article>
+  {% endif %}
 
   <footer class="colophon">
     Johannes Weytjens · <a href="{{ config.repo_url }}/blob/main/LICENSE">BSD-3-Clause</a> · Set in Mona Sans and Monaspace Neon

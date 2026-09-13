@@ -74,6 +74,20 @@ h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 
 .subtitle, h1 + p > em:only-child, article > p:first-child > em:only-child { font-style: italic; color: var(--ink-soft); }
 h1 + p { margin-bottom: 2rem; }
 article > p:first-child { margin: 2.2rem 0 2rem; }
+
+/* Permalink: a quiet pilcrow that surfaces only when its heading is
+   hovered or focused, so a reader can grab the anchor without it
+   sitting beside every heading the rest of the time. */
+.headerlink {
+  opacity: 0;
+  margin-left: 0.3em;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--ink-soft);
+  transition: opacity 0.12s;
+}
+h1:hover > .headerlink, h2:hover > .headerlink, h3:hover > .headerlink,
+.headerlink:focus { opacity: 0.55; }
 a { color: var(--link); text-decoration: none; }
 a:hover { color: var(--link-hover); }
 hr { border: 0; height: 1px; background: var(--rule); margin: 3rem 0; }
@@ -218,15 +232,16 @@ pre {
    for the section label. */
 .doc-heading { margin-top: 3rem; }
 /* One member ends where the next begins, and space alone cannot say so
-   on a page that spaces everything. A rule can, and the border stops the
-   heading's margin collapsing through, so the air below it is set here. */
-.doc-object + .doc-object { border-top: 1px solid var(--rule); margin-top: 3.5rem; }
-.doc-object + .doc-object > .doc-heading { margin-top: 1.3rem; }
+   on a page that spaces everything. A rule can; the border stops the
+   heading's margin collapsing through, so the air below it is set to
+   match the air above, seating the hairline midway. */
+.doc-object + .doc-object { border-top: 1px solid var(--rule); margin-top: 2.4rem; }
+.doc-object + .doc-object > .doc-heading { margin-top: 2.4rem; }
 /* A method parts from a method less than a class parts from a class, so
    the rule between them takes the quieter ink and less air, as the two
    heading ranks above it already do. */
-.doc-children .doc-object + .doc-object { border-top-color: var(--ink-soft); margin-top: 2.4rem; }
-.doc-children .doc-object + .doc-object > .doc-heading { margin-top: 1.1rem; }
+.doc-children .doc-object + .doc-object { border-top-color: var(--ink-soft); margin-top: 1.75rem; }
+.doc-children .doc-object + .doc-object > .doc-heading { margin-top: 1.75rem; }
 .doc-heading .doc-object-name { font-family: "Monaspace Neon", ui-monospace, monospace; font-style: normal; font-size: 1.1em; }
 .doc-signature { margin-left: 0; }
 .doc-signature pre { margin-left: 1.5rem; margin-top: 0.5rem; }
@@ -234,10 +249,12 @@ pre {
    to an inline box, so the paragraph is the one that can carry the air. It
    leans on what follows: the list is its own, the prose above is not. */
 p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
-.doc-section-title { font-style: italic; color: var(--ink-soft); font-weight: 600; }
-/* An entry is a name and its gloss; the parentheses, the default and the
-   dash between them are apparatus, and take the quieter ink. */
-.doc-section-item { list-style: none; margin: 0 0 0.6rem 1.5rem; color: var(--ink-soft); }
+.doc-section-title { color: var(--ink); font-weight: 800; }
+/* An entry is a name and its gloss; the parentheses and the default are
+   apparatus, and take the quieter ink. The dash that once joined the two
+   is the entry's only uncoloured text, so it drops against the ground and
+   leaves the gloss to open its own line. */
+.doc-section-item { list-style: none; margin: 0 0 1.1rem 1.5rem; color: transparent; }
 .doc-section-item > b, .doc-section-item .doc-md-description { color: var(--ink); }
 /* A return has no name, so its type stands in the name's place and takes
    the name's ink. */
@@ -245,15 +262,37 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 /* mkdocstrings sets only the type and the default as code, leaving the
    parentheses, the comma and the word "default:" bare, so the fragment
    alternates faces. docs_hooks.type_annotations wraps it to be set in one. */
-.doc-annotation { font-family: "Monaspace Neon", ui-monospace, Menlo, monospace; font-size: var(--code-size); }
+.doc-annotation { font-family: "Monaspace Neon", ui-monospace, Menlo, monospace; font-size: var(--code-size); color: var(--ink-soft); }
 .doc-annotation code { font-size: 1em; }
-.doc-md-description { display: inline; }
+/* The description drops onto its own line under the name and type. */
+.doc-md-description { display: block; margin-top: 0.1rem; }
 .doc-md-description p { display: inline; margin: 0; }
 .doc-contents ul { padding-left: 0; }
 .admonition { margin: 1.4rem 0; }
 .admonition-title { font-style: italic; color: var(--ink-soft); display: inline; margin-right: 0.4em; }
 .admonition-title::after { content: "."; }
 .admonition > p { display: inline; }
+
+/* Reference pages carry a table of contents in the right margin, where
+   prose pages float their sidenotes. align-items keeps the list its own
+   height so it can ride along, sticky, as the reader scrolls a long page
+   of functions. */
+.with-toc {
+  display: grid;
+  grid-template-columns: minmax(0, 66ch) 1fr;
+  column-gap: 2.5rem;
+  align-items: start;
+}
+/* The margin here is the TOC's, so a wide signature stays in the measure
+   and scrolls rather than spilling under the list, as code does elsewhere. */
+.with-toc pre { max-width: 100%; }
+/* margin-top seats the list level with the h1, which carries the same top
+   margin; top is the offset it sticks at once the h1 scrolls past. */
+.page-toc { position: sticky; top: 2.5rem; margin-top: 2.2rem; font-size: 0.85rem; line-height: 1.4; }
+.page-toc ul { list-style: none; margin: 0; padding: 0; }
+.page-toc li { margin-bottom: 0.45rem; }
+.page-toc a { color: var(--ink-soft); }
+.page-toc a:hover { color: var(--link-hover); }
 
 .colophon { margin-top: 5rem; font-size: 0.8rem; color: var(--ink-soft); }
 .colophon a { color: var(--ink-soft); }
@@ -268,4 +307,8 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
   /* The class rule beats the bare pre above it, so the signature needs
      naming to go flush with the rest of the code. */
   .doc-signature pre { margin-left: 0; }
+  /* No margin to ride in, so the reference TOC steps aside and the top
+     nav carries the page. */
+  .with-toc { display: block; }
+  .page-toc { display: none; }
 }
