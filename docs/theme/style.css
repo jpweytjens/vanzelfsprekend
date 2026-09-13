@@ -269,6 +269,25 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 .admonition-title::after { content: "."; }
 .admonition > p { display: inline; }
 
+/* Reference pages carry a table of contents in the right margin, where
+   prose pages float their sidenotes. align-items keeps the list its own
+   height so it can ride along, sticky, as the reader scrolls a long page
+   of functions. */
+.with-toc {
+  display: grid;
+  grid-template-columns: minmax(0, 66ch) 1fr;
+  column-gap: 2.5rem;
+  align-items: start;
+}
+/* The margin here is the TOC's, so a wide signature stays in the measure
+   and scrolls rather than spilling under the list, as code does elsewhere. */
+.with-toc pre { max-width: 100%; }
+.page-toc { position: sticky; top: 2.5rem; font-size: 0.85rem; line-height: 1.4; }
+.page-toc ul { list-style: none; margin: 0; padding: 0; }
+.page-toc li { margin-bottom: 0.45rem; }
+.page-toc a { color: var(--ink-soft); }
+.page-toc a:hover { color: var(--link-hover); }
+
 .colophon { margin-top: 5rem; font-size: 0.8rem; color: var(--ink-soft); }
 .colophon a { color: var(--ink-soft); }
 
@@ -282,4 +301,8 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
   /* The class rule beats the bare pre above it, so the signature needs
      naming to go flush with the rest of the code. */
   .doc-signature pre { margin-left: 0; }
+  /* No margin to ride in, so the reference TOC steps aside and the top
+     nav carries the page. */
+  .with-toc { display: block; }
+  .page-toc { display: none; }
 }
