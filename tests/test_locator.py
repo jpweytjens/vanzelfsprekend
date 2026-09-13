@@ -747,3 +747,11 @@ def test_augmented_nonsingular_delegates_to_base():
     base = LogBreaksLocator()
     loc = AugmentedLocator(base, [1.0])
     assert loc.nonsingular(5.0, 5.0) == base.nonsingular(5.0, 5.0)
+
+
+def test_augmented_locator_is_public():
+    import vanzelfsprekend as vzs
+    from vanzelfsprekend.locator import AugmentedLocator as _Direct
+
+    assert vzs.AugmentedLocator is _Direct
+    assert "AugmentedLocator" in vzs.__all__
