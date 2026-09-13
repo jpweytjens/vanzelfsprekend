@@ -1,16 +1,47 @@
-# Radian axes
+# Non-decimal ticks
 
-*Count ticks in π by giving the locator a `unit`, write the fractions with a formatter that reads the same π, and add the degree axis on top with one call.*
+*The locator's ticks are `unit * q * 10**x`: nice numbers `q` tiled across the decades. Change `unit` to count in π or any other step, or `nice_numbers` to pick a different set of round values.*
 
-A radian axis wants its ticks on fractions of π, but the default locator counts in decimals and lands them on `0, 2, 4, 6`. Give `TalbotLocator` a `unit` and it counts in that unit instead: `TalbotLocator(unit=np.pi)` puts the ticks on `0, π, 2π, 3π, 4π`, the multiples of π the [Talbot search](../reference/locators.md) settles on once π is its counting step. Set it *after* `apply` (or `range_frame`), the way [every locator goes on after the frame](locators.md), since `apply` installs the default locator and would otherwise overwrite yours.
+The nice numbers are a small seed set, 1, 2, 5 and a few more (2.5, 3, 4), the values a reader takes in at a glance. Talbot does not stop at the seed: it multiplies each by every power of ten, so `q * 10**x` tiles `0.2, 0.5, 1, 2, 5, 10, 20` across the decades, and every default tick is one of those. That is why the grid is decimal, and why a radian axis over `[0, 2π]` ticks `0, 2, 4, 6`, round numbers that fall nowhere near π.
 
-The locator places the ticks; matplotlib still writes them, and left alone it writes the raw number, `3.14`, not `π`. Turning the value into "π/2" is a `FuncFormatter` you supply, because the library ships none: a tick label [stays a string matplotlib wrote](tick-formats.md), and the range frame does not touch it. This names π twice, once as the locator's `unit` and once inside the formatter that divides by π to find the fraction, and nothing makes the two agree. So declare π once and read it in both places. The snippet's `pi = np.pi` is that single authority; change it and the ticks and their labels move together, where two separate literals would drift apart the moment one was edited.
+The full grid the locator searches is `unit * q * 10**x`, with `unit` at 1 by default. Two dials move the ticks off the decimal grid, one for each factor you might want to change: `unit` rescales the whole step, and `nice_numbers` swaps the seed.
 
-The degree axis on top is `vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))`, the pair of functions converting each way between the two units. It mirrors the host's ticks rather than choosing its own, so `0, 180, 360, 540, 720` land directly under the π ticks, and whole degrees need no formatter. The [axes reference](../reference/axes.md) has the rest of what `secondary_frame` takes.
+## A change of unit
 
-When degrees are the *primary* axis instead, the unit trick is the wrong tool: the numbers are already plain, they just fall on ugly multiples. `TalbotLocator` chooses its step from a set of nice numbers, decimal by default (1, 2, 5 and their powers of ten), which on `[0, 360]` gives `0, 100, 200, 300`. Hand it the multiples that suit degrees, `TalbotLocator(nice_numbers=(9, 4.5, 3, 1.5, 6))`, and the same axis ticks `0, 90, 180, 270, 360`. No unit, no formatter.
+Set `unit` to count in that step instead of in ones. `TalbotLocator(unit=np.pi)` runs the search in units of π and lands the ticks on `0, π, 2π, 3π, 4π`, the step now `π * q * 10**x`. Multiplying the grid by a constant is a linear rescaling, exact here because the nice-number search is scale-invariant, and it is the only way onto multiples of an irrational step, which no choice of `q` can reach. Set it *after* `apply` (or `range_frame`), the way [every locator goes on after the frame](locators.md), since `apply` installs the default locator and would otherwise overwrite yours.
 
-The figure, as the gallery script draws it:
+The locator places the ticks; matplotlib still writes them, and left alone it writes `3.14`, not `π`. Turning the value into "π/2" is a `FuncFormatter` you supply, because the library ships none: a tick label [stays a string matplotlib wrote](tick-formats.md), and the range frame does not touch it. This names π twice, once as the locator's `unit` and once inside the formatter that divides by π to find the fraction, so declare it once and read it in both places:
+
+```python
+pi = np.pi  # one authority: the locator and the formatter both read it
+
+ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
+ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
+```
+
+Change that one `pi` and the ticks and their labels move together, where two separate literals would drift apart the moment one was edited.
+
+## The other unit on top
+
+A second axis carrying the same data in the other unit is one call. `vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))` adds a degree axis along the top, the pair of functions converting each way between radians and degrees:
+
+```python
+secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+```
+
+It mirrors the host's ticks rather than running a search of its own, so `0, 180, 360, 540, 720` land directly under the π ticks and whole degrees need no formatter. Because it mirrors, neither `unit` nor `nice_numbers` applies to it: the degree ticks are wherever the π ticks are. The [axes reference](../reference/axes.md) has the rest of what `secondary_frame` takes.
+
+## A different set of nice numbers
+
+When your step *is* on the decimal ladder but the seed is wrong, change `q` instead of `unit`. A degrees-*primary* axis over `[0, 360]` gets `0, 100, 200, 300` from the default seed; the ticks you want, `0, 90, 180, 270, 360`, are `q * 10**1` for a different set. Hand `TalbotLocator` that set:
+
+```python
+ax.xaxis.set_major_locator(vzs.TalbotLocator(nice_numbers=(9, 4.5, 3, 1.5, 6)))
+```
+
+No unit, no formatter. The two dials do not overlap: `nice_numbers` swaps `q` but keeps the powers of ten, so it lands any decimal-scaled set (degrees, dozens) and never a π grid; `unit` rescales the whole step, and only that reaches a unit off the decimal ladder. The [locators reference](../reference/locators.md) lists both arguments.
+
+The figure below sets `unit` and the degree axis on the same plot, as the gallery script draws it:
 
 ```{.python}
 --8<-- "gallery.py:radian_axes"
@@ -20,3 +51,5 @@ The figure, as the gallery script draws it:
 ![Phase-shifted sinusoids on an axis ticked in multiples of π, a matching degree axis along the top, the resistor curve picked out and the rest faded](../figures/radian_axes.svg)
 <figcaption markdown>Radians below, degrees above, both reading off the same ticks.</figcaption>
 </figure>
+
+The figure is built in the spirit of an RLC phasor example from Jean-luc Doumont's *Trees, maps, and theorems*, the source of the y-label placements the range frame follows.
