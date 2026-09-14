@@ -715,6 +715,57 @@ def test_feature_is_a_valid_mode():
     plt.close(fig)
 
 
+def test_feature_without_marks_warns_and_falls_back_to_data(scatter_ax):
+    # frame_unit applies the frame once synchronously on install (as the
+    # symlog/categorical/3d "warns and is skipped" tests above rely on
+    # too), so with no FixedLocator ever set the fallback warning fires
+    # right here, not on the later draw.
+    with pytest.warns(UserWarning, match="no FixedLocator"):
+        ax = range_frame(scatter_ax, frame="feature")  # plain Talbot, no marks
+    ax.figure.canvas.draw()
+    assert ax.spines["left"].get_bounds() == tuple(ax.yaxis.get_data_interval())
+
+
+def test_feature_single_mark_warns_and_falls_back_to_data():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7800]))  # one mark -> degenerate
+    with pytest.warns(UserWarning, match="single feature mark"):
+        fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == tuple(ax.yaxis.get_data_interval())
+    plt.close(fig)
+
+
+def test_feature_over_reach_warns_with_shrink_factor():
+    fig, ax = _two_values_ax()  # y span 7680..7938 -> data span 258
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7000, 7938]))  # 7000 is 680 below
+    with pytest.warns(UserWarning, match="beyond the data"):
+        fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7000.0, 7938.0)
+    plt.close(fig)
+
+
+def test_feature_within_one_span_is_silent(recwarn):
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7600, 7938]))  # 80 below, < 258
+    fig.canvas.draw()
+    assert not [w for w in recwarn if "beyond the data" in str(w.message)]
+    plt.close(fig)
+
+
+def test_feature_warns_once_across_draws(recwarn):
+    ax_fig = _two_values_ax()
+    fig, ax = ax_fig
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7000, 7938]))
+    fig.canvas.draw()
+    fig.canvas.draw()
+    assert len([w for w in recwarn if "beyond the data" in str(w.message)]) == 1
+    plt.close(fig)
+
+
 def test_per_end_loose_frame_view_covers_a_fixed_tick_past_that_end():
     fig, ax = _two_values_ax()
     range_frame(ax, frame=("nice", ("loose", "data")))

@@ -277,6 +277,7 @@ def install_frame(
     """
     frame_state = get_state(ax)["frame"]  # ty: ignore[not-subscriptable]
     frame_state["mode"] = mode
+    frame_state["warned"] = set()
     active = set()
     for name, axis in (("x", ax.xaxis), ("y", ax.yaxis)):
         kind = kinds[name]
@@ -342,6 +343,68 @@ def install_frame(
     add_applier(ax, "frame", _apply_frame)
 
 
+def _resolve_feature_ends(
+    ax: Axes,
+    name: str,
+    axis: Axis,
+    ends: tuple[str, str],
+    frame_state: dict,
+    interval: tuple[float, float] | None,
+) -> tuple[tuple[str, str], list[float] | None]:
+    """Effective ends and marks for a spine with a `feature` end.
+
+    Replaces a `feature` end with `data` (warning once) when the axis has
+    no fixed marks, or when a single mark would collapse the spine. Warns
+    once when a mark strays more than one data-span beyond the data.
+    """
+    warned = frame_state.setdefault("warned", set())
+
+    def warn(key: object, message: str) -> None:
+        if key not in warned:
+            warnings.warn(f"vanzelfsprekend: {message}", stacklevel=2)
+            warned.add(key)
+
+    marks = _fixed_positions(axis)
+    to_data: tuple[str, str] = (
+        "data" if ends[0] == "feature" else ends[0],
+        "data" if ends[1] == "feature" else ends[1],
+    )
+    if marks is None:
+        warn(
+            ("no_marks", name),
+            f"frame='feature' but the {name}-axis has no FixedLocator "
+            "(FeatureLocator/SummaryLocator/QuartileLocator, or an "
+            "AugmentedLocator); framing that end to the data instead",
+        )
+        return to_data, None
+
+    lo_mark, hi_mark = min(marks), max(marks)
+    if ends[0] == "feature" and ends[1] == "feature" and lo_mark == hi_mark:
+        warn(
+            ("single", name),
+            f"frame='feature' found a single feature mark on the {name}-axis; "
+            "framing to the data instead",
+        )
+        return ("data", "data"), None
+
+    dmin, dmax = interval if interval is not None else visible_interval(axis)
+    span = dmax - dmin
+    if span > 0:
+        for i, mark in ((0, lo_mark), (1, hi_mark)):
+            if ends[i] != "feature":
+                continue
+            excess = (dmin - mark) if i == 0 else (mark - dmax)
+            if excess > span:
+                grown = max(hi_mark, dmax) - min(lo_mark, dmin)
+                warn(
+                    ("overreach", name, i),
+                    f"{name}-axis feature mark at {mark:g} lies "
+                    f"{excess / span:.1f}× the data range beyond the data; "  # noqa: RUF001
+                    f"the data will occupy about 1/{round(grown / span)} of the axis",
+                )
+    return ends, marks
+
+
 def _apply_frame(ax: Axes) -> bool:
     state = get_state(ax)
     if state is None or "frame" not in state:
@@ -356,10 +419,15 @@ def _apply_frame(ax: Axes) -> bool:
         if name not in frame_state["active"]:
             continue
         override = overrides.get(name)
+        interval = override() if override is not None else None
         ends = frame_state["mode"][name]
-        span = _frame_span(
-            axis, ends, interval=override() if override is not None else None
-        )
+        marks = None
+        if "feature" in ends:
+            # `marks` is unused until Task 3 wires it into the loose view fit.
+            ends, marks = _resolve_feature_ends(  # noqa: RUF059
+                ax, name, axis, ends, frame_state, interval
+            )
+        span = _frame_span(axis, ends, interval=interval)
         if span is not None and "loose" in ends:
             span, grew = _fit_loose_view(ax, name, span, ends)
             changed = changed or grew
