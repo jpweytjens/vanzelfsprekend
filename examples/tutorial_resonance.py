@@ -95,9 +95,6 @@ def main() -> None:
     save(fig, 3)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.apply(ax, frame="loose", offset=(24, -6))
-    vzs.xlabel(ax, "frequency (GHz)")
-    vzs.ylabel(ax, "output power (mW)")
     # --8<-- [start:step4]
     ax.xaxis.set_major_locator(
         vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
@@ -112,13 +109,13 @@ def main() -> None:
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
     # --8<-- [end:step4]
+    vzs.apply(ax, frame="feature", offset=(24, -6))
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     ax.legend()
     save(fig, 4)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.apply(ax, frame="loose", offset=(24, -6))
-    vzs.xlabel(ax, "frequency (GHz)")
-    vzs.ylabel(ax, "output power (mW)")
     ax.xaxis.set_major_locator(
         vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
     )
@@ -131,6 +128,9 @@ def main() -> None:
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
+    vzs.apply(ax, frame="feature", offset=(24, -6))
+    vzs.xlabel(ax, "frequency (GHz)")
+    vzs.ylabel(ax, "output power (mW)")
     # --8<-- [start:step5]
     vzs.label(ax, "measured", x=lambda x, y: x[np.argmax(y)])
     vzs.label(ax, "calculated", x=17.5)
