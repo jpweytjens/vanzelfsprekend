@@ -435,3 +435,24 @@ def test_end_labels_that_cannot_fit_warn_once():
         warnings.simplefilter("error")
         fig.canvas.draw()  # warned once, not on every draw
     plt.close(fig)
+
+
+def test_line_labels_forward_text_kwargs():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], label="alpha")
+    ax.plot([0, 1], [0, 2], label="beta")
+    vzs.range_frame(ax)
+    texts = vzs.line_labels(ax, fontsize=13, fontstyle="italic")
+    assert texts
+    assert all(t.get_fontsize() == 13 for t in texts)
+    assert all(t.get_fontstyle() == "italic" for t in texts)
+    plt.close(fig)
+
+
+def test_line_labels_color_kwarg_raises():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1], label="alpha")
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match="labelcolor"):
+        vzs.line_labels(ax, color="red")
+    plt.close(fig)

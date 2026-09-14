@@ -1,6 +1,6 @@
 """End-of-spine axis labels for a range frame."""
 
-from typing import cast
+from typing import Any, cast
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -13,7 +13,11 @@ from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appli
 
 
 def xlabel(
-    ax: Axes, text: str, flush: bool = True, labelpad: float | None = None
+    ax: Axes,
+    text: str,
+    flush: bool = True,
+    labelpad: float | None = None,
+    **kwargs: Any,
 ) -> Text:
     """Set an x-label that sits below the right end of the bottom spine.
 
@@ -40,6 +44,11 @@ def xlabel(
         edge is set by the *widest* tick label (matplotlib's own per-draw
         computation). `None` keeps matplotlib's default (rcParam
         `axes.labelpad`, 4.0).
+    **kwargs
+        `matplotlib.text.Text` properties forwarded to `set_xlabel`, for
+        styling: `color`, `fontsize`, `fontweight`, and the like.
+        vanzelfsprekend owns the label's alignment and position, so a
+        `horizontalalignment` here is overridden.
 
     Returns
     -------
@@ -47,7 +56,7 @@ def xlabel(
         The label artist.
     """
     _labels_state(ax)["xlabel_flush"] = flush
-    ax.set_xlabel(text, labelpad=labelpad)
+    ax.set_xlabel(text, labelpad=labelpad, **kwargs)
     ax.xaxis.label.set_horizontalalignment("right")
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
@@ -55,7 +64,11 @@ def xlabel(
 
 
 def ylabel(
-    ax: Axes, text: str, place: str = "above", labelpad: float | None = None
+    ax: Axes,
+    text: str,
+    place: str = "above",
+    labelpad: float | None = None,
+    **kwargs: Any,
 ) -> Text:
     """Set a horizontal y-label at the top of the left spine.
 
@@ -84,6 +97,12 @@ def ylabel(
         label sets the reference edge follows the placement: `'beside'`
         measures from the *widest* one (matplotlib's own per-draw
         computation), `'above'` from the top one.
+    **kwargs
+        `matplotlib.text.Text` properties for styling the label, such as
+        `color`, `fontsize`, `fontweight`. For `'beside'` they go to
+        `set_ylabel`; for `'above'` they style the managed above-label
+        text. vanzelfsprekend owns the label's rotation, alignment and
+        position, so a `rotation` here is overridden.
 
     Returns
     -------
@@ -111,7 +130,7 @@ def ylabel(
     ls = _labels_state(ax)
     ls["ylabel_place"] = place
     if place == "above":
-        result = _set_ylabel_above(ax, text, ls, labelpad)
+        result = _set_ylabel_above(ax, text, ls, labelpad, kwargs)
     else:
         above_text = ls.get("ylabel_above_text")
         if above_text is not None:
@@ -119,7 +138,8 @@ def ylabel(
             ls["ylabel_above_text"] = None
         ax.yaxis.set_label_position("left")
         ax.yaxis._autolabelpos = True  # ty: ignore[unresolved-attribute]
-        ax.set_ylabel(text, rotation=0, labelpad=labelpad)
+        ax.set_ylabel(text, labelpad=labelpad, **kwargs)
+        ax.yaxis.label.set_rotation(0)
         ax.yaxis.label.set_verticalalignment("center_baseline")
         ax.yaxis.label.set_horizontalalignment("right")
         result = ax.yaxis.label
@@ -128,13 +148,17 @@ def ylabel(
     return result
 
 
-def _set_ylabel_above(ax: Axes, text: str, ls: dict, labelpad: float | None) -> Text:
+def _set_ylabel_above(
+    ax: Axes, text: str, ls: dict, labelpad: float | None, kwargs: dict
+) -> Text:
     """Create or update the managed above-label and empty the axis label.
 
     The above-label is a clip-free text child styled to match the axis
     label; the draw hook positions it over the top tick label. `labelpad`
     rides on `ax.yaxis.labelpad`, matplotlib's own store for the gap, so
-    `None` means the same thing here as it does under `'beside'`.
+    `None` means the same thing here as it does under `'beside'`. `kwargs`
+    are `Text` style properties applied to the above-label, overriding the
+    axis-label defaults copied in on first creation.
     """
     above_text = ls.get("ylabel_above_text")
     if above_text is None:
@@ -151,6 +175,8 @@ def _set_ylabel_above(ax: Axes, text: str, ls: dict, labelpad: float | None) -> 
         above_text.set_color(ax.yaxis.label.get_color())
         ls["ylabel_above_text"] = above_text
     above_text.set_text(text)
+    if kwargs:
+        above_text.update(kwargs)
     # only the managed text renders while 'above' is active; the pad still
     # lives on the axis, where `_place_ylabel_above` reads it each draw
     ax.set_ylabel("", labelpad=labelpad)

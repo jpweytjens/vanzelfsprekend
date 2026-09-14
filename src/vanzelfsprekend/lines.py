@@ -3,7 +3,7 @@
 import warnings
 from functools import partial
 from itertools import cycle
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 from matplotlib.artist import Artist
@@ -19,6 +19,12 @@ from vanzelfsprekend import placement
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 
 
+def _reject_color_kwarg(kwargs: dict) -> None:
+    """Reject a `color`/`c` kwarg: the label colour is set through `labelcolor`."""
+    if "color" in kwargs or "c" in kwargs:
+        raise ValueError("set the label colour through labelcolor=, not color=")
+
+
 def line_labels(
     ax: Axes,
     at: Literal["start", "end"] = "end",
@@ -26,6 +32,7 @@ def line_labels(
     pad: float = 4.0,
     gap: float | None = None,
     labels: list[str | None] | None = None,
+    **kwargs: Any,
 ) -> list[Annotation]:
     """Label each line at one end, in place of a legend.
 
@@ -72,6 +79,11 @@ def line_labels(
         match the anchorable lines raises `ValueError`. With the
         default `labels=None`, lines are read as above and an empty
         result warns, pointing here.
+    **kwargs
+        `matplotlib.text.Text` properties forwarded to each label, for
+        styling: `fontsize`, `fontweight`, `fontstyle`, and the like.
+        Set the colour through `labelcolor`, not `color`; alignment and
+        position are vanzelfsprekend's to set.
 
     Returns
     -------
@@ -82,6 +94,7 @@ def line_labels(
         gap = placement.GAP
     if at not in ("start", "end"):
         raise ValueError(f"at must be 'start' or 'end', got {at!r}")
+    _reject_color_kwarg(kwargs)
     state = ensure_state(ax)
     legend = ax.get_legend()
     if legend is not None:
@@ -131,10 +144,17 @@ def line_labels(
             xy=anchor,
             xytext=(sign * pad, 0.0),
             textcoords="offset points",
-            ha="left" if at == "end" else "right",
-            va="baseline",
-            color=color,
-            annotation_clip=False,
+            # vanzelfsprekend's own alignment, colour and clip win over kwargs.
+            **cast(
+                "dict[str, Any]",
+                {
+                    **kwargs,
+                    "ha": "left" if at == "end" else "right",
+                    "va": "baseline",
+                    "color": color,
+                    "annotation_clip": False,
+                },
+            ),
         )
         for (_, label, anchor), color in zip(
             anchored, _resolve_colors(labelcolor, list(lines)), strict=True
