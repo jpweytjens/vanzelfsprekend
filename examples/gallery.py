@@ -208,15 +208,22 @@ def old_faithful() -> None:
 
 
 def frame_modes() -> None:
-    """Render one warming record under the three frame modes, ticks alike."""
+    """Render one warming record under the four frame modes."""
     table = load("hadcrut5_annual.csv")
-    fig, axes = plt.subplots(1, 3, figsize=(9, 2.8))
-    fig.subplots_adjust(wspace=0.5)
-    for ax, mode in zip(axes, ("nice", "loose", "data"), strict=True):
-        vzs.apply(ax, frame=mode)
-        ax.plot(table["year"], table["anomaly_c"])
+    year, anomaly = table["year"], table["anomaly_c"]
+    fig, axes = plt.subplots(2, 2, figsize=(6.5, 5))
+    fig.subplots_adjust(hspace=0.55, wspace=0.4)
+    for ax, mode in zip(axes.flat, ("nice", "loose", "data", "feature"), strict=True):
+        if mode == "feature":
+            # Mark the 2 °C Paris target the record has not reached: the spine
+            # climbs to it while the low end stays at the data. Set the marks
+            # before apply so mute's ink cycle still colours the line below.
+            ax.yaxis.set_major_locator(vzs.FeatureLocator(year, anomaly, [0, 1, 2]))
+            vzs.apply(ax, frame=("data", ("data", "feature")))
+        else:
+            vzs.apply(ax, frame=mode)
+        ax.plot(year, anomaly)
         ax.set_title(f'frame="{mode}"', color=vzs.palettes.TEXT_INK)
-    vzs.ylabel(axes[0], "warming (°C)", place="beside")
     save(fig, "frame_modes")
 
 
