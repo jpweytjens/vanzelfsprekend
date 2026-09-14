@@ -10,6 +10,8 @@
 
 ::: vanzelfsprekend.mute
 
+::: vanzelfsprekend.accent
+
 ::: vanzelfsprekend.small_multiples
 
 ::: vanzelfsprekend.tick_direction
