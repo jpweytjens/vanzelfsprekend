@@ -45,18 +45,18 @@ The three series are drawn and nothing reads across them. The permanent panel au
 
 Decomposing the series produced particular numbers, and those are what the axis should carry. `AugmentedLocator` puts them there without giving up the round-number ticks, by unioning the frame's nice ticks with positions you supply. The permanent y gains its two recovered levels, so the raise is the gap between two ticks a reader can read straight off. The transient y gains a zero line, and its x gains the June and December the bumps fall on, named as features so the next step can pick them out. `FeatureLocator` carries those named positions; `set_major_formatter("{x:.2f}")` rounds each panel's y labels, and where a level tick lands beside a round one the two labels separate on their own.
 
-## Name the recurrence
+## Accent the levels and the recurrence
 
 ```{.python}
---8<-- "tutorial_income.py:name"
+--8<-- "tutorial_income.py:highlight"
 ```
 
 <figure markdown>
-![The finished figure: the Jun and Dec ticks now in gold and red to match the holiday-pay and bonus points, one holiday pay, one bonus and the raise named beside their points](../figures/labour_income_step_4.svg)
-<figcaption markdown>Step four. The June and December ticks take the colours of the bumps they mark, and one holiday pay, one bonus and the raise are named where they happen.</figcaption>
+![The finished figure with no text labels: the two permanent levels 8.51 and 8.76 in blue to match the blue raise point, and the June and December ticks in gold and red to match the holiday-pay and bonus points](../figures/labour_income_step_4.svg)
+<figcaption markdown>Step four. The two permanent levels take the raise's blue and the June and December ticks take the bumps' gold and red, so colour alone ties each tick to the point it stands for.</figcaption>
 </figure>
 
-`accent` colours the named June and December ticks to match their points, gold for holiday pay and red for the bonus, so an axis mark and the point it stands for read as one thing. `label` then names one holiday pay, one bonus and the raise, each at its own date. Because a name, its tick and its point all share a single anchor date, they cannot drift apart when the figure is redrawn. The colour is data here rather than decoration: holiday pay and the year-end bonus are two kinds of recurrent income, which is why these marks carry colour where the rest of the figure stays in ink.[^robust]
+`accent` colours the ticks you point it at, by name or by value. On the transient x it takes the named June and December and colours them gold and red, the colours of the bumps; on the permanent y it takes the two levels by value and colours them the raise's blue, so the step's before and after read as one blue pair with the raise point between them. An axis mark and the point it stands for now read as one thing, and the plot carries no text of its own: the colour is the key, and it is data rather than decoration, holiday pay and the year-end bonus being two kinds of recurrent income.[^robust]
 
 [^robust]: The median cost in the segmentation is what lets the recurrence stay in the transient panel at all. A June bump is larger than the raise but rare within any run of months, so a segment's median steps over it; a least-squares fit would chase the bumps and break the permanent level into steps that were never there.
 

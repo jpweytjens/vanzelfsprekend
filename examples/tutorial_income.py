@@ -21,12 +21,11 @@ Settled so far
 - Ticks live in the major slot via AugmentedLocator (nice union feature):
   transient y = nice union 0; transient x = nice years union named Jun/Dec;
   permanent y = nice union the two recovered levels (full-range spine, the
-  colliding labels separate on their own). accent colours the named Jun/Dec
-  ticks (holiday gold, bonus red) to match their scatter points, tying each
-  axis mark to the example it stands for.
-- Two-colour recurrent scheme (holiday gold, bonus red), blue raise. One
-  callout per category via vzs.label; each recurrent example's callout, accent
-  tick and scatter point share one anchor date so they cannot drift apart.
+  colliding labels separate on their own). accent then colours the two
+  permanent levels the raise's blue and the named Jun/Dec ticks their bumps'
+  gold and red, so each axis mark reads with the point it stands for.
+- Colour is the whole key, no text callouts on the plot: blue for the permanent
+  levels and the raise, gold for June holiday pay, red for the December bonus.
 - Samples on the 1st of the month, so the firm start lands on a 2012 tick;
   two-decimal y labels on every panel.
 
@@ -81,13 +80,10 @@ C = 1.645  # one-sided 95% normal quantile
 HOLIDAY_C = "tol:high_contrast.yellow"  # June holiday pay
 BONUS_C = "tol:high_contrast.red"  # December bonus
 RAISE_C = "tol:high_contrast.blue"  # the one-off raise
-# One holiday pay and one bonus stand as the recurrent examples: each carries a
-# label, an accented tick and the scatter point, all anchored to one date so
-# they cannot drift apart.
-HOLIDAY_AT = dt.date(2017, 6, 1)
-BONUS_AT = dt.date(2017, 12, 1)
-RAISE_AT_DATE = dt.date(2018, 6, 1)
-CALLOUT_SIZE = 7  # callouts a step below the axis text, via label's Text kwargs
+# June and December of one year, accented on the transient x axis to name the
+# months the recurrent bumps fall on.
+HOLIDAY_AT = dt.date(2016, 6, 1)
+BONUS_AT = dt.date(2016, 12, 1)
 
 
 def data() -> tuple[list[dt.date], np.ndarray]:
@@ -238,17 +234,13 @@ def mark(
     # --8<-- [end:mark]
 
 
-def name(axes: np.ndarray) -> None:
-    """Name and colour the recurrent ticks; call out one of each and the raise."""
+def highlight(axes: np.ndarray, perm: np.ndarray) -> None:
+    """Accent the recurrent ticks and the two permanent levels by colour."""
     _, a_perm, a_nu = axes
-    # --8<-- [start:name]
+    # --8<-- [start:highlight]
     a_nu.vzs.accent(axis="x", label="name", color={"Jun": HOLIDAY_C, "Dec": BONUS_C})
-    vzs.label(a_perm, "raise", x=date2num(RAISE_AT_DATE), fontsize=CALLOUT_SIZE)
-    vzs.label(
-        a_nu, "holiday pay", x=date2num(HOLIDAY_AT), side="left", fontsize=CALLOUT_SIZE
-    )
-    vzs.label(a_nu, "bonus", x=date2num(BONUS_AT), side="right", fontsize=CALLOUT_SIZE)
-    # --8<-- [end:name]
+    a_perm.vzs.accent(axis="y", at=np.unique(perm).tolist(), color=RAISE_C)
+    # --8<-- [end:highlight]
 
 
 def decomposition() -> plt.Figure:
@@ -259,7 +251,7 @@ def decomposition() -> plt.Figure:
     fig, axes = draw(dates, income, perm, nu, sigma)
     compare(axes)
     mark(axes, dates, perm, nu, jun, dec, raise_pts)
-    name(axes)
+    highlight(axes, perm)
     return fig
 
 
@@ -295,7 +287,7 @@ def main() -> None:
     fig, axes = draw(dates, income, perm, nu, sigma)
     compare(axes)
     mark(axes, dates, perm, nu, jun, dec, raise_pts)
-    name(axes)
+    highlight(axes, perm)
     save(fig, 4)
 
 
