@@ -456,16 +456,24 @@ class _Accessor:
         )
 
     def set_xlabel(
-        self, text: str, flush: bool = True, labelpad: float | None = None
+        self,
+        text: str,
+        flush: bool = True,
+        labelpad: float | None = None,
+        **kwargs: Any,
     ) -> Text:
         """End-of-spine x-label; see `vanzelfsprekend.xlabel`."""
-        return xlabel(self._ax, text, flush=flush, labelpad=labelpad)
+        return xlabel(self._ax, text, flush=flush, labelpad=labelpad, **kwargs)
 
     def set_ylabel(
-        self, text: str, place: str = "above", labelpad: float | None = None
+        self,
+        text: str,
+        place: str = "above",
+        labelpad: float | None = None,
+        **kwargs: Any,
     ) -> Text:
         """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
-        return ylabel(self._ax, text, place=place, labelpad=labelpad)
+        return ylabel(self._ax, text, place=place, labelpad=labelpad, **kwargs)
 
     def line_labels(
         self,
@@ -474,10 +482,17 @@ class _Accessor:
         pad: float = 4.0,
         gap: float | None = None,
         labels: list[str | None] | None = None,
+        **kwargs: Any,
     ) -> list[Annotation]:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
         return line_labels(
-            self._ax, at=at, labelcolor=labelcolor, pad=pad, gap=gap, labels=labels
+            self._ax,
+            at=at,
+            labelcolor=labelcolor,
+            pad=pad,
+            gap=gap,
+            labels=labels,
+            **kwargs,
         )
 
     def label(
@@ -490,10 +505,19 @@ class _Accessor:
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
         gap: float | None = None,
+        **kwargs: Any,
     ) -> list[Annotation]:
         """Put a label beside a named artist; see `vanzelfsprekend.label`."""
         return label(
-            self._ax, name, x=x, y=y, side=side, labelcolor=labelcolor, pad=pad, gap=gap
+            self._ax,
+            name,
+            x=x,
+            y=y,
+            side=side,
+            labelcolor=labelcolor,
+            pad=pad,
+            gap=gap,
+            **kwargs,
         )
 
     def mute(

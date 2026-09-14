@@ -25,7 +25,7 @@ from matplotlib.typing import ColorType
 
 from vanzelfsprekend import placement
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
-from vanzelfsprekend.lines import _ink_rise, _resolve_colors
+from vanzelfsprekend.lines import _ink_rise, _reject_color_kwarg, _resolve_colors
 
 Side = Literal["right", "left", "above", "below"]
 Feature = Callable[[np.ndarray, np.ndarray], float]
@@ -371,6 +371,7 @@ def label(
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
     gap: float | None = None,
+    **kwargs: Any,
 ) -> list[Annotation]:
     """Put a label beside the artist called `name`, or a column of them.
 
@@ -420,6 +421,11 @@ def label(
     gap : float, optional
         Minimum clearance in points between the text and anything else.
         `None` (the default) uses 2 points.
+    **kwargs
+        `matplotlib.text.Text` properties forwarded to each label, for
+        styling: `fontsize`, `fontweight`, `fontstyle`, and the like.
+        Set the colour through `labelcolor`, not `color`; alignment and
+        position are vanzelfsprekend's to set.
 
     Returns
     -------
@@ -428,6 +434,7 @@ def label(
     """
     if gap is None:
         gap = placement.GAP
+    _reject_color_kwarg(kwargs)
     column = not isinstance(name, str | Artist)
     names = list(cast("Sequence[str | Artist]", name)) if column else [name]
     if x is not None and y is not None:
@@ -475,10 +482,17 @@ def label(
             xy=anchor,
             xytext=(pad, 0.0),
             textcoords="offset points",
-            ha="left",
-            va="baseline",
-            color=color,
-            annotation_clip=False,
+            # vanzelfsprekend's own alignment, colour and clip win over kwargs.
+            **cast(
+                "dict[str, Any]",
+                {
+                    **kwargs,
+                    "ha": "left",
+                    "va": "baseline",
+                    "color": color,
+                    "annotation_clip": False,
+                },
+            ),
         )
         for artist, anchor, color in zip(
             artists, anchors, _resolve_colors(labelcolor, artists), strict=True
