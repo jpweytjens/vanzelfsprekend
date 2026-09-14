@@ -118,3 +118,34 @@ def test_accent_by_position_on_unnamed_locator():
     fig.canvas.draw()
     assert _label_color_at(ax, "x", 10.0) == palettes.ACCENT_INK
     plt.close(fig)
+
+
+def _label_text_at(ax, axis_name, position):
+    axis = getattr(ax, f"{axis_name}axis")
+    for loc, tick in zip(
+        axis.get_majorticklocs(), axis.get_major_ticks(), strict=False
+    ):
+        if np.isclose(loc, position):
+            return tick.label1.get_text()
+    raise AssertionError(f"no tick at {position}")
+
+
+def test_only_features_blanks_the_grid_labels():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, only_features=True)
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) != ""  # a quartile keeps its label
+    assert _label_text_at(ax, "y", 20.0) == ""  # a grid tick is blanked
+    plt.close(fig)
+
+
+def test_only_features_restored():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, only_features=True)
+    fig.canvas.draw()
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 20.0) != ""  # grid label back
+    plt.close(fig)

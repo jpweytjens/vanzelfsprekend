@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.colors import to_rgba
+from matplotlib.ticker import Formatter, FuncFormatter
 from matplotlib.typing import ColorType
 
 from vanzelfsprekend.hook import add_applier, ensure_state
@@ -64,6 +65,30 @@ def _current_labelcolor(axis: Axis) -> str:
     return params.get("labelcolor", params.get("color", "black"))
 
 
+def _feature_formatter(
+    axis: Axis,
+    inner: Formatter,
+    positions: set[float],
+    only_features: bool,
+    label: str,
+) -> FuncFormatter:
+    """Wrap `inner`: feature text per `label`; non-features blanked if only_features."""
+
+    def _value_text(value: float, pos: int | None) -> str:
+        # `inner` is off the axis now, so a stateful ScalarFormatter needs the
+        # current locs before it will render; then it prints what the axis would.
+        inner.set_locs(axis.get_majorticklocs().tolist())
+        return inner(value, pos)
+
+    def fmt(value: float, pos: int | None = None) -> str:
+        is_feature = any(np.isclose(value, p) for p in positions)
+        if not is_feature:
+            return "" if only_features else _value_text(value, pos)
+        return _value_text(value, pos)  # Task 9 replaces this for name/both
+
+    return FuncFormatter(fmt)
+
+
 def accent(
     ax: Axes,
     at: Sequence[str] | Sequence[float] | None = None,
@@ -103,6 +128,11 @@ def accent(
             "colors": dict.fromkeys(positions, resolved),
             "positions": positions,
         }
+        if only_features or label != "value":
+            inner = state["accent"]["axes"][key]["formatter"]
+            target.set_major_formatter(
+                _feature_formatter(target, inner, positions, only_features, label)
+            )
     add_applier(ax, "accent", _apply)
     _apply(ax)
     return ax
