@@ -195,7 +195,7 @@ def build_major_locator(
     if kind.is_date:
         return DateBreaksLocator(n=n, spacing=spacing, loose=loose)
     if kind.scale == "log":
-        return LogBreaksLocator(n=n, spacing=spacing, loose=loose, base=base)  # ty: ignore
+        return LogBreaksLocator(n=n, spacing=spacing, loose=loose, base=base)  # ty: ignore[invalid-argument-type]
     return TalbotLocator(
         n=n, spacing=spacing, loose=loose, nice_numbers=nice_numbers, weights=weights
     )
@@ -205,7 +205,7 @@ _Slotted = TypeVar("_Slotted")
 
 
 def _write_slot(
-    installed: dict,
+    installed: dict[str, object],
     key: str,
     is_default: bool,
     current: _Slotted,
