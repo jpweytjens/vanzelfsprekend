@@ -8,7 +8,7 @@ import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.ticker import NullLocator
+from matplotlib.ticker import Locator, NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
@@ -162,6 +162,30 @@ def skip_if_not_rectilinear(ax: Axes, stacklevel: int) -> bool:
     return True
 
 
+def build_major_locator(
+    kind: AxisKind,
+    loose: tuple[bool, bool],
+    n: int | None,
+    spacing: float,
+    nice_numbers: Sequence[float] | None,
+    weights: dict[str, float] | None,
+    base: float | None,
+) -> Locator:
+    """Return the range-frame major locator for `kind`.
+
+    A `DateBreaksLocator` for a date axis, a `LogBreaksLocator` (using
+    `base`) for a log axis, a `TalbotLocator` otherwise. Does not touch
+    the axis; the caller installs it.
+    """
+    if kind.is_date:
+        return DateBreaksLocator(n=n, spacing=spacing, loose=loose)
+    if kind.scale == "log":
+        return LogBreaksLocator(n=n, spacing=spacing, loose=loose, base=base)  # ty: ignore
+    return TalbotLocator(
+        n=n, spacing=spacing, loose=loose, nice_numbers=nice_numbers, weights=weights
+    )
+
+
 def install_frame(
     ax: Axes,
     mode: dict[str, tuple[str, str]],
@@ -219,31 +243,16 @@ def install_frame(
             )
             continue
         loose = (mode[name][0] == "loose", mode[name][1] == "loose")
+        base = axis.get_transform().base if kind.scale == "log" else None  # ty: ignore[unresolved-attribute]
+        locator = build_major_locator(
+            kind, loose, n, spacing[name], nice_numbers, weights, base
+        )
+        axis.set_major_locator(locator)
         if kind.is_date:
-            locator = DateBreaksLocator(n=n, spacing=spacing[name], loose=loose)
-            axis.set_major_locator(locator)
             axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
             frame_state["formatted"].add(name)
         elif kind.scale == "log":
-            axis.set_major_locator(
-                LogBreaksLocator(
-                    n=n,
-                    spacing=spacing[name],
-                    loose=loose,
-                    base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
-                )
-            )
             axis.set_minor_locator(NullLocator())
-        else:
-            axis.set_major_locator(
-                TalbotLocator(
-                    n=n,
-                    spacing=spacing[name],
-                    loose=loose,
-                    nice_numbers=nice_numbers,
-                    weights=weights,
-                )
-            )
         active.add(name)
     frame_state["active"] = active
 
