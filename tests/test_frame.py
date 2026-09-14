@@ -457,7 +457,8 @@ def test_draw_hook_swallows_applier_errors():
         raise RuntimeError("applier blew up")
 
     hook.add_applier(ax, "boom", boom)
-    fig.canvas.draw()  # must not raise
+    with pytest.warns(UserWarning, match="draw-time frame update failed"):
+        fig.canvas.draw()  # must not raise; warns once instead
     plt.close(fig)
 
 
