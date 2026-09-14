@@ -661,8 +661,8 @@ def test_loose_frame_view_covers_a_fixed_tick_outside_the_data():
 
 def test_feature_frame_bounds_equal_mark_envelope():
     fig, ax = _two_values_ax()  # y data spans 7680..7938
-    range_frame(ax, frame=("data", "feature"))
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))  # interior marks
+    range_frame(ax, frame=("data", "feature"))
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (7750.0, 7850.0)
     plt.close(fig)
@@ -670,28 +670,32 @@ def test_feature_frame_bounds_equal_mark_envelope():
 
 def test_feature_frame_reaches_a_mark_beyond_the_data():
     fig, ax = _two_values_ax()
+    # 7600 is below the data (7680..7938) but within one data-span (258),
+    # so it reaches beyond the data without tripping the overreach warning.
+    ax.yaxis.set_major_locator(FixedLocator([7600, 7680, 7938]))
     range_frame(ax, frame=("data", "feature"))
-    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))  # 0 is below the data
     fig.canvas.draw()
-    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    assert ax.spines["left"].get_bounds() == (7600.0, 7938.0)
     plt.close(fig)
 
 
 def test_feature_view_grows_to_cover_a_mark_beyond_the_data():
     fig, ax = _two_values_ax()
+    ax.yaxis.set_major_locator(FixedLocator([7600, 7680, 7938]))
     range_frame(ax, frame=("data", "feature"))
-    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
     fig.canvas.draw()
-    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
-    assert ax.get_ylim()[0] <= 0.0  # view grew down to the mark
+    assert ax.spines["left"].get_bounds() == (7600.0, 7938.0)
+    assert ax.get_ylim()[0] <= 7600.0  # view grew down to the mark
     plt.close(fig)
 
 
 def test_feature_under_pinned_view_crops_to_visible_marks():
     fig, ax = _two_values_ax()
+    # 7500 sits outside the pinned view below, and within one data-span,
+    # so it is cropped out without tripping the overreach warning.
+    ax.yaxis.set_major_locator(FixedLocator([7500, 7680, 7900]))
     range_frame(ax, frame=("data", "feature"))
-    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7900]))
-    ax.set_ylim(7600, 8000)  # crops out the 0 mark
+    ax.set_ylim(7600, 8000)  # crops out the 7500 mark
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (7680.0, 7900.0)
     plt.close(fig)
@@ -699,11 +703,11 @@ def test_feature_under_pinned_view_crops_to_visible_marks():
 
 def test_feature_reads_the_extra_side_of_an_augmented_locator():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame=("data", "feature"))
     # Nice side brackets wider than the marks; feature must ignore it.
     ax.yaxis.set_major_locator(
         AugmentedLocator(FixedLocator([7600, 8000]), FixedLocator([7750, 7850]))
     )
+    range_frame(ax, frame=("data", "feature"))
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (7750.0, 7850.0)
     plt.close(fig)
@@ -711,8 +715,8 @@ def test_feature_reads_the_extra_side_of_an_augmented_locator():
 
 def test_feature_per_end_tuple_sets_each_end_independently():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame=("data", ("feature", "data")))
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    range_frame(ax, frame=("data", ("feature", "data")))
     fig.canvas.draw()
     ymax = ax.yaxis.get_data_interval()[1]
     assert ax.spines["left"].get_bounds() == (7750.0, ymax)
@@ -721,8 +725,9 @@ def test_feature_per_end_tuple_sets_each_end_independently():
 
 def test_feature_spine_is_flush_by_default():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame="feature")
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    with pytest.warns(UserWarning, match="no FixedLocator"):
+        range_frame(ax, frame="feature")  # x-axis has no marks; y already does
     fig.canvas.draw()
     assert ax.spines["left"].get_position() == ("outward", 0.0)
     plt.close(fig)
@@ -731,7 +736,8 @@ def test_feature_spine_is_flush_by_default():
 def test_feature_is_a_valid_mode():
     fig, ax = _two_values_ax()
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
-    range_frame(ax, frame="feature")  # must not raise
+    with pytest.warns(UserWarning, match="no FixedLocator"):
+        range_frame(ax, frame="feature")  # must not raise; x-axis has no marks
     plt.close(fig)
 
 
@@ -748,7 +754,8 @@ def test_feature_without_marks_warns_and_falls_back_to_data(scatter_ax):
 
 def test_feature_single_mark_warns_and_falls_back_to_data():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame=("data", "feature"))
+    with pytest.warns(UserWarning, match="no FixedLocator"):
+        range_frame(ax, frame=("data", "feature"))
     ax.yaxis.set_major_locator(FixedLocator([7800]))  # one mark -> degenerate
     with pytest.warns(UserWarning, match="single feature mark"):
         fig.canvas.draw()
@@ -758,7 +765,8 @@ def test_feature_single_mark_warns_and_falls_back_to_data():
 
 def test_feature_over_reach_warns_with_shrink_factor():
     fig, ax = _two_values_ax()  # y span 7680..7938 -> data span 258
-    range_frame(ax, frame=("data", "feature"))
+    with pytest.warns(UserWarning, match="no FixedLocator"):
+        range_frame(ax, frame=("data", "feature"))
     ax.yaxis.set_major_locator(FixedLocator([7000, 7938]))  # 7000 is 680 below
     with pytest.warns(UserWarning, match="beyond the data"):
         fig.canvas.draw()
