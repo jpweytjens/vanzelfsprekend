@@ -760,6 +760,16 @@ def test_range_frame_date_formatter_preserved_when_locator_set(date_plot_ax):
     assert ax.xaxis.get_major_formatter() is mine
 
 
+def test_range_frame_date_formatter_preserved_when_only_formatter_set(date_plot_ax):
+    import matplotlib.dates as mdates
+
+    mine = mdates.DateFormatter("%Y")
+    date_plot_ax.xaxis.set_major_formatter(mine)
+    ax = range_frame(date_plot_ax)
+    assert isinstance(ax.xaxis.get_major_locator(), vzs.DateBreaksLocator)
+    assert ax.xaxis.get_major_formatter() is mine
+
+
 def test_range_frame_log_minor_guarded(log_scatter_ax):
     from matplotlib.ticker import NullLocator
 
