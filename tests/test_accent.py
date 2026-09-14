@@ -4,7 +4,12 @@ import pytest
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import palettes
-from vanzelfsprekend.locator import AugmentedLocator, QuartileLocator, TalbotLocator
+from vanzelfsprekend.locator import (
+    AugmentedLocator,
+    FeatureLocator,
+    QuartileLocator,
+    TalbotLocator,
+)
 
 
 def _quartile_axes():
@@ -82,4 +87,34 @@ def test_accent_without_named_locator_raises():
     vzs.range_frame(ax)
     with pytest.raises(ValueError, match="no named features"):
         vzs.accent(ax)
+    plt.close(fig)
+
+
+def test_accent_selects_a_single_name():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=["median"])
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == palettes.ACCENT_INK
+    assert _label_color_at(ax, "y", 25.0) != palettes.ACCENT_INK  # Q1 not selected
+    plt.close(fig)
+
+
+def test_accent_unknown_name_raises_listing_available():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match=r"Q9.*median"):
+        vzs.accent(ax, at=["Q9"])
+    plt.close(fig)
+
+
+def test_accent_by_position_on_unnamed_locator():
+    fig, ax = plt.subplots()
+    x, y = np.linspace(0, 10, 50), np.linspace(0, 10, 50)
+    ax.plot(x, y)
+    ax.xaxis.set_major_locator(FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]]))
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=[10.0], axis="x")
+    fig.canvas.draw()
+    assert _label_color_at(ax, "x", 10.0) == palettes.ACCENT_INK
     plt.close(fig)

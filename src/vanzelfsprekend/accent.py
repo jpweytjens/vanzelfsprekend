@@ -37,8 +37,26 @@ def _accent_axes(ax: Axes, axis: str | None) -> list[Axis]:
 def _selected_positions(
     axis: Axis, at: Sequence[str] | Sequence[float] | None
 ) -> set[float]:
-    """Feature positions to accent (all named by default). Filled out in Task 7."""
-    return set(_feature_names(axis))
+    """Feature positions to accent; `at` selects by name or by position."""
+    names = _feature_names(axis)
+    if at is None:
+        return set(names)
+    items = list(at)
+    str_items = [item for item in items if isinstance(item, str)]
+    if items and len(str_items) == len(items):
+        by_name: dict[str, float] = {
+            name: pos for pos, tup in names.items() for name in tup
+        }
+        missing = [name for name in str_items if name not in by_name]
+        if missing:
+            available = ", ".join(sorted(by_name)) or "(none)"
+            raise ValueError(
+                f"unknown feature name(s) {missing}; available: {available}"
+            )
+        return {by_name[name] for name in str_items}
+    candidates = list(names) or list(axis.get_majorticklocs())
+    wanted = [float(item) for item in items]
+    return {c for c in candidates if any(np.isclose(c, w) for w in wanted)}
 
 
 def _current_labelcolor(axis: Axis) -> str:
