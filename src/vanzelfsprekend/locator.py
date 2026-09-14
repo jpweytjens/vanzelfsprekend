@@ -38,6 +38,24 @@ _DEFAULT_WEIGHTS = {
 }
 
 
+def parse_spacing(spacing: float | tuple[float, float] | None) -> dict[str, float]:
+    """Resolve `spacing` into per-axis gaps, keyed `'x'` and `'y'`.
+
+    `None` is the public default and takes `SPACING`, the single
+    authority for the aimed-for tick spacing.
+    """
+    if spacing is None:
+        spacing = SPACING
+    if isinstance(spacing, (int, float)):
+        return {"x": spacing, "y": spacing}
+    pair = tuple(spacing)
+    if len(pair) != 2 or not all(isinstance(s, (int, float)) for s in pair):
+        raise ValueError(
+            f"spacing must be a number or a tuple of two numbers, got {spacing!r}"
+        )
+    return {"x": pair[0], "y": pair[1]}
+
+
 def _label_height(axis: Axis) -> float:
     """Read the axis's major tick-label font size in points."""
     name = axis.axis_name  # ty: ignore[unresolved-attribute]
@@ -87,9 +105,7 @@ class BreaksLocator(Locator):
         if axis is None:
             return _UNBOUND_N
         name = axis.axis_name  # ty: ignore[unresolved-attribute]
-        spacing = self._spacing
-        if spacing is None:
-            spacing = SPACING[0] if name == "x" else SPACING[1]
+        spacing = parse_spacing(self._spacing)[name]
         axes = axis.axes
         ends = Bbox.unit().transformed(axes.transAxes - axes.figure.dpi_scale_trans)
         length = (ends.width if name == "x" else ends.height) * 72

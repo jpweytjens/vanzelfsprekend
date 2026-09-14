@@ -21,7 +21,6 @@ from vanzelfsprekend.frame import (
     axis_kind,
     install_frame,
     parse_frame_args,
-    parse_spacing,
     snapshot_frame,
 )
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
@@ -30,6 +29,7 @@ from vanzelfsprekend.locator import (
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
+    parse_spacing,
     visible_interval,
 )
 from vanzelfsprekend.ticklabels import _apply_tick_labels
