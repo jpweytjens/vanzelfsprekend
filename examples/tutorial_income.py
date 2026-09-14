@@ -1,9 +1,10 @@
 """Build the labour-income decomposition figure one call at a time.
 
-A simulated monthly labour-income series decomposed, inspired by the phd (not
-reproducing it), into a permanent component and a transient component (the
-residual). Recurrent June holiday pay and December bonuses (transient) and a
-one-off raise (permanent) are the changes the decomposition surfaces. The final
+A simulated monthly labour-income series decomposed, inspired by a working
+paper on consumption responses to labour income (not reproducing it), into a
+permanent component and a transient component (the residual). Recurrent June
+holiday pay and December bonuses (transient) and a one-off raise (permanent)
+are the changes the decomposition surfaces. The final
 step is the gallery's `labour_income_decomposition`; the earlier steps exist so
 the tutorial can show what each call buys.
 
@@ -35,9 +36,8 @@ Open threads
   form -- draw/compare/mark/name + --8<-- markers; `decomposition()` assembles
   the final gallery figure; the tutorial page is docs/tutorial/labour-income.md
   and the mkdocs nav points at it.)
-- The tutorial and gallery cite the phd
-  (https://biblio.ugent.be/publication/01JZ0FKKB552K6A14DEKSEET9P) and the
-  working paper (https://wps-feb.ugent.be/Papers/wp_23_1067.pdf) for the method.
+- The tutorial cites the working paper it is inspired by in a sidenote
+  (https://wps-feb.ugent.be/Papers/wp_23_1067.pdf).
 - Library candidate (separate branch): give the vzs label family **kwargs
   routed to Text, like matplotlib's set_xlabel; a fontsize at label() creation
   feeds the placement solver (set_fontsize after placement does not).
