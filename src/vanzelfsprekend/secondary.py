@@ -107,7 +107,7 @@ def _mirror_one(ax: Axes, entry: dict) -> bool:
 
     desired = np.asarray(forward(host_axis.get_majorticklocs()), dtype=float)
     if not np.array_equal(sec_axis.get_majorticklocs(), desired):
-        sec_axis.set_major_locator(FixedLocator(desired))
+        sec_axis.set_major_locator(FixedLocator(list(desired)))
         changed = True
 
     dmin, dmax = visible_interval(host_axis)
