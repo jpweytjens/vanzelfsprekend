@@ -350,3 +350,18 @@ def test_apply_mutes_every_member_of_the_unit():
     for ax in (a, b):
         assert ax.spines["left"].get_edgecolor() == to_rgba(vzs.palettes.LINE_INK)
     plt.close(fig)
+
+
+def test_grouped_refresh_reinstalls_breaks_locator():
+    fig, (a, b) = plt.subplots(1, 2, sharex=True)
+    a.plot([0, 10], [0, 1])
+    b.plot([0, 10], [1, 0])
+    vzs.range_frame(a)
+    first = a.xaxis.get_major_locator()
+    assert isinstance(first, GroupLocator)
+    vzs.range_frame(a, frame="loose")
+    second = a.xaxis.get_major_locator()
+    assert isinstance(second, GroupLocator)
+    assert second is not first
+    fig.canvas.draw()
+    plt.close(fig)

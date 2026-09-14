@@ -784,3 +784,11 @@ def test_range_frame_log_minor_preserved(log_scatter_ax):
     log_scatter_ax.xaxis.set_minor_locator(mine)
     ax = range_frame(log_scatter_ax)
     assert ax.xaxis.get_minor_locator() is mine
+
+
+def test_range_frame_refresh_after_scale_change(scatter_ax):
+    range_frame(scatter_ax)
+    assert isinstance(scatter_ax.xaxis.get_major_locator(), vzs.TalbotLocator)
+    scatter_ax.set_xscale("log")
+    range_frame(scatter_ax)
+    assert isinstance(scatter_ax.xaxis.get_major_locator(), vzs.LogBreaksLocator)
