@@ -225,6 +225,7 @@ def frame_unit(
             nice_numbers=nice_numbers,
             weights=weights,
             kinds=kinds,
+            grouped=set(get_state(ax)["group"]["members"]),  # ty: ignore[not-subscriptable]
             stacklevel=stacklevel,
         )
         state = ensure_state(ax)
