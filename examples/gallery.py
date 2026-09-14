@@ -439,6 +439,13 @@ def radian_axes() -> None:
     save(fig, "radian_axes")
 
 
+def labour_income() -> None:
+    """Save the labour-income decomposition, assembled by the tutorial script."""
+    from tutorial_income import decomposition
+
+    save(decomposition(), "labour_income_decomposition")
+
+
 def main() -> None:
     """Render every gallery figure into `examples/output`."""
     OUTPUT.mkdir(exist_ok=True)
@@ -459,6 +466,7 @@ def main() -> None:
     frame_modes()
     radian_axes()
     seaborn_lineplot()
+    labour_income()  # last: draw() sets font rcParams that would leak to others
     for name in README_FIGURES:
         shutil.copyfile(OUTPUT / name, DOCS / name)
     print(f"wrote {len(list(OUTPUT.glob('*.png')))} figures to {OUTPUT}")

@@ -1,6 +1,6 @@
 # Gallery
 
-*Thirteen figures in the order a reader should meet them, from one call to ticks that are the argument.*
+*Fourteen figures in the order a reader should meet them, from one call to ticks that are the argument.*
 
 Every figure comes from `examples/gallery.py`; regenerate them with `uv run --group examples examples/gallery.py`. The datasets sit in `examples/data`, each file naming its source and licence; what is not a measurement says so.
 
@@ -67,4 +67,9 @@ Every figure comes from `examples/gallery.py`; regenerate them with `uv run --gr
 <figure markdown>
 ![A 2x2 grid of monthly CO2 at Barrow, Mauna Loa, Samoa and the South Pole on a shared scale, the seasonal sawtooth shrinking toward the pole, spines and ticks only on the left column and bottom row](figures/small_multiples.svg)
 <figcaption markdown>**A small-multiples grid.** Monthly CO₂ at four stations from the Arctic to the South Pole on [one shared scale](how-to/small-multiples.md). Only the left column and bottom row keep furniture, so the seasonal swing shrinking toward the pole reads on equal terms.</figcaption>
+</figure>
+
+<figure markdown>
+![Three stacked panels: monthly labour income, a two-level permanent step and a transient residual; income and the permanent step share one y scale, the permanent panel ticked at its two recovered levels, the transient at zero with gold June and red December bumps and a blue raise marked, and June and December named on the time axis](figures/labour_income_decomposition.svg)
+<figcaption markdown>**The labour-income decomposition.** A monthly income split into a permanent step and a transient residual. [Small multiples](how-to/small-multiples.md) put income and the permanent component on one scale, so the raise reads against income's own swings, and [`AugmentedLocator`](reference/locators.md) unions the frame's nice ticks with the decomposition's own numbers: the two recovered levels, the zero line, and the June and December the bumps recur on. [`accent`](reference/locators.md) colours those month ticks to match their points. The [tutorial](tutorial/labour-income.md) builds it one call at a time.</figcaption>
 </figure>
