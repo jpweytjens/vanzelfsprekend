@@ -16,6 +16,7 @@ The ticks and the spine are two separate decisions. The ticks are the locator's,
 | `nice` | nice numbers inside the data | the outermost ticks |
 | `loose` | nice numbers bracketing the data | the outermost ticks |
 | `data` | nice numbers inside the data | the data's exact min and max |
+| `feature` | the marks a `FixedLocator` sets | the outermost marks |
 
 So under `data` the spine runs a little past its last tick at each end, and a tick sits at the data's extreme only when a locator you set puts one there, as `QuartileLocator` does in the [Anscombe figure](../gallery.md). The same record under the three modes carries the same ticks under `nice` and `data`; only the spine ends move:
 
@@ -44,4 +45,11 @@ A spine with a `loose` end also stands off the plot by 8 points: a loose frame r
 
 ```python
 ax.vzs.range_frame(frame="loose", offset=(8, 2))
+```
+
+`feature` ends each spine at the outermost mark a `FeatureLocator`, `SummaryLocator`, `QuartileLocator`, or bare `FixedLocator` sets on that axis: the peak, the quartiles, a zero baseline. A mark can sit beyond the data, and the spine reaches it anyway, growing the view to keep it on screen. Like `data` and `nice` it sits flush, offset 0 by default rather than `loose`'s 8, because the mark is the data's own landmark rather than a detached reference scale. Set the locator before framing:
+
+```python
+ax.yaxis.set_major_locator(vzs.FeatureLocator(...))
+ax.vzs.apply(frame=("data", "feature"))
 ```
