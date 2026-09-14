@@ -11,6 +11,12 @@ import importlib.util
 from pathlib import Path
 
 import numpy as np
+import pytest
+
+# The example lives in the `examples` dependency group (ruptures, pandas); skip
+# rather than error when the suite runs without it.
+pytest.importorskip("ruptures")
+pytest.importorskip("pandas")
 
 _PATH = Path(__file__).parents[1] / "examples" / "tutorial_income.py"
 _spec = importlib.util.spec_from_file_location("tutorial_income", _PATH)
