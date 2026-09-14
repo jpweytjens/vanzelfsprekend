@@ -94,6 +94,7 @@ def snapshot_frame(ax: Axes) -> None:
     state["frame"] = {
         "active": set(),
         "formatted": set(),
+        "installed": {},
         "snapshot": {
             "locators": {
                 "x": ax.xaxis.get_major_locator(),
@@ -186,6 +187,29 @@ def build_major_locator(
     )
 
 
+def _write_slot(
+    installed: dict,
+    key: str,
+    is_default: bool,
+    current: Locator,
+    build: Callable[[], Locator],
+    set_fn: Callable[[Locator], None],
+) -> Locator | None:
+    """Install `build()` into a tick slot iff we may; return it, else None.
+
+    We may when the slot is matplotlib's untouched default (`is_default`)
+    or still holds the object we installed before (`current is
+    installed[key]`, a refresh). A slot the user set deliberately is
+    preserved untouched.
+    """
+    if is_default or current is installed.get(key):
+        obj = build()
+        set_fn(obj)
+        installed[key] = obj
+        return obj
+    return None
+
+
 def install_frame(
     ax: Axes,
     mode: dict[str, tuple[str, str]],
@@ -195,6 +219,7 @@ def install_frame(
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
     kinds: dict[str, AxisKind | None],
+    grouped: set[str],
     stacklevel: int,
 ) -> None:
     """Install the frame on `ax` given each axis's kind.
@@ -217,6 +242,11 @@ def install_frame(
         to leave alone (a group that disagrees on kind; the caller has
         warned or raised). An unsupported kind warns here, as it always
         has, and is left alone too.
+    grouped : set of str
+        Axis names (`'x'`, `'y'`) that will be wrapped in a
+        `GroupLocator` by the caller. A grouped axis is always
+        (re)installed — the shared scale is computed there — so the
+        no-clobber guard does not apply to it. Empty for a lone axes.
     stacklevel : int
         The depth of the caller the warnings must point at, counted
         from this function.
@@ -244,14 +274,23 @@ def install_frame(
             continue
         loose = (mode[name][0] == "loose", mode[name][1] == "loose")
         base = axis.get_transform().base if kind.scale == "log" else None  # ty: ignore[unresolved-attribute]
-        locator = build_major_locator(
-            kind, loose, n, spacing[name], nice_numbers, weights, base
+        installed = frame_state["installed"]
+        may_clobber = name in grouped
+        loc = _write_slot(
+            installed,
+            f"majloc:{name}",
+            axis.isDefault_majloc or may_clobber,
+            axis.get_major_locator(),
+            lambda kind=kind, loose=loose, name=name, base=base: build_major_locator(
+                kind, loose, n, spacing[name], nice_numbers, weights, base
+            ),
+            axis.set_major_locator,
         )
-        axis.set_major_locator(locator)
-        if kind.is_date:
-            axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
+        wrote_major = loc is not None
+        if wrote_major and kind.is_date:
+            axis.set_major_formatter(mdates.ConciseDateFormatter(loc))
             frame_state["formatted"].add(name)
-        elif kind.scale == "log":
+        elif wrote_major and kind.scale == "log":
             axis.set_minor_locator(NullLocator())
         active.add(name)
     frame_state["active"] = active

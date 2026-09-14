@@ -81,6 +81,14 @@ def range_frame(
     what `mute` changes. Safe to call repeatedly; later calls update
     the settings instead of stacking hooks.
 
+    A locator you set on an axis before calling `range_frame` is kept,
+    not overwritten, so ticks and frame compose in either order; the
+    locator-shaping arguments below (`spacing`, `n`, `nice_numbers`,
+    `weights`) then have nothing to configure and are ignored on that
+    axis. Panels framed as a group (shared axes, `small_multiples`) are
+    the exception: the shared scale is computed here, so a locator set
+    on a grouped axis is replaced.
+
     Panels that share an axis (`sharex`, `sharey`, `ax.sharex(other)`)
     are framed together, whichever one you pass: each shared axis is
     ticked and framed from the union of the panels' data, so the panels

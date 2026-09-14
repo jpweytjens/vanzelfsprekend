@@ -4,7 +4,7 @@ import warnings
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from matplotlib.ticker import FixedLocator
+from matplotlib.ticker import FixedLocator, MultipleLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
@@ -685,4 +685,58 @@ def test_loose_frame_under_pinned_view_drops_fixed_ticks_outside_it():
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (7680.0, 7938.0)
     assert ax.get_ylim() == (7600.0, 8000.0)
+    plt.close(fig)
+
+
+def test_range_frame_installs_on_default_axis(scatter_ax):
+    ax = range_frame(scatter_ax)
+    assert isinstance(ax.xaxis.get_major_locator(), vzs.TalbotLocator)
+    assert ax.xaxis.isDefault_majloc is False
+    assert (
+        get_state(ax)["frame"]["installed"]["majloc:x"] is ax.xaxis.get_major_locator()
+    )
+
+
+def test_range_frame_preserves_user_locator(scatter_ax):
+    mine = MultipleLocator(2)
+    scatter_ax.xaxis.set_major_locator(mine)
+    ax = range_frame(scatter_ax)
+    assert ax.xaxis.get_major_locator() is mine
+    assert "x" in get_state(ax)["frame"]["active"]
+    assert isinstance(ax.yaxis.get_major_locator(), vzs.TalbotLocator)
+
+
+def test_range_frame_preserves_augmented_locator(scatter_ax):
+    mine = vzs.AugmentedLocator(vzs.TalbotLocator(), [5.0])
+    scatter_ax.xaxis.set_major_locator(mine)
+    ax = range_frame(scatter_ax)
+    assert ax.xaxis.get_major_locator() is mine
+
+
+def test_range_frame_refreshes_own_locator(scatter_ax):
+    ax = range_frame(scatter_ax)
+    first = ax.xaxis.get_major_locator()
+    range_frame(ax, frame="loose")
+    second = ax.xaxis.get_major_locator()
+    assert second is not first
+    assert isinstance(second, vzs.TalbotLocator)
+
+
+def test_range_frame_kwargs_noop_on_preserved_axis(scatter_ax):
+    mine = MultipleLocator(2)
+    scatter_ax.xaxis.set_major_locator(mine)
+    range_frame(scatter_ax, n=3)
+    assert scatter_ax.xaxis.get_major_locator() is mine
+
+
+def test_grouped_frame_clobbers_user_locator():
+    fig, (a, b) = plt.subplots(1, 2, sharex=True)
+    a.plot([0, 10], [0, 1])
+    b.plot([0, 10], [1, 0])
+    a.xaxis.set_major_locator(MultipleLocator(2))
+    range_frame(a)
+    from vanzelfsprekend.group import GroupLocator
+
+    assert isinstance(a.xaxis.get_major_locator(), GroupLocator)
+    fig.canvas.draw()  # no AttributeError from the wrap
     plt.close(fig)
