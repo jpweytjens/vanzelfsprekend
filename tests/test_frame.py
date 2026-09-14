@@ -740,3 +740,37 @@ def test_grouped_frame_clobbers_user_locator():
     assert isinstance(a.xaxis.get_major_locator(), GroupLocator)
     fig.canvas.draw()  # no AttributeError from the wrap
     plt.close(fig)
+
+
+def test_range_frame_date_formatter_guarded(date_plot_ax):
+    import matplotlib.dates as mdates
+
+    ax = range_frame(date_plot_ax)
+    assert isinstance(ax.xaxis.get_major_formatter(), mdates.ConciseDateFormatter)
+
+
+def test_range_frame_date_formatter_preserved_when_locator_set(date_plot_ax):
+    import matplotlib.dates as mdates
+
+    date_plot_ax.xaxis.set_major_locator(mdates.YearLocator())
+    mine = mdates.DateFormatter("%Y")
+    date_plot_ax.xaxis.set_major_formatter(mine)
+    ax = range_frame(date_plot_ax)
+    assert ax.xaxis.get_major_locator().__class__ is mdates.YearLocator
+    assert ax.xaxis.get_major_formatter() is mine
+
+
+def test_range_frame_log_minor_guarded(log_scatter_ax):
+    from matplotlib.ticker import NullLocator
+
+    ax = range_frame(log_scatter_ax)
+    assert isinstance(ax.xaxis.get_minor_locator(), NullLocator)
+
+
+def test_range_frame_log_minor_preserved(log_scatter_ax):
+    from matplotlib.ticker import LogLocator
+
+    mine = LogLocator(subs="auto")
+    log_scatter_ax.xaxis.set_minor_locator(mine)
+    ax = range_frame(log_scatter_ax)
+    assert ax.xaxis.get_minor_locator() is mine

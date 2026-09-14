@@ -2,7 +2,7 @@
 
 import warnings
 from collections.abc import Callable, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypeVar
 
 import matplotlib.dates as mdates
 import numpy as np
@@ -187,14 +187,17 @@ def build_major_locator(
     )
 
 
+_Slotted = TypeVar("_Slotted")
+
+
 def _write_slot(
     installed: dict,
     key: str,
     is_default: bool,
-    current: Locator,
-    build: Callable[[], Locator],
-    set_fn: Callable[[Locator], None],
-) -> Locator | None:
+    current: _Slotted,
+    build: Callable[[], _Slotted],
+    set_fn: Callable[[_Slotted], None],
+) -> _Slotted | None:
     """Install `build()` into a tick slot iff we may; return it, else None.
 
     We may when the slot is matplotlib's untouched default (`is_default`)
@@ -288,10 +291,25 @@ def install_frame(
         )
         wrote_major = loc is not None
         if wrote_major and kind.is_date:
-            axis.set_major_formatter(mdates.ConciseDateFormatter(loc))
-            frame_state["formatted"].add(name)
-        elif wrote_major and kind.scale == "log":
-            axis.set_minor_locator(NullLocator())
+            fmt = _write_slot(
+                installed,
+                f"majfmt:{name}",
+                axis.isDefault_majfmt or may_clobber,
+                axis.get_major_formatter(),
+                lambda loc=loc: mdates.ConciseDateFormatter(loc),
+                axis.set_major_formatter,
+            )
+            if fmt is not None:
+                frame_state["formatted"].add(name)
+        if kind.scale == "log":
+            _write_slot(
+                installed,
+                f"minloc:{name}",
+                axis.isDefault_minloc or may_clobber,
+                axis.get_minor_locator(),
+                NullLocator,
+                axis.set_minor_locator,
+            )
         active.add(name)
     frame_state["active"] = active
 
