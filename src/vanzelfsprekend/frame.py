@@ -423,13 +423,12 @@ def _apply_frame(ax: Axes) -> bool:
         ends = frame_state["mode"][name]
         marks = None
         if "feature" in ends:
-            # `marks` is unused until Task 3 wires it into the loose view fit.
-            ends, marks = _resolve_feature_ends(  # noqa: RUF059
+            ends, marks = _resolve_feature_ends(
                 ax, name, axis, ends, frame_state, interval
             )
         span = _frame_span(axis, ends, interval=interval)
-        if span is not None and "loose" in ends:
-            span, grew = _fit_loose_view(ax, name, span, ends)
+        if span is not None and ("loose" in ends or "feature" in ends):
+            span, grew = _fit_view(ax, name, span, ends, marks)
             changed = changed or grew
         if span is None:
             continue
@@ -440,21 +439,21 @@ def _apply_frame(ax: Axes) -> bool:
     return changed
 
 
-def _fit_loose_view(
-    ax: Axes, name: str, span: tuple[float, float], ends: tuple[str, str]
+def _fit_view(
+    ax: Axes,
+    name: str,
+    span: tuple[float, float],
+    ends: tuple[str, str],
+    marks: list[float] | None,
 ) -> tuple[tuple[float, float] | None, bool]:
-    """Reconcile a spine with a loose end with the view along `name`.
+    """Reconcile a spine that reaches past the view along `name`.
 
-    A loose end sits at a tick bracketing the data, which a user's
-    fixed locator can put outside the autoscaled view; spines are not
-    clipped, so the spine would be drawn outside the axes. While the
-    axis autoscales, the view grows to cover the spine, as the default
-    locator's own view limits already do. A view the user pinned is a
-    crop, so a loose end keeps only the ticks the view shows; an end
-    that is not loose reads the visible data and is inside the view
-    already.
-
-    Returns the span to draw and whether the view was changed.
+    A `loose` or `feature` end can sit at a tick outside the autoscaled
+    view; spines are not clipped, so the view must grow to cover it. A
+    view the user pinned is a crop: each such end keeps only the ticks
+    the view still shows — the fixed `marks` for a `feature` end, all
+    major ticks for a `loose` end. Returns the span to draw and whether
+    the view changed.
     """
     axis = ax.xaxis if name == "x" else ax.yaxis
     view = axis.get_view_interval()
@@ -467,13 +466,20 @@ def _fit_loose_view(
         limits = (hi, lo) if view[0] > view[1] else (lo, hi)
         (ax.set_xlim if name == "x" else ax.set_ylim)(*limits, auto=None)
         return span, True
-    ticks = [t for t in axis.get_majorticklocs() if vmin <= t <= vmax]
-    if not ticks:
+    all_ticks = [t for t in axis.get_majorticklocs() if vmin <= t <= vmax]
+    marks_in = [t for t in (marks or []) if vmin <= t <= vmax]
+
+    def edge(i: int, pick: Callable[[list[float]], float]) -> float | None:
+        if ends[i] not in ("loose", "feature"):
+            return span[i]
+        pool = marks_in if ends[i] == "feature" else all_ticks
+        return pick(pool) if pool else None
+
+    lo = edge(0, min)
+    hi = edge(1, max)
+    if lo is None or hi is None:
         return None, False
-    return (
-        min(ticks) if ends[0] == "loose" else span[0],
-        max(ticks) if ends[1] == "loose" else span[1],
-    ), False
+    return (lo, hi), False
 
 
 def _frame_span(
