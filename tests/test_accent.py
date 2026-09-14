@@ -1,3 +1,5 @@
+import warnings
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
@@ -187,4 +189,31 @@ def test_label_unknown_mode_raises():
     vzs.range_frame(ax)
     with pytest.raises(ValueError, match="label must be"):
         vzs.accent(ax, label="fancy")
+    plt.close(fig)
+
+
+def test_accent_per_name_colour():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, color={"median": "#0077BB", "Q1": "#009988"})
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == "#0077BB"
+    assert _label_color_at(ax, "y", 25.0) == "#009988"
+    assert _label_color_at(ax, "y", 0.0) == palettes.ACCENT_INK  # min: default
+    plt.close(fig)
+
+
+def test_accent_coincident_colour_conflict_warns_once():
+    fig, ax = plt.subplots()
+    y = np.array([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19.0])
+    ax.plot(y, y)
+    ax.yaxis.set_major_locator(AugmentedLocator(TalbotLocator(), QuartileLocator(y)))
+    vzs.range_frame(ax)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        vzs.accent(ax, color={"min": "#0077BB", "Q1": "#009988"})
+        fig.canvas.draw()
+        fig.canvas.draw()
+    conflict = [w for w in caught if "coincident" in str(w.message)]
+    assert len(conflict) == 1
     plt.close(fig)

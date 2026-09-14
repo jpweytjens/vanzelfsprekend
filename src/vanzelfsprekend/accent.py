@@ -1,6 +1,7 @@
 """Pull chosen feature ticks forward: colour their labels; the antonym of `mute`."""
 
-from collections.abc import Sequence
+import warnings
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -101,10 +102,34 @@ def _feature_formatter(
     return FuncFormatter(fmt)
 
 
+def _resolve_colors(
+    axis: Axis,
+    positions: set[float],
+    color: ColorType | Mapping[str, ColorType] | None,
+) -> tuple[dict[float, ColorType], bool]:
+    """Map each accented position to a colour; flag a coincident colour clash."""
+    if not isinstance(color, Mapping):
+        default = ACCENT_INK if color is None else color
+        return dict.fromkeys(positions, default), False
+    names = _feature_names(axis)
+    result: dict[float, ColorType] = {}
+    clash = False
+    for pos in positions:
+        chosen = None
+        for name in names.get(pos, ()):
+            if name in color:
+                if chosen is not None and color[name] != chosen:
+                    clash = True
+                elif chosen is None:
+                    chosen = color[name]
+        result[pos] = chosen if chosen is not None else ACCENT_INK
+    return result, clash
+
+
 def accent(
     ax: Axes,
     at: Sequence[str] | Sequence[float] | None = None,
-    color: ColorType | None = None,
+    color: ColorType | Mapping[str, ColorType] | None = None,
     axis: str | None = None,
     only_features: bool = False,
     label: str = "value",
@@ -126,7 +151,6 @@ def accent(
     if label not in ("value", "name", "both"):
         raise ValueError(f"label must be 'value', 'name' or 'both', got {label!r}")
     axes = _accent_axes(ax, axis)
-    resolved = ACCENT_INK if color is None else color
     state = ensure_state(ax)
     if "accent" not in state:
         state["accent"] = {"axes": {}}
@@ -138,9 +162,12 @@ def accent(
                 "labelcolor": _current_labelcolor(target),
             }
         positions = _selected_positions(target, at)
+        colors, clash = _resolve_colors(target, positions, color)
         target._vzs_accent = {  # ty: ignore[unresolved-attribute]
-            "colors": dict.fromkeys(positions, resolved),
+            "colors": colors,
             "positions": positions,
+            "clash": clash,
+            "warned": False,
         }
         if only_features or label != "value":
             inner = state["accent"]["axes"][key]["formatter"]
@@ -159,6 +186,13 @@ def _apply(ax: Axes) -> bool:
         spec = getattr(axis, "_vzs_accent", None)
         if spec is None:
             continue
+        if spec.get("clash") and not spec["warned"]:
+            spec["warned"] = True
+            warnings.warn(
+                "vanzelfsprekend: coincident features have conflicting accent "
+                "colours; using the first.",
+                stacklevel=2,
+            )
         for loc, tick in zip(
             axis.get_majorticklocs(), axis.get_major_ticks(), strict=False
         ):

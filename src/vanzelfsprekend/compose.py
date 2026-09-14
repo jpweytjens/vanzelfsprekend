@@ -3,7 +3,7 @@
 `register` puts the `ax.vzs` accessor on `Axes`; `unregister` takes it off.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from matplotlib.artist import Artist
@@ -516,7 +516,7 @@ class _Accessor:
     def accent(
         self,
         at: Sequence[str] | Sequence[float] | None = None,
-        color: ColorType | None = None,
+        color: ColorType | Mapping[str, ColorType] | None = None,
         axis: str | None = None,
         only_features: bool = False,
         label: str = "value",
