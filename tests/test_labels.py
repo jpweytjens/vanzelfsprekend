@@ -511,6 +511,51 @@ def test_beside_ylabel_clears_a_data_end_past_the_top_tick():
     plt.close(fig)
 
 
+def test_xlabel_forwards_text_kwargs():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    lbl = vzs.xlabel(ax, "time (s)", color="C3", fontsize=15)
+    assert lbl.get_color() == "C3"
+    assert lbl.get_fontsize() == 15
+    assert lbl.get_horizontalalignment() == "right"  # vzs still owns placement
+    plt.close(fig)
+
+
+def test_ylabel_beside_forwards_text_kwargs():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    lbl = vzs.ylabel(ax, "voltage", place="beside", color="C2", fontweight="bold")
+    assert lbl.get_color() == "C2"
+    assert lbl.get_fontweight() == "bold"
+    assert lbl.get_rotation() == 0  # vzs keeps the label horizontal
+    plt.close(fig)
+
+
+def test_ylabel_above_forwards_text_kwargs():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    vzs.range_frame(ax)
+    lbl = vzs.ylabel(ax, "voltage", place="above", color="C1", fontsize=16)
+    assert lbl.get_color() == "C1"  # applied to the managed above-label text
+    assert lbl.get_fontsize() == 16
+    plt.close(fig)
+
+
+def test_accessor_set_xlabel_forwards_text_kwargs():
+    fig, ax = plt.subplots()
+    rng = np.random.default_rng(0)
+    ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
+    ax.vzs.range_frame()
+    lbl = ax.vzs.set_xlabel("time (s)", color="C4")
+    assert lbl.get_color() == "C4"
+    plt.close(fig)
+
+
 def _inverted_ax(axis_name):
     """Axes with one axis running backwards, as a depth profile does.
 

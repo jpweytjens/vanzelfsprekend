@@ -880,3 +880,20 @@ def test_accessor_label_matches_the_function():
     assert peak.get_text() == "measured"
     assert "label" in vzs.__all__
     plt.close(fig)
+
+
+def test_label_forwards_text_kwargs():
+    fig, ax = resonance()
+    (text,) = vzs.label(
+        ax, "calculated", x=17.5, side="right", fontsize=13, fontstyle="italic"
+    )
+    assert text.get_fontsize() == 13
+    assert text.get_fontstyle() == "italic"
+    plt.close(fig)
+
+
+def test_label_color_kwarg_raises():
+    fig, ax = resonance()
+    with pytest.raises(ValueError, match="labelcolor"):
+        vzs.label(ax, "calculated", x=17.5, color="red")
+    plt.close(fig)
