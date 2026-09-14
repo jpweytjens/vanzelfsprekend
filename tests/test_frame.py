@@ -9,6 +9,7 @@ from matplotlib.ticker import FixedLocator, MultipleLocator
 import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
 from vanzelfsprekend.hook import get_state
+from vanzelfsprekend.locator import AugmentedLocator
 
 
 @pytest.fixture
@@ -655,6 +656,62 @@ def test_loose_frame_view_covers_a_fixed_tick_outside_the_data():
     lo, hi = ax.get_ylim()
     assert lo <= 0.0
     assert hi >= 7938.0
+    plt.close(fig)
+
+
+def test_feature_frame_bounds_equal_mark_envelope():
+    fig, ax = _two_values_ax()  # y data spans 7680..7938
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))  # interior marks
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7750.0, 7850.0)
+    plt.close(fig)
+
+
+def test_feature_frame_reaches_a_mark_beyond_the_data():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))  # 0 is below the data
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    plt.close(fig)
+
+
+def test_feature_reads_the_extra_side_of_an_augmented_locator():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    # Nice side brackets wider than the marks; feature must ignore it.
+    ax.yaxis.set_major_locator(
+        AugmentedLocator(FixedLocator([7600, 8000]), FixedLocator([7750, 7850]))
+    )
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7750.0, 7850.0)
+    plt.close(fig)
+
+
+def test_feature_per_end_tuple_sets_each_end_independently():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", ("feature", "data")))
+    ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    fig.canvas.draw()
+    ymax = ax.yaxis.get_data_interval()[1]
+    assert ax.spines["left"].get_bounds() == (7750.0, ymax)
+    plt.close(fig)
+
+
+def test_feature_spine_is_flush_by_default():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame="feature")
+    ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    fig.canvas.draw()
+    assert ax.spines["left"].get_position() == ("outward", 0.0)
+    plt.close(fig)
+
+
+def test_feature_is_a_valid_mode():
+    fig, ax = _two_values_ax()
+    ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    range_frame(ax, frame="feature")  # must not raise
     plt.close(fig)
 
 

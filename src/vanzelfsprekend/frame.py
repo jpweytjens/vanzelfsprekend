@@ -8,10 +8,11 @@ import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.ticker import Locator, NullLocator
+from matplotlib.ticker import FixedLocator, Locator, NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
+    AugmentedLocator,
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
@@ -21,7 +22,7 @@ from vanzelfsprekend.locator import (
 FrameMode = str | tuple[str, str]
 """One axis's frame mode: a mode for both ends, or a `(low, high)` pair."""
 
-MODES = ("nice", "data", "loose")
+MODES = ("nice", "data", "loose", "feature")
 
 
 def parse_frame_args(
@@ -34,9 +35,9 @@ def parse_frame_args(
     the spelling given.
     """
     invalid = ValueError(
-        "frame must be 'nice', 'data' or 'loose', a tuple of two of them, or "
-        "a tuple whose entries are each a mode or a (low, high) pair of "
-        f"modes, got {frame!r}"
+        "frame must be 'nice', 'data', 'loose' or 'feature', a tuple of two "
+        "of them, or a tuple whose entries are each a mode or a (low, high) "
+        f"pair of modes, got {frame!r}"
     )
 
     def ends(axis_mode: FrameMode) -> tuple[str, str]:
@@ -144,6 +145,24 @@ def axis_kind(axis: Axis) -> AxisKind:
     is_date = converter is not None and _is_date_converter(converter)
     supported = scale in ("linear", "log") and (converter is None or is_date)
     return AxisKind(scale, is_date, supported)
+
+
+def _fixed_positions(axis: Axis) -> list[float] | None:
+    """Return the fixed marks on `axis`, or None if its major locator has none.
+
+    An `AugmentedLocator` contributes its `.extra` side (the marks, not
+    the nice-union); any other `FixedLocator` (so `FeatureLocator`,
+    `SummaryLocator`, `QuartileLocator`, or a bare one) contributes its
+    own positions. Any other locator has no marks for `feature` mode.
+    """
+    loc = axis.get_major_locator()
+    if isinstance(loc, AugmentedLocator):
+        loc = loc.extra
+    if not isinstance(loc, FixedLocator):
+        return None
+    positions = np.asarray(loc.locs, dtype=float).ravel()  # ty: ignore[unresolved-attribute]
+    positions = positions[np.isfinite(positions)]
+    return positions.tolist() if positions.size else None
 
 
 def skip_if_not_rectilinear(ax: Axes, stacklevel: int) -> bool:
@@ -397,7 +416,8 @@ def _frame_span(
     if not np.isfinite([dmin, dmax]).all() or dmin == dmax:
         return None
     ticks = list(axis.get_majorticklocs())
-    if not ticks and ends != ("data", "data"):
+    marks = _fixed_positions(axis) if "feature" in ends else None
+    if not ticks and ends != ("data", "data") and "feature" not in ends:
         return None
     inside = [t for t in ticks if dmin <= t <= dmax]
     tol = 1e-9 * (dmax - dmin)
@@ -409,6 +429,8 @@ def _frame_span(
         nearest: Callable[[list[float]], float],
         beyond: list[float],
     ) -> float | None:
+        if mode == "feature":
+            return outer(marks) if marks else None
         if mode == "data":
             return datum
         if mode == "nice":
