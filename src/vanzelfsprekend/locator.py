@@ -1,7 +1,7 @@
 """Tick locator built on mizani's extended Wilkinson algorithm."""
 
 import datetime
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 import matplotlib as mpl
 import numpy as np
@@ -826,11 +826,19 @@ class FeatureLocator(FixedLocator):
         self,
         x: ArrayLike,
         y: ArrayLike,
-        features: Sequence[Callable[..., ArrayLike] | ArrayLike],
+        features: Sequence[Callable[..., ArrayLike] | ArrayLike]
+        | Mapping[str, Callable[..., float] | float],
     ) -> None:
         xs = np.asarray(x, dtype=float).ravel()
         ys = np.asarray(y, dtype=float).ravel()
-        super().__init__(_tick_positions(features, xs, ys))
+        positions, names = _named_positions(features, xs, ys)
+        super().__init__(positions)
+        self._feature_names = names
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """Map from each named feature's position to its name(s); empty if nameless."""
+        return dict(self._feature_names)
 
 
 class SummaryLocator(FixedLocator):
@@ -863,13 +871,21 @@ class SummaryLocator(FixedLocator):
     def __init__(
         self,
         values: ArrayLike,
-        reducers: Sequence[Callable[..., ArrayLike] | ArrayLike],
+        reducers: Sequence[Callable[..., ArrayLike] | ArrayLike]
+        | Mapping[str, Callable[..., float] | float],
     ) -> None:
         vals = np.asarray(values, dtype=float).ravel()
         vals = vals[np.isfinite(vals)]
         if vals.size == 0:
             raise ValueError("data has no finite values")
-        super().__init__(_tick_positions(reducers, vals))
+        positions, names = _named_positions(reducers, vals)
+        super().__init__(positions)
+        self._feature_names = names
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """Map from each named reducer's position to its name(s); empty if nameless."""
+        return dict(self._feature_names)
 
 
 class QuartileLocator(SummaryLocator):
@@ -895,7 +911,11 @@ class QuartileLocator(SummaryLocator):
     """
 
     def __init__(self, data: ArrayLike) -> None:
-        super().__init__(data, (lambda v: np.quantile(v, (0, 0.25, 0.5, 0.75, 1)),))
+        quantiles = {"min": 0.0, "Q1": 0.25, "median": 0.5, "Q3": 0.75, "max": 1.0}
+        super().__init__(
+            data,
+            {name: (lambda v, p=p: np.quantile(v, p)) for name, p in quantiles.items()},
+        )
 
 
 class AugmentedLocator(Locator):
@@ -930,6 +950,16 @@ class AugmentedLocator(Locator):
     def __init__(self, base: Locator, extra: Locator | Sequence[float]) -> None:
         self._base = base
         self._extra = extra if isinstance(extra, Locator) else FixedLocator(list(extra))
+
+    @property
+    def extra(self) -> Locator:
+        """The fixed side whose ticks augment the base."""
+        return self._extra
+
+    @property
+    def feature_names(self) -> dict[float, tuple[str, ...]]:
+        """The `extra` side's `position -> names` map, or empty if it has none."""
+        return getattr(self._extra, "feature_names", {})
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return the union of the base and extra tick positions."""
@@ -988,6 +1018,49 @@ def _tick_positions(
     # tolist: FixedLocator's stub wants Sequence[float], which an ndarray
     # does not satisfy structurally.
     return np.unique(values).tolist()
+
+
+def _named_positions(
+    entries: Sequence[Callable[..., ArrayLike] | ArrayLike]
+    | Mapping[str, Callable[..., float] | float],
+    *data: np.ndarray,
+) -> tuple[list[float], dict[float, tuple[str, ...]]]:
+    """Positions plus a `position -> names` map from named or nameless entries.
+
+    A `Mapping` names each entry (one name, one scalar position); a
+    `Sequence` is nameless and may yield arrays. Positions follow the
+    same flatten, drop-non-finite, collapse-coincident pipeline as
+    `_tick_positions`; the map carries identity past the collapse, so
+    coincident named positions collapse to a tuple of their names.
+    """
+    if isinstance(entries, Mapping):
+        items: list[tuple[str | None, Callable[..., ArrayLike] | ArrayLike]] = [
+            (name, entry) for name, entry in entries.items()
+        ]
+    else:
+        items = [(None, entry) for entry in entries]
+
+    pairs: list[tuple[float, str | None]] = []
+    for name, entry in items:
+        # ty: ignore[call-top-callable]; same top-callable narrowing as _tick_positions.
+        arr = np.asarray(
+            entry(*data) if callable(entry) else entry, dtype=float
+        ).ravel()
+        if name is not None and arr.size != 1:
+            raise ValueError(
+                f"named feature {name!r} must yield one position, got {arr.size}"
+            )
+        pairs.extend((float(value), name) for value in arr)
+
+    finite = [(v, n) for v, n in pairs if np.isfinite(v)]
+    if not finite:
+        raise ValueError("reducers produced no finite tick positions")
+    positions = np.unique([v for v, _ in finite]).tolist()
+    names: dict[float, tuple[str, ...]] = {}
+    for value, name in finite:
+        if name is not None:
+            names[value] = (*names.get(value, ()), name)
+    return positions, names
 
 
 def visible_interval(

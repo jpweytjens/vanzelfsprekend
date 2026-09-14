@@ -113,7 +113,7 @@ def test_palette_css_maps_the_three_inks_in_both_modes():
         assert f"{token}: {docs_hooks.DARK_INKS[token]};" in dark
 
 
-def test_palette_css_colours_only_four_token_categories():
+def test_palette_css_colours_six_token_categories():
     css = docs_hooks.palette_css()
     assert ".s1, .s2" in css
     assert "var(--code-string)" in css
@@ -124,8 +124,10 @@ def test_palette_css_colours_only_four_token_categories():
     assert "var(--code-constant)" in css
     assert ".nf, .nc, .fm" in css
     assert "var(--code-definition)" in css
-    assert ".k " not in css  # keywords stay body ink
-    assert ".k," not in css
+    assert ".k, .kd" in css  # keywords carry their own ink
+    assert "var(--code-keyword)" in css
+    assert ".nb, .kt" in css  # builtins and types
+    assert "var(--code-builtin)" in css
     assert ".o " not in css  # operators stay body ink
     assert ".o," not in css
 

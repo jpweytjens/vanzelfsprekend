@@ -21,6 +21,10 @@ def test_scheme_shapes_pin_the_technote():
     assert palettes.SCHEMES["vibrant"] is palettes.VIBRANT
 
 
+def test_accent_ink_is_the_high_contrast_blue():
+    assert palettes.HIGH_CONTRAST["blue"] == palettes.ACCENT_INK
+
+
 def test_inks():
     assert palettes.DATA_INK == "#333333"
     assert palettes.TEXT_INK == palettes.DARK["grey"] == "#555555"

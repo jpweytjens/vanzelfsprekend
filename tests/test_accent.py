@@ -1,0 +1,219 @@
+import warnings
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+
+import vanzelfsprekend as vzs
+from vanzelfsprekend import palettes
+from vanzelfsprekend.locator import (
+    AugmentedLocator,
+    FeatureLocator,
+    QuartileLocator,
+    TalbotLocator,
+)
+
+
+def _quartile_axes():
+    fig, ax = plt.subplots()
+    y = np.arange(101.0)
+    ax.plot(y, y)
+    ax.yaxis.set_major_locator(AugmentedLocator(TalbotLocator(), QuartileLocator(y)))
+    return fig, ax
+
+
+def _label_color_at(ax, axis_name, position):
+    axis = getattr(ax, f"{axis_name}axis")
+    for loc, tick in zip(
+        axis.get_majorticklocs(), axis.get_major_ticks(), strict=False
+    ):
+        if np.isclose(loc, position):
+            return tick.label1.get_color()
+    raise AssertionError(f"no tick at {position}")
+
+
+def test_accent_colours_feature_labels():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax)
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == palettes.ACCENT_INK
+    plt.close(fig)
+
+
+def test_accent_leaves_base_labels_uncoloured():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax)
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == palettes.ACCENT_INK  # feature
+    assert _label_color_at(ax, "y", 20.0) != palettes.ACCENT_INK  # grid tick
+    plt.close(fig)
+
+
+def test_accent_custom_colour():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, color="#EE7733")
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == "#EE7733"
+    plt.close(fig)
+
+
+def test_accent_survives_redraw():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax)
+    fig.canvas.draw()
+    ax.set_ylim(0, 100)
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == palettes.ACCENT_INK
+    plt.close(fig)
+
+
+def test_accent_restore_reverts_label_colour():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax)
+    fig.canvas.draw()
+    before = _label_color_at(ax, "y", 20.0)
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == before
+    plt.close(fig)
+
+
+def test_accent_without_named_locator_raises():
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match="no named features"):
+        vzs.accent(ax)
+    plt.close(fig)
+
+
+def test_accent_selects_a_single_name():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=["median"])
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == palettes.ACCENT_INK
+    assert _label_color_at(ax, "y", 25.0) != palettes.ACCENT_INK  # Q1 not selected
+    plt.close(fig)
+
+
+def test_accent_unknown_name_raises_listing_available():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match=r"Q9.*median"):
+        vzs.accent(ax, at=["Q9"])
+    plt.close(fig)
+
+
+def test_accent_by_position_on_unnamed_locator():
+    fig, ax = plt.subplots()
+    x, y = np.linspace(0, 10, 50), np.linspace(0, 10, 50)
+    ax.plot(x, y)
+    ax.xaxis.set_major_locator(FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]]))
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=[10.0], axis="x")
+    fig.canvas.draw()
+    assert _label_color_at(ax, "x", 10.0) == palettes.ACCENT_INK
+    plt.close(fig)
+
+
+def _label_text_at(ax, axis_name, position):
+    axis = getattr(ax, f"{axis_name}axis")
+    for loc, tick in zip(
+        axis.get_majorticklocs(), axis.get_major_ticks(), strict=False
+    ):
+        if np.isclose(loc, position):
+            return tick.label1.get_text()
+    raise AssertionError(f"no tick at {position}")
+
+
+def test_only_features_blanks_the_grid_labels():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, only_features=True)
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) != ""  # a quartile keeps its label
+    assert _label_text_at(ax, "y", 20.0) == ""  # a grid tick is blanked
+    plt.close(fig)
+
+
+def test_only_features_restored():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, only_features=True)
+    fig.canvas.draw()
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 20.0) != ""  # grid label back
+    plt.close(fig)
+
+
+def test_label_name_shows_the_name():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, label="name")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) == "median"
+    plt.close(fig)
+
+
+def test_label_both_joins_name_and_value():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    ax.yaxis.set_major_formatter("{x:.0f}")
+    vzs.accent(ax, label="both")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) == "median = 50"
+    plt.close(fig)
+
+
+def test_label_name_joins_coincident_names():
+    fig, ax = plt.subplots()
+    y = np.array([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19.0])
+    ax.plot(y, y)
+    ax.yaxis.set_major_locator(AugmentedLocator(TalbotLocator(), QuartileLocator(y)))
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=["min"], label="name")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 8.0) == "min/Q1/median/Q3"
+    plt.close(fig)
+
+
+def test_label_unknown_mode_raises():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match="label must be"):
+        vzs.accent(ax, label="fancy")
+    plt.close(fig)
+
+
+def test_accent_per_name_colour():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, color={"median": "#0077BB", "Q1": "#009988"})
+    fig.canvas.draw()
+    assert _label_color_at(ax, "y", 50.0) == "#0077BB"
+    assert _label_color_at(ax, "y", 25.0) == "#009988"
+    assert _label_color_at(ax, "y", 0.0) == palettes.ACCENT_INK  # min: default
+    plt.close(fig)
+
+
+def test_accent_coincident_colour_conflict_warns_once():
+    fig, ax = plt.subplots()
+    y = np.array([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19.0])
+    ax.plot(y, y)
+    ax.yaxis.set_major_locator(AugmentedLocator(TalbotLocator(), QuartileLocator(y)))
+    vzs.range_frame(ax)
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        vzs.accent(ax, color={"min": "#0077BB", "Q1": "#009988"})
+        fig.canvas.draw()
+        fig.canvas.draw()
+    conflict = [w for w in caught if "coincident" in str(w.message)]
+    assert len(conflict) == 1
+    plt.close(fig)

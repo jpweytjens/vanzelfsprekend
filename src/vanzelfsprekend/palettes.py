@@ -102,6 +102,7 @@ SCHEMES = {
 DATA_INK = "#333333"
 TEXT_INK = DARK["grey"]
 LINE_INK = "#999999"
+ACCENT_INK = HIGH_CONTRAST["blue"]  # "#004488": emphasis for a few ticks pulled forward
 
 
 def cycle(scheme: str = "ink") -> Cycler:

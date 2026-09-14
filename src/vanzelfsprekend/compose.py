@@ -3,7 +3,7 @@
 `register` puts the `ax.vzs` accessor on `Axes`; `unregister` takes it off.
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from matplotlib.artist import Artist
@@ -11,6 +11,7 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
+from vanzelfsprekend.accent import accent
 from vanzelfsprekend.direct import Side, label
 from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import frame_unit, share_groups
@@ -331,6 +332,15 @@ def _restore_member(ax: Axes) -> None:
             for text, (original, *_rest) in per_axis.items():
                 text.set_transform(original)
 
+    accent_state = state.get("accent")
+    if accent_state is not None:
+        for key, snap in accent_state["axes"].items():
+            axis = ax.xaxis if key == "x" else ax.yaxis
+            axis.set_major_formatter(snap["formatter"])
+            ax.tick_params(axis=key, which="major", labelcolor=snap["labelcolor"])
+            if hasattr(axis, "_vzs_accent"):
+                delattr(axis, "_vzs_accent")
+
     line_labels_state = state.get("line_labels")
     if line_labels_state is not None:
         for side in line_labels_state.values():
@@ -502,6 +512,24 @@ class _Accessor:
     def tick_direction(self, direction: str = "out") -> Axes:
         """Point the tick marks; see `vanzelfsprekend.tick_direction`."""
         return tick_direction(self._ax, direction=direction)
+
+    def accent(
+        self,
+        at: Sequence[str] | Sequence[float] | None = None,
+        color: ColorType | Mapping[str, ColorType] | None = None,
+        axis: str | None = None,
+        only_features: bool = False,
+        label: str = "value",
+    ) -> Axes:
+        """Emphasise named feature ticks; see `vanzelfsprekend.accent`."""
+        return accent(
+            self._ax,
+            at=at,
+            color=color,
+            axis=axis,
+            only_features=only_features,
+            label=label,
+        )
 
 
 def register() -> None:

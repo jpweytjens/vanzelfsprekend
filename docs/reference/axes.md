@@ -12,6 +12,8 @@ Everything here acts on a matplotlib axes: `apply` installs the range frame, and
 
 ::: vanzelfsprekend.mute
 
+::: vanzelfsprekend.accent
+
 ::: vanzelfsprekend.small_multiples
 
 ::: vanzelfsprekend.tick_direction

@@ -872,3 +872,121 @@ def test_augmented_feature_tick_after_range_frame():
     assert lo <= x.min()  # spine/view still bounds the data
     assert hi >= x.max()  # spine/view still bounds the data
     plt.close(fig)
+
+
+def test_named_positions_sequence_form_has_no_names():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions([np.min, np.max], np.array([0.0, 1.0, 2.0]))
+    assert positions == [0.0, 2.0]
+    assert names == {}
+
+
+def test_named_positions_mapping_form_maps_each_name():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"lo": np.min, "hi": np.max}, np.array([0.0, 1.0, 2.0])
+    )
+    assert positions == [0.0, 2.0]
+    assert names == {0.0: ("lo",), 2.0: ("hi",)}
+
+
+def test_named_positions_coincident_names_collapse_to_a_tuple():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"a": lambda v: v.min(), "b": lambda v: v[0]}, np.array([5.0, 6.0])
+    )
+    assert positions == [5.0]
+    assert names == {5.0: ("a", "b")}
+
+
+def test_named_positions_named_array_result_raises():
+    from vanzelfsprekend.locator import _named_positions
+
+    with pytest.raises(ValueError, match="one position"):
+        _named_positions({"q": lambda v: np.quantile(v, (0.25, 0.75))}, np.arange(10.0))
+
+
+def test_named_positions_drops_non_finite_and_its_name():
+    from vanzelfsprekend.locator import _named_positions
+
+    positions, names = _named_positions(
+        {"ok": lambda v: v[0], "bad": lambda v: np.nan}, np.array([3.0, 4.0])
+    )
+    assert positions == [3.0]
+    assert names == {3.0: ("ok",)}
+
+
+def test_named_positions_without_finite_positions_raises():
+    from vanzelfsprekend.locator import _named_positions
+
+    with pytest.raises(ValueError, match="finite"):
+        _named_positions([lambda v: np.nan], np.array([0.0, 1.0]))
+
+
+def test_feature_locator_sequence_form_has_empty_feature_names():
+    x, y = _lorentzian_peak()
+    locator = FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])
+    assert locator.feature_names == {}
+
+
+def test_feature_locator_mapping_form_names_the_feature():
+    x, y = _lorentzian_peak()
+    locator = FeatureLocator(x, y, {"peak": lambda x, y: x[np.argmax(y)]})
+    np.testing.assert_allclose(locator(), [17.2])
+    (position,) = locator.feature_names
+    np.testing.assert_allclose(position, 17.2)
+    assert locator.feature_names[position] == ("peak",)
+
+
+def test_summary_locator_mapping_form_names_each_reducer():
+    locator = SummaryLocator(
+        np.array([0.0, 1.0, 2.0, 3.0, 4.0]),
+        {"lo": np.min, "mean": np.mean, "hi": np.max},
+    )
+    np.testing.assert_allclose(locator(), [0.0, 2.0, 4.0])
+    assert locator.feature_names == {0.0: ("lo",), 2.0: ("mean",), 4.0: ("hi",)}
+
+
+def test_summary_locator_mapping_form_accepts_a_plain_number():
+    locator = SummaryLocator(
+        np.array([1.0, 2.0, 3.0]), {"mean": np.mean, "target": 5.0}
+    )
+    np.testing.assert_allclose(locator(), [2.0, 5.0])
+    assert locator.feature_names == {2.0: ("mean",), 5.0: ("target",)}
+
+
+def test_quartile_locator_names_the_five_number_summary():
+    locator = QuartileLocator(np.arange(101.0))
+    assert locator.feature_names == {
+        0.0: ("min",),
+        25.0: ("Q1",),
+        50.0: ("median",),
+        75.0: ("Q3",),
+        100.0: ("max",),
+    }
+
+
+def test_quartile_locator_coincident_names_collapse_to_a_tuple():
+    locator = QuartileLocator([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19])
+    assert list(locator()) == [8.0, 19.0]
+    assert locator.feature_names[8.0] == ("min", "Q1", "median", "Q3")
+    assert locator.feature_names[19.0] == ("max",)
+
+
+def test_augmented_locator_exposes_its_extra():
+    extra = QuartileLocator(np.arange(101.0))
+    locator = AugmentedLocator(TalbotLocator(), extra)
+    assert locator.extra is extra
+
+
+def test_augmented_locator_forwards_feature_names():
+    locator = AugmentedLocator(TalbotLocator(), QuartileLocator(np.arange(101.0)))
+    assert locator.feature_names[50.0] == ("median",)
+
+
+def test_augmented_locator_feature_names_empty_for_bare_positions():
+    locator = AugmentedLocator(TalbotLocator(), [1.0, 2.0, 3.0])
+    assert locator.feature_names == {}
