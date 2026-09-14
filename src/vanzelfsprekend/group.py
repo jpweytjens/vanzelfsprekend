@@ -21,16 +21,15 @@ from vanzelfsprekend.frame import (
     axis_kind,
     install_frame,
     parse_frame_args,
-    parse_spacing,
     snapshot_frame,
 )
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 from vanzelfsprekend.labels import _apply_date_offset
 from vanzelfsprekend.locator import (
-    SPACING,
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
+    parse_spacing,
     visible_interval,
 )
 from vanzelfsprekend.ticklabels import _apply_tick_labels
@@ -148,7 +147,7 @@ def frame_unit(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -226,6 +225,7 @@ def frame_unit(
             nice_numbers=nice_numbers,
             weights=weights,
             kinds=kinds,
+            grouped=set(get_state(ax)["group"]["members"]),  # ty: ignore[not-subscriptable]
             stacklevel=stacklevel,
         )
         state = ensure_state(ax)

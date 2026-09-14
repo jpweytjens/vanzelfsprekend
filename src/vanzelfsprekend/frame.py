@@ -2,13 +2,13 @@
 
 import warnings
 from collections.abc import Callable, Sequence
-from typing import NamedTuple
+from typing import NamedTuple, TypeVar
 
 import matplotlib.dates as mdates
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.axis import Axis
-from matplotlib.ticker import NullLocator
+from matplotlib.ticker import Locator, NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
@@ -68,18 +68,6 @@ def parse_frame_args(
     return mode, offsets
 
 
-def parse_spacing(spacing: float | tuple[float, float]) -> dict[str, float]:
-    """Resolve `spacing` into per-axis gaps, keyed `'x'` and `'y'`."""
-    if isinstance(spacing, (int, float)):
-        return {"x": spacing, "y": spacing}
-    pair = tuple(spacing)
-    if len(pair) != 2 or not all(isinstance(s, (int, float)) for s in pair):
-        raise ValueError(
-            f"spacing must be a number or a tuple of two numbers, got {spacing!r}"
-        )
-    return {"x": pair[0], "y": pair[1]}
-
-
 def snapshot_frame(ax: Axes) -> None:
     """Record what the frame will change on `ax`, once.
 
@@ -94,6 +82,7 @@ def snapshot_frame(ax: Axes) -> None:
     state["frame"] = {
         "active": set(),
         "formatted": set(),
+        "installed": {},
         "snapshot": {
             "locators": {
                 "x": ax.xaxis.get_major_locator(),
@@ -106,6 +95,20 @@ def snapshot_frame(ax: Axes) -> None:
             "formatters": {
                 "x": ax.xaxis.get_major_formatter(),
                 "y": ax.yaxis.get_major_formatter(),
+            },
+            "is_default": {
+                "majloc": {
+                    "x": ax.xaxis.isDefault_majloc,
+                    "y": ax.yaxis.isDefault_majloc,
+                },
+                "minloc": {
+                    "x": ax.xaxis.isDefault_minloc,
+                    "y": ax.yaxis.isDefault_minloc,
+                },
+                "majfmt": {
+                    "x": ax.xaxis.isDefault_majfmt,
+                    "y": ax.yaxis.isDefault_majfmt,
+                },
             },
             "top_visible": ax.spines["top"].get_visible(),
             "right_visible": ax.spines["right"].get_visible(),
@@ -162,6 +165,56 @@ def skip_if_not_rectilinear(ax: Axes, stacklevel: int) -> bool:
     return True
 
 
+def build_major_locator(
+    kind: AxisKind,
+    loose: tuple[bool, bool],
+    n: int | None,
+    spacing: float,
+    nice_numbers: Sequence[float] | None,
+    weights: dict[str, float] | None,
+    base: float | None,
+) -> Locator:
+    """Return the range-frame major locator for `kind`.
+
+    A `DateBreaksLocator` for a date axis, a `LogBreaksLocator` (using
+    `base`) for a log axis, a `TalbotLocator` otherwise. Does not touch
+    the axis; the caller installs it.
+    """
+    if kind.is_date:
+        return DateBreaksLocator(n=n, spacing=spacing, loose=loose)
+    if kind.scale == "log":
+        return LogBreaksLocator(n=n, spacing=spacing, loose=loose, base=base)  # ty: ignore[invalid-argument-type]
+    return TalbotLocator(
+        n=n, spacing=spacing, loose=loose, nice_numbers=nice_numbers, weights=weights
+    )
+
+
+_Slotted = TypeVar("_Slotted")
+
+
+def _write_slot(
+    installed: dict[str, object],
+    key: str,
+    is_default: bool,
+    current: _Slotted,
+    build: Callable[[], _Slotted],
+    set_fn: Callable[[_Slotted], None],
+) -> _Slotted | None:
+    """Install `build()` into a tick slot iff we may; return it, else None.
+
+    We may when the slot is matplotlib's untouched default (`is_default`)
+    or still holds the object we installed before (`current is
+    installed[key]`, a refresh). A slot the user set deliberately is
+    preserved untouched.
+    """
+    if is_default or current is installed.get(key):
+        obj = build()
+        set_fn(obj)
+        installed[key] = obj
+        return obj
+    return None
+
+
 def install_frame(
     ax: Axes,
     mode: dict[str, tuple[str, str]],
@@ -171,6 +224,7 @@ def install_frame(
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
     kinds: dict[str, AxisKind | None],
+    grouped: set[str],
     stacklevel: int,
 ) -> None:
     """Install the frame on `ax` given each axis's kind.
@@ -193,6 +247,11 @@ def install_frame(
         to leave alone (a group that disagrees on kind; the caller has
         warned or raised). An unsupported kind warns here, as it always
         has, and is left alone too.
+    grouped : set of str
+        Axis names (`'x'`, `'y'`) that will be wrapped in a
+        `GroupLocator` by the caller. A grouped axis is always
+        (re)installed — the shared scale is computed there — so the
+        no-clobber guard does not apply to it. Empty for a lone axes.
     stacklevel : int
         The depth of the caller the warnings must point at, counted
         from this function.
@@ -219,30 +278,39 @@ def install_frame(
             )
             continue
         loose = (mode[name][0] == "loose", mode[name][1] == "loose")
-        if kind.is_date:
-            locator = DateBreaksLocator(n=n, spacing=spacing[name], loose=loose)
-            axis.set_major_locator(locator)
-            axis.set_major_formatter(mdates.ConciseDateFormatter(locator))
-            frame_state["formatted"].add(name)
-        elif kind.scale == "log":
-            axis.set_major_locator(
-                LogBreaksLocator(
-                    n=n,
-                    spacing=spacing[name],
-                    loose=loose,
-                    base=axis.get_transform().base,  # ty: ignore[unresolved-attribute]
-                )
+        base = axis.get_transform().base if kind.scale == "log" else None  # ty: ignore[unresolved-attribute]
+        installed = frame_state["installed"]
+        may_clobber = name in grouped
+        loc = _write_slot(
+            installed,
+            f"majloc:{name}",
+            axis.isDefault_majloc or may_clobber,
+            axis.get_major_locator(),
+            lambda kind=kind, loose=loose, name=name, base=base: build_major_locator(
+                kind, loose, n, spacing[name], nice_numbers, weights, base
+            ),
+            axis.set_major_locator,
+        )
+        wrote_major = loc is not None
+        if wrote_major and kind.is_date:
+            fmt = _write_slot(
+                installed,
+                f"majfmt:{name}",
+                axis.isDefault_majfmt or may_clobber,
+                axis.get_major_formatter(),
+                lambda loc=loc: mdates.ConciseDateFormatter(loc),
+                axis.set_major_formatter,
             )
-            axis.set_minor_locator(NullLocator())
-        else:
-            axis.set_major_locator(
-                TalbotLocator(
-                    n=n,
-                    spacing=spacing[name],
-                    loose=loose,
-                    nice_numbers=nice_numbers,
-                    weights=weights,
-                )
+            if fmt is not None:
+                frame_state["formatted"].add(name)
+        if kind.scale == "log":
+            _write_slot(
+                installed,
+                f"minloc:{name}",
+                axis.isDefault_minloc or may_clobber,
+                axis.get_minor_locator(),
+                NullLocator,
+                axis.set_minor_locator,
             )
         active.add(name)
     frame_state["active"] = active

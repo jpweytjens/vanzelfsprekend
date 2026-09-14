@@ -11,17 +11,14 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
-from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
 from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import frame_unit, share_groups
 from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
-from vanzelfsprekend.locator import SPACING
 from vanzelfsprekend.multiples import _teardown_grid
-from vanzelfsprekend.mute import LINE_WIDTH, mute
-from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.mute import mute
 from vanzelfsprekend.secondary import secondary_frame
 from vanzelfsprekend.ticks import _rc, tick_direction
 
@@ -30,7 +27,7 @@ def _frame(
     ax: Axes,
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode],
-    spacing: float | tuple[float, float],
+    spacing: float | tuple[float, float] | None,
     n: int | None,
     offset: float | tuple[float | None, float | None] | None,
     nice_numbers: Sequence[float] | None,
@@ -62,7 +59,7 @@ def _frame(
 def range_frame(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -80,6 +77,14 @@ def range_frame(
     spines keep their colour and the axes its colour cycle, which is
     what `mute` changes. Safe to call repeatedly; later calls update
     the settings instead of stacking hooks.
+
+    A locator you set on an axis before calling `range_frame` is kept,
+    not overwritten, so ticks and frame compose in either order; the
+    locator-shaping arguments below (`spacing`, `n`, `nice_numbers`,
+    `weights`) then have nothing to configure and are ignored on that
+    axis. Panels framed as a group (shared axes, `small_multiples`) are
+    the exception: the shared scale is computed here, so a locator set
+    on a grouped axis is replaced.
 
     Panels that share an axis (`sharex`, `sharey`, `ax.sharex(other)`)
     are framed together, whichever one you pass: each shared axis is
@@ -106,15 +111,15 @@ def range_frame(
         All three read the data cut back to the view, so a view pinned
         inside the data with `set_xlim` crops the frame to the data on
         screen, and a view wider than the data changes nothing.
-    spacing : float or tuple of two floats
+    spacing : float or tuple of two floats, optional
         The gap to aim for between ticks, in tick-label heights, so the
         number of ticks follows the axis's length and the labels' size:
         a small panel gets few, a poster's large labels thin them out.
         A tuple `(x_spacing, y_spacing)` sets the axes independently;
-        the default `(7, 4)` is 70 pt and 40 pt at 10 pt labels, about
-        2.5 cm and 1.4 cm, since an x label is three to five heights
-        wide along its axis and a y label one. Halving the spacing
-        doubles the ticks.
+        `None` (the default) uses `(7, 4)`, which is 70 pt and 40 pt at
+        10 pt labels, about 2.5 cm and 1.4 cm, since an x label is three
+        to five heights wide along its axis and a y label one. Halving
+        the spacing doubles the ticks.
     n : int, optional
         The number of ticks to aim for per axis, overriding `spacing`.
     offset : float or tuple of (float or None), optional
@@ -152,7 +157,7 @@ def range_frame(
 def apply(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -238,6 +243,10 @@ def _restore_member(ax: Axes) -> None:
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             if key in frame_state["formatted"]:
                 axis.set_major_formatter(snap["formatters"][key])
+        for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
+            axis.isDefault_majloc = snap["is_default"]["majloc"][key]
+            axis.isDefault_minloc = snap["is_default"]["minloc"][key]
+            axis.isDefault_majfmt = snap["is_default"]["majfmt"][key]
         ax.spines["top"].set_visible(snap["top_visible"])
         ax.spines["right"].set_visible(snap["right_visible"])
         ax.spines["left"].set_position(snap["left_position"])
@@ -389,7 +398,7 @@ class _Accessor:
     def apply(
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-        spacing: float | tuple[float, float] = SPACING,
+        spacing: float | tuple[float, float] | None = None,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
@@ -413,7 +422,7 @@ class _Accessor:
     def range_frame(
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-        spacing: float | tuple[float, float] = SPACING,
+        spacing: float | tuple[float, float] | None = None,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
@@ -447,7 +456,7 @@ class _Accessor:
         at: Literal["start", "end"] = "end",
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
-        gap: float = placement.GAP,
+        gap: float | None = None,
         labels: list[str | None] | None = None,
     ) -> list[Annotation]:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
@@ -464,7 +473,7 @@ class _Accessor:
         side: Side | None = None,
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
-        gap: float = placement.GAP,
+        gap: float | None = None,
     ) -> list[Annotation]:
         """Put a label beside a named artist; see `vanzelfsprekend.label`."""
         return label(
@@ -473,9 +482,9 @@ class _Accessor:
 
     def mute(
         self,
-        text_ink: str = TEXT_INK,
-        line_ink: str = LINE_INK,
-        line_width: float = LINE_WIDTH,
+        text_ink: str | None = None,
+        line_ink: str | None = None,
+        line_width: float | None = None,
     ) -> Axes:
         """Grey the axis furniture; see `vanzelfsprekend.mute`."""
         return mute(

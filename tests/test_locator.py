@@ -19,7 +19,16 @@ from vanzelfsprekend import (
     TalbotLocator,
     range_frame,
 )
-from vanzelfsprekend.locator import AugmentedLocator
+from vanzelfsprekend.locator import SPACING, AugmentedLocator, parse_spacing
+
+
+def test_parse_spacing_resolves_none_scalar_and_tuple():
+    # parse_spacing is the single authority for the default spacing, used
+    # both by the high-level frame and by the locator's per-axis fallback:
+    # an unset (None) spacing takes SPACING[0] on x and SPACING[1] on y.
+    assert parse_spacing(None) == {"x": SPACING[0], "y": SPACING[1]}
+    assert parse_spacing(5.0) == {"x": 5.0, "y": 5.0}
+    assert parse_spacing((6.0, 3.0)) == {"x": 6.0, "y": 3.0}
 
 
 def test_matches_mizani_directly():
