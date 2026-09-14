@@ -32,10 +32,10 @@ Settled so far
 
 Open threads
 ------------
-- Not yet done: the gallery entry + its guard test. (The script is in the step
-  form -- draw/compare/mark/name + --8<-- markers; `decomposition()` assembles
-  the final gallery figure; the tutorial page is docs/tutorial/labour-income.md
-  and the mkdocs nav points at it.)
+- The lesson is complete: draw/compare/mark/name with --8<-- markers,
+  `decomposition()` assembles the gallery figure, docs/tutorial/labour-income.md
+  walks through it, the mkdocs nav points at it, and it is the gallery's
+  capstone. `mkdocs build --strict` in CI guards the figures, snippets and links.
 - The tutorial cites the working paper it is inspired by in a sidenote
   (https://wps-feb.ugent.be/Papers/wp_23_1067.pdf).
 - Library candidate (separate branch): give the vzs label family **kwargs
