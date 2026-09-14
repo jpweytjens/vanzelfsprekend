@@ -53,6 +53,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import ruptures as rpt
 from matplotlib.dates import date2num, num2date
 
 import vanzelfsprekend as vzs
@@ -69,8 +70,8 @@ BONUS = 0.40  # December recurrent bump (eindejaarspremie)
 RECUR_NOISE = 0.03  # year-to-year variation in the recurrent bumps
 NOISE_SD = 0.04  # small monthly transient wobble
 
-# --- decomposition (phd: n=6 double median, MAD n=12) ---
-N = 6
+# --- decomposition (inspired by the phd; here a penalized median fit) ---
+PEN = 2.0  # segmentation penalty: cost per extra piecewise-constant segment
 MAD_WINDOW = 12
 EPS_SIGMA = 0.005  # floor on the scale estimate
 EPS_PERM = 0.02  # a permanent change must exceed this
@@ -96,14 +97,29 @@ def data() -> tuple[list[dt.date], np.ndarray]:
     return dates, income
 
 
+def _segment_median(income: np.ndarray) -> np.ndarray:
+    """Penalized median segmentation of the income series.
+
+    A piecewise-constant fit whose segments take the median of their span.
+    The L1 (median) cost is robust to the June/December bumps -- larger than
+    the raise, but a minority in any span -- so they land in the residual,
+    not as spurious steps.
+    """
+    algo = rpt.Pelt(model="l1", min_size=2, jump=1).fit(income)
+    perm = np.empty(income.size)
+    start = 0
+    for end in algo.predict(pen=PEN):
+        perm[start:end] = np.median(income[start:end])
+        start = end
+    return perm
+
+
 def decompose(
     income: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Return P-hat, nu-hat, the rolling scale sigma-hat, and dP-hat."""
-    s = pd.Series(income)
-    smooth = s.rolling(2 * N + 1, center=True, min_periods=N + 1).median()
-    perm = smooth.rolling(2 * N + 1, center=True, min_periods=N + 1).median()
-    nu = s - perm
+    perm = _segment_median(income)
+    nu = pd.Series(income - perm)
 
     def mad(x: np.ndarray) -> float:
         return np.median(np.abs(x - np.median(x)))
@@ -111,8 +127,8 @@ def decompose(
     sigma = (
         nu.rolling(MAD_WINDOW, min_periods=4).apply(mad, raw=True).bfill() * 1.4826
     ).clip(lower=EPS_SIGMA)
-    dperm = perm.diff()
-    return perm.to_numpy(), nu.to_numpy(), sigma.to_numpy(), dperm.to_numpy()
+    dperm = pd.Series(perm).diff()
+    return perm, nu.to_numpy(), sigma.to_numpy(), dperm.to_numpy()
 
 
 def render() -> None:
