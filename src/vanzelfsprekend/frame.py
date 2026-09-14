@@ -379,6 +379,8 @@ def _resolve_feature_ends(
         return to_data, None
 
     lo_mark, hi_mark = min(marks), max(marks)
+    # Only when both ends are `feature` can one collapsed mark zero the
+    # spine; a mixed end still has a non-feature end to span to.
     if ends[0] == "feature" and ends[1] == "feature" and lo_mark == hi_mark:
         warn(
             ("single", name),
