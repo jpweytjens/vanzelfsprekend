@@ -214,7 +214,7 @@ def _drawn_spine_span(ax: Axes, name: str) -> tuple[float, float] | None:
     """Return the span the frame applier drew the spine over, or `None`.
 
     `_frame_span` reports where a loose end wants to sit, which
-    `_fit_loose_view` then crops to a pinned view before setting the
+    `_fit_view` then crops to a pinned view before setting the
     spine's bounds. A label belongs at the spine's drawn end, so it
     reads the bounds rather than re-deriving the crop.
     """
@@ -234,7 +234,7 @@ def _visible_end_tick(axis: Axis) -> int | None:
     a loose end reaching past a pinned limit leaves a positioned tick
     label that never renders. Anchoring on the end tick of all would
     follow one of those off the axes; reading the view here crops the
-    same way `_fit_loose_view` crops the spine to a pinned view.
+    same way `_fit_view` crops the spine to a pinned view.
     """
     locs = axis.get_majorticklocs()
     vmin, vmax = sorted(float(v) for v in axis.get_view_interval())

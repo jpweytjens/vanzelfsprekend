@@ -677,6 +677,26 @@ def test_feature_frame_reaches_a_mark_beyond_the_data():
     plt.close(fig)
 
 
+def test_feature_view_grows_to_cover_a_mark_beyond_the_data():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    assert ax.get_ylim()[0] <= 0.0  # view grew down to the mark
+    plt.close(fig)
+
+
+def test_feature_under_pinned_view_crops_to_visible_marks():
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7900]))
+    ax.set_ylim(7600, 8000)  # crops out the 0 mark
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (7680.0, 7900.0)
+    plt.close(fig)
+
+
 def test_feature_reads_the_extra_side_of_an_augmented_locator():
     fig, ax = _two_values_ax()
     range_frame(ax, frame=("data", "feature"))
