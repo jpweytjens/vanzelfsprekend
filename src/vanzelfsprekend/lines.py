@@ -24,7 +24,7 @@ def line_labels(
     at: Literal["start", "end"] = "end",
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
-    gap: float = placement.GAP,
+    gap: float | None = None,
     labels: list[str | None] | None = None,
 ) -> list[Annotation]:
     """Label each line at one end, in place of a legend.
@@ -58,8 +58,9 @@ def line_labels(
         label; a list is cycled over the lines.
     pad : float
         Horizontal gap in points between a line's end and its label.
-    gap : float
+    gap : float, optional
         Minimum vertical clearance in points between label boxes.
+        `None` (the default) uses 2 points.
     labels : list of (str or None), optional
         Supply the text yourself instead of reading each line's
         `label=`. Needed for producers that keep the legend text on a
@@ -77,6 +78,8 @@ def line_labels(
     list of matplotlib.text.Annotation
         The label artists, in line order.
     """
+    if gap is None:
+        gap = placement.GAP
     if at not in ("start", "end"):
         raise ValueError(f"at must be 'start' or 'end', got {at!r}")
     state = ensure_state(ax)

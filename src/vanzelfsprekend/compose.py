@@ -11,7 +11,6 @@ from matplotlib.axes import Axes
 from matplotlib.text import Annotation, Text
 from matplotlib.typing import ColorType
 
-from vanzelfsprekend import placement
 from vanzelfsprekend.direct import Side, label
 from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import frame_unit, share_groups
@@ -446,7 +445,7 @@ class _Accessor:
         at: Literal["start", "end"] = "end",
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
-        gap: float = placement.GAP,
+        gap: float | None = None,
         labels: list[str | None] | None = None,
     ) -> list[Annotation]:
         """Direct labels at the lines' ends; see `vanzelfsprekend.line_labels`."""
@@ -463,7 +462,7 @@ class _Accessor:
         side: Side | None = None,
         labelcolor: str | ColorType | list[ColorType] = "linecolor",
         pad: float = 4.0,
-        gap: float = placement.GAP,
+        gap: float | None = None,
     ) -> list[Annotation]:
         """Put a label beside a named artist; see `vanzelfsprekend.label`."""
         return label(

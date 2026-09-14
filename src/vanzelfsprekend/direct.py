@@ -370,7 +370,7 @@ def label(
     side: Side | None = None,
     labelcolor: str | ColorType | list[ColorType] = "linecolor",
     pad: float = 4.0,
-    gap: float = placement.GAP,
+    gap: float | None = None,
 ) -> list[Annotation]:
     """Put a label beside the artist called `name`, or a column of them.
 
@@ -417,14 +417,17 @@ def label(
     pad : float
         Points between the anchor (or the column's helper) and the near
         edge of the text.
-    gap : float
+    gap : float, optional
         Minimum clearance in points between the text and anything else.
+        `None` (the default) uses 2 points.
 
     Returns
     -------
     list of matplotlib.text.Annotation
         The label artists, in `name` order.
     """
+    if gap is None:
+        gap = placement.GAP
     column = not isinstance(name, str | Artist)
     names = list(cast("Sequence[str | Artist]", name)) if column else [name]
     if x is not None and y is not None:
