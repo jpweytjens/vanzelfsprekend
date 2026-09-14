@@ -246,6 +246,10 @@ def _restore_member(ax: Axes) -> None:
         for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
             if key in frame_state["formatted"]:
                 axis.set_major_formatter(snap["formatters"][key])
+        for axis, key in ((ax.xaxis, "x"), (ax.yaxis, "y")):
+            axis.isDefault_majloc = snap["is_default"]["majloc"][key]
+            axis.isDefault_minloc = snap["is_default"]["minloc"][key]
+            axis.isDefault_majfmt = snap["is_default"]["majfmt"][key]
         ax.spines["top"].set_visible(snap["top_visible"])
         ax.spines["right"].set_visible(snap["right_visible"])
         ax.spines["left"].set_position(snap["left_position"])

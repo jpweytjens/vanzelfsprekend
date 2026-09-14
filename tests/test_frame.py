@@ -713,6 +713,25 @@ def test_range_frame_preserves_augmented_locator(scatter_ax):
     assert ax.xaxis.get_major_locator() is mine
 
 
+def test_range_frame_after_restore_reinstalls_locator(scatter_ax):
+    ax = range_frame(scatter_ax)
+    assert isinstance(ax.xaxis.get_major_locator(), vzs.TalbotLocator)
+    vzs.restore(ax)
+    range_frame(ax)
+    assert isinstance(ax.xaxis.get_major_locator(), vzs.TalbotLocator)
+    assert isinstance(ax.yaxis.get_major_locator(), vzs.TalbotLocator)
+
+
+def test_range_frame_after_restore_reinstalls_log_minor(log_scatter_ax):
+    from matplotlib.ticker import NullLocator
+
+    ax = range_frame(log_scatter_ax)
+    vzs.restore(ax)
+    range_frame(ax)
+    assert isinstance(ax.xaxis.get_major_locator(), vzs.LogBreaksLocator)
+    assert isinstance(ax.xaxis.get_minor_locator(), NullLocator)
+
+
 def test_range_frame_refreshes_own_locator(scatter_ax):
     ax = range_frame(scatter_ax)
     first = ax.xaxis.get_major_locator()

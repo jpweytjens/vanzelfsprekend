@@ -108,6 +108,20 @@ def snapshot_frame(ax: Axes) -> None:
                 "x": ax.xaxis.get_major_formatter(),
                 "y": ax.yaxis.get_major_formatter(),
             },
+            "is_default": {
+                "majloc": {
+                    "x": ax.xaxis.isDefault_majloc,
+                    "y": ax.yaxis.isDefault_majloc,
+                },
+                "minloc": {
+                    "x": ax.xaxis.isDefault_minloc,
+                    "y": ax.yaxis.isDefault_minloc,
+                },
+                "majfmt": {
+                    "x": ax.xaxis.isDefault_majfmt,
+                    "y": ax.yaxis.isDefault_majfmt,
+                },
+            },
             "top_visible": ax.spines["top"].get_visible(),
             "right_visible": ax.spines["right"].get_visible(),
             "left_position": ax.spines["left"].get_position(),
