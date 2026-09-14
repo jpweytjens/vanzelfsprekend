@@ -87,6 +87,7 @@ RAISE_C = "tol:high_contrast.blue"  # the one-off raise
 HOLIDAY_AT = dt.date(2017, 6, 1)
 BONUS_AT = dt.date(2017, 12, 1)
 RAISE_AT_DATE = dt.date(2018, 6, 1)
+CALLOUT_SIZE = 7  # callouts a step below the axis text, via label's Text kwargs
 
 
 def data() -> tuple[list[dt.date], np.ndarray]:
@@ -212,9 +213,13 @@ def mark(
     _, a_perm, a_nu = axes
     dnum = np.array(dates)
     # --8<-- [start:mark]
-    a_perm.scatter(dnum[raise_pts], perm[raise_pts], s=24, color=RAISE_C, label="raise")
-    a_nu.scatter(dnum[jun], nu[jun], s=14, color=HOLIDAY_C, label="holiday pay")
-    a_nu.scatter(dnum[dec], nu[dec], s=14, color=BONUS_C, label="bonus")
+    a_perm.scatter(
+        dnum[raise_pts], perm[raise_pts], s=24, color=RAISE_C, zorder=5, label="raise"
+    )
+    a_nu.scatter(
+        dnum[jun], nu[jun], s=14, color=HOLIDAY_C, zorder=5, label="holiday pay"
+    )
+    a_nu.scatter(dnum[dec], nu[dec], s=14, color=BONUS_C, zorder=5, label="bonus")
 
     recur = vzs.FeatureLocator(
         date2num(dates), nu, {"Jun": date2num(HOLIDAY_AT), "Dec": date2num(BONUS_AT)}
@@ -238,9 +243,11 @@ def name(axes: np.ndarray) -> None:
     _, a_perm, a_nu = axes
     # --8<-- [start:name]
     a_nu.vzs.accent(axis="x", label="name", color={"Jun": HOLIDAY_C, "Dec": BONUS_C})
-    vzs.label(a_perm, "raise", x=date2num(RAISE_AT_DATE))
-    vzs.label(a_nu, "holiday pay", x=date2num(HOLIDAY_AT))
-    vzs.label(a_nu, "bonus", x=date2num(BONUS_AT))
+    vzs.label(a_perm, "raise", x=date2num(RAISE_AT_DATE), fontsize=CALLOUT_SIZE)
+    vzs.label(
+        a_nu, "holiday pay", x=date2num(HOLIDAY_AT), side="left", fontsize=CALLOUT_SIZE
+    )
+    vzs.label(a_nu, "bonus", x=date2num(BONUS_AT), side="right", fontsize=CALLOUT_SIZE)
     # --8<-- [end:name]
 
 
