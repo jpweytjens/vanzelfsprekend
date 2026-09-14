@@ -1,46 +1,45 @@
 """WORK IN PROGRESS -- the labour-income decomposition figure.
 
-A simulated monthly labour-income series decomposed, as in the phd, into a
-permanent component (a double rolling median) and a transient component (the
-residual). Recurrent June holiday pay and December bonuses (positive
-recurrent) and a one-off raise (positive permanent) are the changes the
-decomposition surfaces. Meant to become a gallery figure + a datetime tutorial.
+A simulated monthly labour-income series decomposed, inspired by the phd (not
+reproducing it), into a permanent component and a transient component (the
+residual). Recurrent June holiday pay and December bonuses (transient) and a
+one-off raise (permanent) are the changes the decomposition surfaces. Meant to
+become a gallery figure + a datetime tutorial.
 
 Settled so far
 --------------
-- Two y-groups on one x: income + permanent share a level scale (compare=
-  "figure", so P reads relative to I), the transient stands alone (apply).
-  small_multiples has no single `compare` mode for "union rows 0-1, row 2
-  apart", so it is two frame calls; identical dates + x-mode keep the x
-  aligned without sharex (sharex breaks the shared y-scale, see below).
-- frame y="data" on BOTH groups: the spines hug their own data with equal
-  margins, so all three align as a column, and the troughs no longer hang
-  below the lowest nice tick (the "nice" mode symptom).
-- x per-end ("data","loose"): a firm 2012 start, a loose (ongoing) end.
-- Highlight rule (phd): transient/recurrent when |nu| >= 1.645 * MAD(nu)
-  (one-sided 95% normal quantile, a single band); permanent when |dP| > eps.
-  Recovered P-hat is shown, not the true step, so the running median is on
-  display; the shared scale hides its noise wander.
-- High-contrast scheme: gold for recurrent, blue for the raise. One label
-  per category via vzs.label. 0 marked as a MINOR tick on the transient y,
-  so both axes read the same way: nice majors + feature minors (jun/dec on
-  x, 0 on y).
+- Permanent component by penalized median segmentation (ruptures' Pelt, L1
+  cost): one clean piecewise-constant step. The median cost is robust to the
+  June/December bumps -- larger than the raise, but a minority in any span --
+  so they land in the residual, not as spurious steps.
+- Three stacked panels, each framed with apply. income + permanent share one y
+  scale (small_multiples, compare="figure"), so the permanent step reads
+  against income's variation; the transient stands alone. x per-end
+  ("data","loose"): a firm 2012 start, a loose (ongoing) end; y="loose".
+- Ticks live in the major slot via AugmentedLocator (nice union feature):
+  transient y = nice union 0; transient x = nice years union named Jun/Dec;
+  permanent y = nice union the two recovered levels (full-range spine, the
+  colliding labels separate on their own). accent relabels the date features
+  as "Jun"/"Dec" and colours them (holiday gold, bonus red) -- the
+  ConciseDateFormatter would otherwise read the month-start as a day-of-month.
+- Two-colour recurrent scheme (holiday gold, bonus red), blue raise. One
+  callout per category via vzs.label; each recurrent example's callout, accent
+  tick and scatter point share one anchor date so they cannot drift apart.
+- Samples on the 1st of the month, so the firm start lands on a 2012 tick;
+  two-decimal y labels on every panel.
 
 Open threads
 ------------
-- The 0 reference is a minor tick. Alternative: a labelled major via custom
-  fixed offsets (union the frame's nice ticks with 0; safe under "data" mode
-  because the spine hugs data, not the ticks). Decide minor vs major.
-- Library candidate (out of scope for this docs branch): teach a locator to
-  union nice breaks with explicit feature positions, so "nice + feature" can
-  share the major slot instead of one overwriting the other. Sibling of the
-  pi-axis / breaks_date Q-equivalent candidates.
 - Not yet done: restructure into the tutorial step form (data/decompose/
-  draw/save/main + --8<-- snippet markers, like tutorial_grand_tours.py);
-  the datetime three-way tick story (nice breaks / jun-dec annotation minors
-  / RRuleLocator recurrence-as-axis) for the tutorial page; the gallery entry
-  + "which figure shows what" index + its guard tests; mkdocs nav.
-- Calibration knobs (noise, bump sizes, raise size, c) are illustrative.
+  draw/save/main + --8<-- snippet markers, like tutorial_grand_tours.py); the
+  datetime tick story for the tutorial page; the gallery entry + "which figure
+  shows what" index + its guard tests; mkdocs nav.
+- Caption should cite the phd:
+  https://biblio.ugent.be/publication/01JZ0FKKB552K6A14DEKSEET9P
+- Library candidate (separate branch): give the vzs label family **kwargs
+  routed to Text, like matplotlib's set_xlabel; a fontsize at label() creation
+  feeds the placement solver (set_fontsize after placement does not).
+- Calibration knobs (noise, bump sizes, raise size, C, PEN) are illustrative.
 """
 
 import datetime as dt
@@ -54,7 +53,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import ruptures as rpt
-from matplotlib.dates import date2num, num2date
+from matplotlib.dates import date2num
 
 import vanzelfsprekend as vzs
 
@@ -77,14 +76,20 @@ EPS_SIGMA = 0.005  # floor on the scale estimate
 EPS_PERM = 0.02  # a permanent change must exceed this
 C = 1.645  # one-sided 95% normal quantile
 
-RECUR = "tol:high_contrast.yellow"
-RAISE_C = "tol:high_contrast.blue"
+HOLIDAY_C = "tol:high_contrast.yellow"  # June holiday pay
+BONUS_C = "tol:high_contrast.red"  # December bonus
+RAISE_C = "tol:high_contrast.blue"  # the one-off raise
+# One holiday pay and one bonus stand as the recurrent examples: each carries a
+# label, an accented tick and the scatter point, all anchored to one date so
+# they cannot drift apart.
+HOLIDAY_AT = dt.date(2017, 6, 1)
+BONUS_AT = dt.date(2017, 12, 1)
 
 
 def data() -> tuple[list[dt.date], np.ndarray]:
     """Return monthly dates and the simulated log labour-income series."""
     rng = np.random.default_rng(SEED)
-    dates = [dt.date(y, m, 15) for y in range(2012, 2024) for m in range(1, 13)]
+    dates = [dt.date(y, m, 1) for y in range(2012, 2024) for m in range(1, 13)]
     months = np.array([d.month for d in dates])
     t = np.arange(len(dates))
     permanent = np.where(t < RAISE_AT, BASE, BASE + RAISE)
@@ -133,6 +138,7 @@ def decompose(
 
 def render() -> None:
     """Render the current three-panel decomposition figure."""
+    plt.rcParams.update({"font.size": 8, "xtick.labelsize": 8, "ytick.labelsize": 8})
     dates, income = data()
     perm, nu, sigma, dperm = decompose(income)
     months = np.array([d.month for d in dates])
@@ -165,35 +171,60 @@ def render() -> None:
     band = {"color": vzs.palettes.LINE_INK, "linewidth": 0.7, "linestyle": (0, (3, 3))}
     a_nu.plot(dates, C * sigma, **band)
     a_nu.plot(dates, -C * sigma, **band)
-    a_nu.scatter(dnum[jun], nu[jun], s=14, color=RECUR, zorder=5, label="holiday pay")
-    a_nu.scatter(dnum[dec], nu[dec], s=14, color=RECUR, zorder=5, label="bonus")
+    a_nu.scatter(
+        dnum[jun], nu[jun], s=14, color=HOLIDAY_C, zorder=5, label="holiday pay"
+    )
+    a_nu.scatter(dnum[dec], nu[dec], s=14, color=BONUS_C, zorder=5, label="bonus")
 
-    # x: firm data start, loose (ongoing) end. y="data" on both groups.
+    # x: firm data start, loose (ongoing) end. income + permanent share one y
+    # scale (compare="figure"), so the permanent step reads against income's
+    # variation; the transient stands alone.
     vzs.small_multiples(
         [a_income, a_perm],
         compare="figure",
-        frame=(("data", "loose"), "data"),
+        frame=(("data", "loose"), "loose"),
         spacing=(6, 4),
     )
-    vzs.apply(a_nu, frame=(("data", "loose"), "data"), spacing=(6, 4))
+    vzs.apply(a_nu, frame=(("data", "loose"), "loose"), spacing=(6, 4))
 
     vzs.ylabel(a_income, "Labour income")
     vzs.ylabel(a_perm, "Permanent component")
     vzs.ylabel(a_nu, "Transient component")
 
-    # keep the frame's nice y ticks; add 0 as a minor reference
-    a_nu.yaxis.set_minor_locator(vzs.FeatureLocator(date2num(dates), nu, [0.0]))
-    a_nu.xaxis.set_minor_locator(
-        vzs.FeatureLocator(
-            date2num(dates),
-            nu,
-            [lambda x, y: x[np.isin([num2date(v).month for v in x], (6, 12))]],
-        )
+    # Union the frame's nice ticks (major slot; apply keeps a user-set locator)
+    # with named Jun/Dec features and a 0 reference. accent then relabels the
+    # date features as "Jun"/"Dec" -- the ConciseDateFormatter would read the
+    # 15th as a day -- and colours them to match the recurrent scatter.
+    recur = vzs.FeatureLocator(
+        date2num(dates),
+        nu,
+        {
+            "Jun": date2num(HOLIDAY_AT),
+            "Dec": date2num(BONUS_AT),
+        },
     )
+    a_nu.xaxis.set_major_locator(
+        vzs.AugmentedLocator(a_nu.xaxis.get_major_locator(), recur)
+    )
+    a_nu.yaxis.set_major_locator(
+        vzs.AugmentedLocator(a_nu.yaxis.get_major_locator(), [0.0])
+    )
+    a_nu.vzs.accent(axis="x", label="name", color={"Jun": HOLIDAY_C, "Dec": BONUS_C})
 
-    vzs.label(a_perm, "raise", x=date2num(dt.date(2018, 6, 15)))
-    vzs.label(a_nu, "holiday pay", x=date2num(dt.date(2016, 6, 15)))
-    vzs.label(a_nu, "bonus", x=date2num(dt.date(2021, 12, 15)))
+    # Augment the permanent panel's nice ticks with the two recovered levels
+    # (major slot; panel-local, so the shared income scale is untouched), so the
+    # spine spans the full range and the reader still reads the raise off the
+    # two level ticks. Colliding labels separate on their own.
+    a_perm.yaxis.set_major_locator(
+        vzs.AugmentedLocator(a_perm.yaxis.get_major_locator(), np.unique(perm).tolist())
+    )
+    # Two-decimal y labels across all three panels.
+    for panel in (a_income, a_perm, a_nu):
+        panel.yaxis.set_major_formatter("{x:.2f}")
+
+    vzs.label(a_perm, "raise", x=date2num(dt.date(2018, 6, 1)))
+    vzs.label(a_nu, "holiday pay", x=date2num(HOLIDAY_AT))
+    vzs.label(a_nu, "bonus", x=date2num(BONUS_AT))
 
     FIGURES.mkdir(exist_ok=True)
     fig.savefig(
