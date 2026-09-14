@@ -2,7 +2,9 @@
 
 *Put the components on one scale so they can be compared, then let the ticks carry what the decomposition found.*
 
-A simulated monthly labour income, split into a permanent component and a transient residual. The permanent component is recovered by penalized median segmentation, a piecewise-constant fit whose segments take their own median; the transient component is what is left. The method is the subject of a [working paper](https://wps-feb.ugent.be/Papers/wp_23_1067.pdf) and [thesis](https://biblio.ugent.be/publication/01JZ0FKKB552K6A14DEKSEET9P), and this lesson borrows it only to have something to draw. The recurrent June holiday pay and December bonuses fall in the transient component; a one-off raise steps the permanent one. This lesson is about the graphics that make those readable, and it builds the figure one call at a time, as the [grand tours](grand-tours.md) did; the script is `examples/tutorial_income.py`.
+A simulated monthly labour income, split into a permanent component and a transient residual. The permanent component is recovered by penalized median segmentation, a piecewise-constant fit whose segments take their own median; the transient component is what is left. The decomposition is inspired by a working paper on consumption responses to labour income changes,[^wp] simplified here to a clean example. The recurrent June holiday pay and December bonuses fall in the transient component; a one-off raise steps the permanent one. This lesson is about the graphics that make those readable, and it builds the figure one call at a time, as the [grand tours](grand-tours.md) did; the script is `examples/tutorial_income.py`.
+
+[^wp]: Kris Boudt, Koen Schoors, Milan van den Heuvel and Johannes Weytjens, [*Taming the Zoo of Consumption Responses to Labour Income Changes*](https://wps-feb.ugent.be/Papers/wp_23_1067.pdf), Ghent University Working Paper 2023/1067, April 2023.
 
 ## The decomposition, in default boxes
 
