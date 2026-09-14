@@ -91,13 +91,6 @@ def main() -> None:
     save(fig, 2)
 
     fig, axes = draw(dates, speeds_of)
-    vzs.small_multiples(
-        axes,
-        compare="column",
-        frame="data",
-        spacing=(5, 4),
-        ylabel="winner's average\nspeed (km/h)",
-    )
     # --8<-- [start:step3]
     for ax, speeds in zip(axes, speeds_of.values(), strict=True):
         ax.yaxis.set_major_locator(
@@ -105,11 +98,6 @@ def main() -> None:
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
     # --8<-- [end:step3]
-    for ax in axes:
-        ax.legend()
-    save(fig, 3)
-
-    fig, axes = draw(dates, speeds_of)
     vzs.small_multiples(
         axes,
         compare="column",
@@ -117,11 +105,23 @@ def main() -> None:
         spacing=(5, 4),
         ylabel="winner's average\nspeed (km/h)",
     )
+    for ax in axes:
+        ax.legend()
+    save(fig, 3)
+
+    fig, axes = draw(dates, speeds_of)
     for ax, speeds in zip(axes, speeds_of.values(), strict=True):
         ax.yaxis.set_major_locator(
             vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
+    vzs.small_multiples(
+        axes,
+        compare="column",
+        frame="data",
+        spacing=(5, 4),
+        ylabel="winner's average\nspeed (km/h)",
+    )
     # --8<-- [start:step4]
     for ax in axes:
         vzs.line_labels(ax)

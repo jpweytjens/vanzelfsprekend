@@ -64,12 +64,12 @@ def anscombe() -> None:
     numerals = ["I", "II", "III", "IV"]
     for i, (ax, numeral) in enumerate(zip(axes.flat, numerals, strict=True), 1):
         x, y = table[f"x{i}"], table[f"y{i}"]
-        vzs.apply(ax, frame="data")
         ax.scatter(x, y, s=12)
         ax.xaxis.set_major_locator(vzs.QuartileLocator(x))
         ax.yaxis.set_major_locator(vzs.QuartileLocator(y))
         ax.xaxis.set_major_formatter("{x:.0f}")
         ax.yaxis.set_major_formatter("{x:.1f}")
+        vzs.apply(ax, frame="data")
         ax.set_title(numeral, color=vzs.palettes.TEXT_INK)
     save(fig, "anscombe")
 
@@ -93,6 +93,11 @@ def grand_tours() -> None:
         speeds[table["year"].astype(int) - first] = table[column]
         speeds_of[ax] = speeds
         ax.plot(dates, speeds, color=color, label=label)
+    for ax, speeds in speeds_of.items():
+        ax.yaxis.set_major_locator(
+            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+        )
+        ax.yaxis.set_major_formatter("{x:.1f}")
     # Plot before apply: the axis becomes a date axis when date data
     # arrives, and apply detects date-ness at call time.
     vzs.small_multiples(
@@ -102,11 +107,7 @@ def grand_tours() -> None:
         spacing=(5, 4),
         ylabel="winner's average\nspeed (km/h)",
     )
-    for ax, speeds in speeds_of.items():
-        ax.yaxis.set_major_locator(
-            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
-        )
-        ax.yaxis.set_major_formatter("{x:.1f}")
+    for ax in axes:
         vzs.line_labels(ax)
     save(fig, "grand_tours")
 
@@ -292,7 +293,6 @@ def resonance_peak() -> None:
     random_sampled = sampled + rng.normal(0, 0.04, sampled.size)
     measured = lorentzian(sampled) + rng.normal(0, 12, sampled.size)
     fig, ax = plt.subplots(figsize=(5, 4))
-    vzs.apply(ax, frame="loose", offset=(24, -6))
     ax.plot(frequency, calculated, color="tol:orange", label="calculated")
     ax.scatter(
         random_sampled,
@@ -313,6 +313,7 @@ def resonance_peak() -> None:
     )
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
+    vzs.apply(ax, frame="feature", offset=(24, -6))
     vzs.tick_direction(ax, "in")
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
@@ -400,7 +401,7 @@ def radian_axes() -> None:
         return f"{sign}{head}" if den == 1 else f"{sign}{head}/{den}"
 
     theta = np.linspace(0, 4 * pi, 400)
-    v_l = 10.0 * np.sin(theta + pi / 3)  # leads
+    v_l = 9.7 * np.sin(theta + pi / 3)  # leads
     v_c = 6.7 * np.sin(theta - pi / 3)  # lags
     v_r = 8.7 * np.sin(theta - pi / 8)
     v_tot = (v_l + v_r + v_c) / np.sqrt(3)  # their exact sum
@@ -414,7 +415,8 @@ def radian_axes() -> None:
     ax.plot(theta, v_tot, color=vzs.palettes.DATA_INK, alpha=0.15, label="$V_{tot}$")
     ax.plot(theta, v_r, color=yellow, label="$V_R$")
 
-    vzs.apply(ax, frame=("data", "data"), offset=(10, 5))
+    ax.yaxis.set_major_locator(vzs.FeatureLocator(theta, v_r, [-10, 0, 10]))
+    vzs.apply(ax, frame=("data", "feature"), offset=(10, 5))
     vzs.tick_direction(ax, "in")
 
     ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
@@ -422,8 +424,6 @@ def radian_axes() -> None:
 
     secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
     secax.tick_params(direction="in")
-
-    ax.yaxis.set_major_locator(vzs.FeatureLocator(theta, v_r, [-10, 0, 10]))
 
     vzs.xlabel(ax, "phase (rad)")
     vzs.ylabel(ax, "voltage (V)", place="beside")
