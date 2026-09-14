@@ -106,13 +106,14 @@ def range_frame(
         at nice numbers bounding the data (frame may extend up to one
         tick step beyond the data). `'feature'` ends the spines at
         the outermost mark a `FixedLocator` sets on that axis (as
-        `FeatureLocator`, `SummaryLocator`, and `QuartileLocator` do),
-        even when it lies beyond the data, growing the view to keep
-        it on screen; unlike `'loose'` it sits flush by default
-        (offset 0). A tuple `(x_mode, y_mode)` sets the bottom and
-        left spine independently, and either entry may
-        itself be a pair `(low, high)` setting that spine's two ends
-        on their own: `(("loose", "data"), "nice")` runs the bottom
+        `FeatureLocator`, `SummaryLocator`, and `QuartileLocator` do,
+        or as an `AugmentedLocator`'s `.extra` side does), even when
+        it lies beyond the data, growing the view to keep it on
+        screen; unlike `'loose'` it sits flush by default (offset
+        0). A tuple `(x_mode, y_mode)` sets the bottom and left spine
+        independently, and either entry may itself be a pair
+        `(low, high)` setting that spine's two ends on their own:
+        `(("loose", "data"), "nice")` runs the bottom
         spine from the tick below the data to the last observation.
         All three read the data cut back to the view, so a view pinned
         inside the data with `set_xlim` crops the frame to the data on
