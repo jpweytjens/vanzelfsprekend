@@ -18,8 +18,7 @@ from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_stat
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
 from vanzelfsprekend.multiples import _teardown_grid
-from vanzelfsprekend.mute import LINE_WIDTH, mute
-from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.mute import mute
 from vanzelfsprekend.secondary import secondary_frame
 from vanzelfsprekend.ticks import _rc, tick_direction
 
@@ -471,9 +470,9 @@ class _Accessor:
 
     def mute(
         self,
-        text_ink: str = TEXT_INK,
-        line_ink: str = LINE_INK,
-        line_width: float = LINE_WIDTH,
+        text_ink: str | None = None,
+        line_ink: str | None = None,
+        line_width: float | None = None,
     ) -> Axes:
         """Grey the axis furniture; see `vanzelfsprekend.mute`."""
         return mute(

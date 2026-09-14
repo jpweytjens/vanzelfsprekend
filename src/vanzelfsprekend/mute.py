@@ -13,21 +13,23 @@ LINE_WIDTH = 0.7
 
 def mute(
     ax: Axes,
-    text_ink: str = TEXT_INK,
-    line_ink: str = LINE_INK,
-    line_width: float = LINE_WIDTH,
+    text_ink: str | None = None,
+    line_ink: str | None = None,
+    line_width: float | None = None,
 ) -> Axes:
     """Grey the axis furniture in two tiers: readable text, receding lines.
 
     Spines and tick marks take `line_ink` at `line_width` points; tick
     labels and axis labels take the darker `text_ink`, since text is
-    read while lines are only looked at. Gridlines are turned off,
-    since they are furniture and not data, while the near-side tick marks
-    (bottom, left) are turned on, since they anchor the labels to the
-    spine; data artists are untouched. The prior colours, widths, grid
-    and tick visibility are snapshotted on the first call so `restore`
-    can undo the change; later calls update the inks without
-    overwriting the snapshot.
+    read while lines are only looked at. Passing `None` (the default)
+    for any of the three takes vanzelfsprekend's own inks: a light grey
+    for lines at 0.7 points and a darker grey for text. Gridlines are
+    turned off, since they are furniture and not data, while the
+    near-side tick marks (bottom, left) are turned on, since they anchor
+    the labels to the spine; data artists are untouched. The prior
+    colours, widths, grid and tick visibility are snapshotted on the
+    first call so `restore` can undo the change; later calls update the
+    inks without overwriting the snapshot.
 
     The neutral ink cycle is installed as well, so a mark drawn after
     `mute` is `DATA_INK` until you opt into colour with a scheme cycle
@@ -40,6 +42,12 @@ def mute(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    if text_ink is None:
+        text_ink = TEXT_INK
+    if line_ink is None:
+        line_ink = LINE_INK
+    if line_width is None:
+        line_width = LINE_WIDTH
     state = ensure_state(ax)
     if "mute" not in state:
         state["mute"] = {
