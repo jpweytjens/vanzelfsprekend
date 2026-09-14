@@ -1,5 +1,7 @@
 # Axes
 
+Everything here acts on a matplotlib axes: `apply` installs the range frame, and the rest extend, quieten, group or undo it.
+
 ::: vanzelfsprekend.apply
 
 ::: vanzelfsprekend.restore
