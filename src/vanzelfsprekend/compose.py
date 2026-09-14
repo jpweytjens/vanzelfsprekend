@@ -100,12 +100,17 @@ def range_frame(
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    frame : {'nice', 'data', 'loose'} or tuple of two of them
+    frame : {'nice', 'data', 'loose', 'feature'} or tuple of two of them
         `'nice'` ends the spines at the outermost ticks, `'data'` at
         the exact data minimum and maximum. `'loose'` ends the spines
         at nice numbers bounding the data (frame may extend up to one
-        tick step beyond the data). A tuple `(x_mode, y_mode)` sets
-        the bottom and left spine independently, and either entry may
+        tick step beyond the data). `'feature'` ends the spines at
+        the outermost mark a `FixedLocator` sets on that axis (as
+        `FeatureLocator`, `SummaryLocator`, and `QuartileLocator` do),
+        even when it lies beyond the data, growing the view to keep
+        it on screen; unlike `'loose'` it sits flush by default
+        (offset 0). A tuple `(x_mode, y_mode)` sets the bottom and
+        left spine independently, and either entry may
         itself be a pair `(low, high)` setting that spine's two ends
         on their own: `(("loose", "data"), "nice")` runs the bottom
         spine from the tick below the data to the last observation.
