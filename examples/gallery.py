@@ -302,9 +302,6 @@ def resonance_peak() -> None:
         zorder=3,
         label="measured",
     )
-    # Output power has a true zero, so show the axis from the 0 baseline
-    # up past the measured peak that pokes above the calculated curve.
-    ax.set_ylim(0, measured.max() * 1.05)
     ax.xaxis.set_major_locator(
         vzs.FeatureLocator(sampled, measured, [16, lambda x, y: x[np.argmax(y)], 19])
     )

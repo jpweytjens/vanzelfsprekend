@@ -57,7 +57,6 @@ def draw(
         zorder=3,
         label="measured",
     )
-    ax.set_ylim(0, measured.max() * 1.05)
     # --8<-- [end:draw]
     return fig, ax
 
