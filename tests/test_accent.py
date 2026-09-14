@@ -149,3 +149,42 @@ def test_only_features_restored():
     fig.canvas.draw()
     assert _label_text_at(ax, "y", 20.0) != ""  # grid label back
     plt.close(fig)
+
+
+def test_label_name_shows_the_name():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    vzs.accent(ax, label="name")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) == "median"
+    plt.close(fig)
+
+
+def test_label_both_joins_name_and_value():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    ax.yaxis.set_major_formatter("{x:.0f}")
+    vzs.accent(ax, label="both")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 50.0) == "median = 50"
+    plt.close(fig)
+
+
+def test_label_name_joins_coincident_names():
+    fig, ax = plt.subplots()
+    y = np.array([8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 19.0])
+    ax.plot(y, y)
+    ax.yaxis.set_major_locator(AugmentedLocator(TalbotLocator(), QuartileLocator(y)))
+    vzs.range_frame(ax)
+    vzs.accent(ax, at=["min"], label="name")
+    fig.canvas.draw()
+    assert _label_text_at(ax, "y", 8.0) == "min/Q1/median/Q3"
+    plt.close(fig)
+
+
+def test_label_unknown_mode_raises():
+    fig, ax = _quartile_axes()
+    vzs.range_frame(ax)
+    with pytest.raises(ValueError, match="label must be"):
+        vzs.accent(ax, label="fancy")
+    plt.close(fig)

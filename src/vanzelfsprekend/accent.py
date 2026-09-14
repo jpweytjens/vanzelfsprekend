@@ -73,6 +73,7 @@ def _feature_formatter(
     label: str,
 ) -> FuncFormatter:
     """Wrap `inner`: feature text per `label`; non-features blanked if only_features."""
+    names = _feature_names(axis)
 
     def _value_text(value: float, pos: int | None) -> str:
         # `inner` is off the axis now, so a stateful ScalarFormatter needs the
@@ -80,11 +81,22 @@ def _feature_formatter(
         inner.set_locs(axis.get_majorticklocs().tolist())
         return inner(value, pos)
 
+    def _names_at(value: float) -> str:
+        for pos, tup in names.items():
+            if np.isclose(value, pos):
+                return "/".join(tup)
+        return ""
+
     def fmt(value: float, pos: int | None = None) -> str:
         is_feature = any(np.isclose(value, p) for p in positions)
         if not is_feature:
             return "" if only_features else _value_text(value, pos)
-        return _value_text(value, pos)  # Task 9 replaces this for name/both
+        if label == "value":
+            return _value_text(value, pos)
+        name_text = _names_at(value)
+        if label == "name":
+            return name_text
+        return f"{name_text} = {_value_text(value, pos)}"
 
     return FuncFormatter(fmt)
 
@@ -111,6 +123,8 @@ def accent(
     matplotlib.axes.Axes
         The same axes, for chaining.
     """
+    if label not in ("value", "name", "both"):
+        raise ValueError(f"label must be 'value', 'name' or 'both', got {label!r}")
     axes = _accent_axes(ax, axis)
     resolved = ACCENT_INK if color is None else color
     state = ensure_state(ax)
