@@ -1,10 +1,11 @@
-"""WORK IN PROGRESS -- the labour-income decomposition figure.
+"""Build the labour-income decomposition figure one call at a time.
 
 A simulated monthly labour-income series decomposed, inspired by the phd (not
 reproducing it), into a permanent component and a transient component (the
 residual). Recurrent June holiday pay and December bonuses (transient) and a
-one-off raise (permanent) are the changes the decomposition surfaces. Meant to
-become a gallery figure + a datetime tutorial.
+one-off raise (permanent) are the changes the decomposition surfaces. The final
+step is the gallery's `labour_income_decomposition`; the earlier steps exist so
+the tutorial can show what each call buys.
 
 Settled so far
 --------------
@@ -19,9 +20,9 @@ Settled so far
 - Ticks live in the major slot via AugmentedLocator (nice union feature):
   transient y = nice union 0; transient x = nice years union named Jun/Dec;
   permanent y = nice union the two recovered levels (full-range spine, the
-  colliding labels separate on their own). accent relabels the date features
-  as "Jun"/"Dec" and colours them (holiday gold, bonus red) -- the
-  ConciseDateFormatter would otherwise read the month-start as a day-of-month.
+  colliding labels separate on their own). accent colours the named Jun/Dec
+  ticks (holiday gold, bonus red) to match their scatter points, tying each
+  axis mark to the example it stands for.
 - Two-colour recurrent scheme (holiday gold, bonus red), blue raise. One
   callout per category via vzs.label; each recurrent example's callout, accent
   tick and scatter point share one anchor date so they cannot drift apart.
@@ -30,12 +31,13 @@ Settled so far
 
 Open threads
 ------------
-- Not yet done: restructure into the tutorial step form (data/decompose/
-  draw/save/main + --8<-- snippet markers, like tutorial_grand_tours.py); the
-  datetime tick story for the tutorial page; the gallery entry + "which figure
-  shows what" index + its guard tests; mkdocs nav.
-- Caption should cite the phd:
-  https://biblio.ugent.be/publication/01JZ0FKKB552K6A14DEKSEET9P
+- Not yet done: the gallery entry + its guard test. (The script is in the step
+  form -- draw/compare/mark/name + --8<-- markers; `decomposition()` assembles
+  the final gallery figure; the tutorial page is docs/tutorial/labour-income.md
+  and the mkdocs nav points at it.)
+- The tutorial and gallery cite the phd
+  (https://biblio.ugent.be/publication/01JZ0FKKB552K6A14DEKSEET9P) and the
+  working paper (https://wps-feb.ugent.be/Papers/wp_23_1067.pdf) for the method.
 - Library candidate (separate branch): give the vzs label family **kwargs
   routed to Text, like matplotlib's set_xlabel; a fontsize at label() creation
   feeds the placement solver (set_fontsize after placement does not).
@@ -84,6 +86,7 @@ RAISE_C = "tol:high_contrast.blue"  # the one-off raise
 # they cannot drift apart.
 HOLIDAY_AT = dt.date(2017, 6, 1)
 BONUS_AT = dt.date(2017, 12, 1)
+RAISE_AT_DATE = dt.date(2018, 6, 1)
 
 
 def data() -> tuple[list[dt.date], np.ndarray]:
@@ -136,49 +139,53 @@ def decompose(
     return perm, nu.to_numpy(), sigma.to_numpy(), dperm.to_numpy()
 
 
-def render() -> None:
-    """Render the current three-panel decomposition figure."""
-    plt.rcParams.update({"font.size": 8, "xtick.labelsize": 8, "ytick.labelsize": 8})
-    dates, income = data()
-    perm, nu, sigma, dperm = decompose(income)
-    months = np.array([d.month for d in dates])
-    dnum = np.array(dates)
+def features(
+    dates: list[dt.date], nu: np.ndarray, sigma: np.ndarray, dperm: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return the points the decomposition surfaces: the bumps and the raise.
 
+    A transient value is substantial when |nu| clears the one-sided 95% band
+    C * sigma; the recurrent ones fall in June and December, the raise where the
+    permanent level steps.
+    """
+    months = np.array([d.month for d in dates])
     substantial = np.abs(nu) >= C * sigma
     jun = substantial & (months == 6) & (nu > 0)
     dec = substantial & (months == 12) & (nu > 0)
     raise_pts = np.abs(dperm) > EPS_PERM
+    return jun, dec, raise_pts
 
-    # Two y-groups (income+permanent, transient) on one x: both frame calls use
-    # the same dates and x-mode, so the x-limits match and the panels align.
+
+def draw(
+    dates: list[dt.date],
+    income: np.ndarray,
+    perm: np.ndarray,
+    nu: np.ndarray,
+    sigma: np.ndarray,
+) -> tuple[plt.Figure, np.ndarray]:
+    """Plot the three raw components on a fresh stack of axes."""
+    plt.rcParams.update({"font.size": 8, "xtick.labelsize": 8, "ytick.labelsize": 8})
+    # --8<-- [start:draw]
     fig, axes = plt.subplots(3, 1, figsize=(5.6, 6.2))
     fig.subplots_adjust(hspace=0.55)
     a_income, a_perm, a_nu = axes
 
-    grey = {
-        "color": vzs.palettes.LINE_INK,
-        "marker": "o",
-        "markersize": 2.2,
-        "linewidth": 0.8,
-    }
-    a_income.plot(dates, income, **grey)
-    a_perm.plot(dates, perm, **grey)
-    a_perm.scatter(
-        dnum[raise_pts], perm[raise_pts], s=24, color=RAISE_C, zorder=5, label="raise"
-    )
+    grey = {"color": vzs.palettes.LINE_INK, "marker": "o", "markersize": 2.2}
+    a_income.plot(dates, income, linewidth=0.8, **grey)
+    a_perm.plot(dates, perm, linewidth=0.8, **grey)
+    a_nu.plot(dates, nu, linewidth=0.8, **grey)
 
-    a_nu.plot(dates, nu, **grey)
     band = {"color": vzs.palettes.LINE_INK, "linewidth": 0.7, "linestyle": (0, (3, 3))}
     a_nu.plot(dates, C * sigma, **band)
     a_nu.plot(dates, -C * sigma, **band)
-    a_nu.scatter(
-        dnum[jun], nu[jun], s=14, color=HOLIDAY_C, zorder=5, label="holiday pay"
-    )
-    a_nu.scatter(dnum[dec], nu[dec], s=14, color=BONUS_C, zorder=5, label="bonus")
+    # --8<-- [end:draw]
+    return fig, axes
 
-    # x: firm data start, loose (ongoing) end. income + permanent share one y
-    # scale (compare="figure"), so the permanent step reads against income's
-    # variation; the transient stands alone.
+
+def compare(axes: np.ndarray) -> None:
+    """Put income and the permanent step on one scale; frame the transient alone."""
+    a_income, a_perm, a_nu = axes
+    # --8<-- [start:compare]
     vzs.small_multiples(
         [a_income, a_perm],
         compare="figure",
@@ -186,22 +193,31 @@ def render() -> None:
         spacing=(6, 4),
     )
     vzs.apply(a_nu, frame=(("data", "loose"), "loose"), spacing=(6, 4))
-
     vzs.ylabel(a_income, "Labour income")
     vzs.ylabel(a_perm, "Permanent component")
     vzs.ylabel(a_nu, "Transient component")
+    # --8<-- [end:compare]
 
-    # Union the frame's nice ticks (major slot; apply keeps a user-set locator)
-    # with named Jun/Dec features and a 0 reference. accent then relabels the
-    # date features as "Jun"/"Dec" -- the ConciseDateFormatter would read the
-    # 15th as a day -- and colours them to match the recurrent scatter.
+
+def mark(
+    axes: np.ndarray,
+    dates: list[dt.date],
+    perm: np.ndarray,
+    nu: np.ndarray,
+    jun: np.ndarray,
+    dec: np.ndarray,
+    raise_pts: np.ndarray,
+) -> None:
+    """Union the frame's nice ticks with the decomposition's own features."""
+    _, a_perm, a_nu = axes
+    dnum = np.array(dates)
+    # --8<-- [start:mark]
+    a_perm.scatter(dnum[raise_pts], perm[raise_pts], s=24, color=RAISE_C, label="raise")
+    a_nu.scatter(dnum[jun], nu[jun], s=14, color=HOLIDAY_C, label="holiday pay")
+    a_nu.scatter(dnum[dec], nu[dec], s=14, color=BONUS_C, label="bonus")
+
     recur = vzs.FeatureLocator(
-        date2num(dates),
-        nu,
-        {
-            "Jun": date2num(HOLIDAY_AT),
-            "Dec": date2num(BONUS_AT),
-        },
+        date2num(dates), nu, {"Jun": date2num(HOLIDAY_AT), "Dec": date2num(BONUS_AT)}
     )
     a_nu.xaxis.set_major_locator(
         vzs.AugmentedLocator(a_nu.xaxis.get_major_locator(), recur)
@@ -209,31 +225,72 @@ def render() -> None:
     a_nu.yaxis.set_major_locator(
         vzs.AugmentedLocator(a_nu.yaxis.get_major_locator(), [0.0])
     )
-    a_nu.vzs.accent(axis="x", label="name", color={"Jun": HOLIDAY_C, "Dec": BONUS_C})
-
-    # Augment the permanent panel's nice ticks with the two recovered levels
-    # (major slot; panel-local, so the shared income scale is untouched), so the
-    # spine spans the full range and the reader still reads the raise off the
-    # two level ticks. Colliding labels separate on their own.
     a_perm.yaxis.set_major_locator(
         vzs.AugmentedLocator(a_perm.yaxis.get_major_locator(), np.unique(perm).tolist())
     )
-    # Two-decimal y labels across all three panels.
-    for panel in (a_income, a_perm, a_nu):
+    for panel in axes:
         panel.yaxis.set_major_formatter("{x:.2f}")
+    # --8<-- [end:mark]
 
-    vzs.label(a_perm, "raise", x=date2num(dt.date(2018, 6, 1)))
+
+def name(axes: np.ndarray) -> None:
+    """Name and colour the recurrent ticks; call out one of each and the raise."""
+    _, a_perm, a_nu = axes
+    # --8<-- [start:name]
+    a_nu.vzs.accent(axis="x", label="name", color={"Jun": HOLIDAY_C, "Dec": BONUS_C})
+    vzs.label(a_perm, "raise", x=date2num(RAISE_AT_DATE))
     vzs.label(a_nu, "holiday pay", x=date2num(HOLIDAY_AT))
     vzs.label(a_nu, "bonus", x=date2num(BONUS_AT))
+    # --8<-- [end:name]
 
-    FIGURES.mkdir(exist_ok=True)
+
+def decomposition() -> plt.Figure:
+    """Assemble the final figure -- the gallery's `labour_income_decomposition`."""
+    dates, income = data()
+    perm, nu, sigma, dperm = decompose(income)
+    jun, dec, raise_pts = features(dates, nu, sigma, dperm)
+    fig, axes = draw(dates, income, perm, nu, sigma)
+    compare(axes)
+    mark(axes, dates, perm, nu, jun, dec, raise_pts)
+    name(axes)
+    return fig
+
+
+def save(fig: plt.Figure, step: int) -> None:
+    """Write one step's figure for the tutorial."""
     fig.savefig(
-        FIGURES / "labour_income_decomposition.svg",
+        FIGURES / f"labour_income_step_{step}.svg",
         bbox_inches="tight",
         transparent=True,
     )
     plt.close(fig)
 
 
+def main() -> None:
+    """Render the four tutorial steps."""
+    FIGURES.mkdir(exist_ok=True)
+    dates, income = data()
+    perm, nu, sigma, dperm = decompose(income)
+    jun, dec, raise_pts = features(dates, nu, sigma, dperm)
+
+    fig, axes = draw(dates, income, perm, nu, sigma)
+    save(fig, 1)
+
+    fig, axes = draw(dates, income, perm, nu, sigma)
+    compare(axes)
+    save(fig, 2)
+
+    fig, axes = draw(dates, income, perm, nu, sigma)
+    compare(axes)
+    mark(axes, dates, perm, nu, jun, dec, raise_pts)
+    save(fig, 3)
+
+    fig, axes = draw(dates, income, perm, nu, sigma)
+    compare(axes)
+    mark(axes, dates, perm, nu, jun, dec, raise_pts)
+    name(axes)
+    save(fig, 4)
+
+
 if __name__ == "__main__":
-    render()
+    main()
