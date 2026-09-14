@@ -10,7 +10,6 @@ from vanzelfsprekend import labels as labels_
 from vanzelfsprekend.frame import FrameMode, skip_if_not_rectilinear
 from vanzelfsprekend.group import axis_kinds, frame_unit
 from vanzelfsprekend.hook import ensure_state, get_state, run_appliers
-from vanzelfsprekend.locator import SPACING
 from vanzelfsprekend.mute import mute
 
 
@@ -65,7 +64,7 @@ def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | None = None,
     nice_numbers: Sequence[float] | None = None,

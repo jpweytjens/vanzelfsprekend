@@ -12,6 +12,7 @@ from matplotlib.ticker import NullLocator
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
+    SPACING,
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
@@ -68,8 +69,14 @@ def parse_frame_args(
     return mode, offsets
 
 
-def parse_spacing(spacing: float | tuple[float, float]) -> dict[str, float]:
-    """Resolve `spacing` into per-axis gaps, keyed `'x'` and `'y'`."""
+def parse_spacing(spacing: float | tuple[float, float] | None) -> dict[str, float]:
+    """Resolve `spacing` into per-axis gaps, keyed `'x'` and `'y'`.
+
+    `None` is the public default and takes `SPACING`, the single
+    authority for the aimed-for tick spacing.
+    """
+    if spacing is None:
+        spacing = SPACING
     if isinstance(spacing, (int, float)):
         return {"x": spacing, "y": spacing}
     pair = tuple(spacing)

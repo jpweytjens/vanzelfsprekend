@@ -18,7 +18,6 @@ from vanzelfsprekend.group import frame_unit, share_groups
 from vanzelfsprekend.hook import clear_state, disconnect, ensure_state, get_state
 from vanzelfsprekend.labels import xlabel, ylabel
 from vanzelfsprekend.lines import line_labels
-from vanzelfsprekend.locator import SPACING
 from vanzelfsprekend.multiples import _teardown_grid
 from vanzelfsprekend.mute import LINE_WIDTH, mute
 from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
@@ -30,7 +29,7 @@ def _frame(
     ax: Axes,
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode],
-    spacing: float | tuple[float, float],
+    spacing: float | tuple[float, float] | None,
     n: int | None,
     offset: float | tuple[float | None, float | None] | None,
     nice_numbers: Sequence[float] | None,
@@ -62,7 +61,7 @@ def _frame(
 def range_frame(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -106,15 +105,15 @@ def range_frame(
         All three read the data cut back to the view, so a view pinned
         inside the data with `set_xlim` crops the frame to the data on
         screen, and a view wider than the data changes nothing.
-    spacing : float or tuple of two floats
+    spacing : float or tuple of two floats, optional
         The gap to aim for between ticks, in tick-label heights, so the
         number of ticks follows the axis's length and the labels' size:
         a small panel gets few, a poster's large labels thin them out.
         A tuple `(x_spacing, y_spacing)` sets the axes independently;
-        the default `(7, 4)` is 70 pt and 40 pt at 10 pt labels, about
-        2.5 cm and 1.4 cm, since an x label is three to five heights
-        wide along its axis and a y label one. Halving the spacing
-        doubles the ticks.
+        `None` (the default) uses `(7, 4)`, which is 70 pt and 40 pt at
+        10 pt labels, about 2.5 cm and 1.4 cm, since an x label is three
+        to five heights wide along its axis and a y label one. Halving
+        the spacing doubles the ticks.
     n : int, optional
         The number of ticks to aim for per axis, overriding `spacing`.
     offset : float or tuple of (float or None), optional
@@ -152,7 +151,7 @@ def range_frame(
 def apply(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
@@ -389,7 +388,7 @@ class _Accessor:
     def apply(
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-        spacing: float | tuple[float, float] = SPACING,
+        spacing: float | tuple[float, float] | None = None,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
@@ -413,7 +412,7 @@ class _Accessor:
     def range_frame(
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-        spacing: float | tuple[float, float] = SPACING,
+        spacing: float | tuple[float, float] | None = None,
         n: int | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,

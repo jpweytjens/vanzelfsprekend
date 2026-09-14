@@ -27,7 +27,6 @@ from vanzelfsprekend.frame import (
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 from vanzelfsprekend.labels import _apply_date_offset
 from vanzelfsprekend.locator import (
-    SPACING,
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
@@ -148,7 +147,7 @@ def frame_unit(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
-    spacing: float | tuple[float, float] = SPACING,
+    spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,

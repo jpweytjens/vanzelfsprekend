@@ -8,7 +8,9 @@ from matplotlib.ticker import FixedLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
+from vanzelfsprekend.frame import parse_spacing
 from vanzelfsprekend.hook import get_state
+from vanzelfsprekend.locator import SPACING
 
 
 @pytest.fixture
@@ -686,3 +688,9 @@ def test_loose_frame_under_pinned_view_drops_fixed_ticks_outside_it():
     assert ax.spines["left"].get_bounds() == (7680.0, 7938.0)
     assert ax.get_ylim() == (7600.0, 8000.0)
     plt.close(fig)
+
+
+def test_parse_spacing_none_resolves_to_default():
+    # None is the public sentinel for "the library's default spacing";
+    # it must resolve to SPACING, the single authority for that value.
+    assert parse_spacing(None) == parse_spacing(SPACING)
