@@ -8,28 +8,31 @@ Start with the scatter as matplotlib draws it, then add the frame and the labels
 
 ## Draw the data
 
-```python
-import matplotlib.pyplot as plt
-import numpy as np
-
-import vanzelfsprekend as vzs
-
-table = np.genfromtxt(
-    "examples/data/old_faithful.csv", delimiter=",", names=True, skip_header=4
-)
-fig, ax = plt.subplots(figsize=(5, 3.5))
-ax.scatter(table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK)
+```{.python}
+--8<-- "tutorial_old_faithful.py:data"
 ```
 
-The file's first four lines name its source, so `skip_header` steps over them to the column names. The colour is yours to set: vanzelfsprekend never recolours a mark, so a scatter drawn before `apply` keeps whatever you gave it. Draw it after `apply` instead and the neutral cycle hands you the same near-black.
+```{.python}
+--8<-- "tutorial_old_faithful.py:draw"
+```
 
-This is the figure every matplotlib user knows: a box, ticks at round numbers whether or not the data reaches them, and the axis labels still to come.
+<figure markdown>
+![Scatter of Old Faithful eruption length against the wait to the next eruption in a default matplotlib box, ticks at round numbers past the data on both axes](../figures/old_faithful_step_1.svg)
+<figcaption markdown>Step one. The scatter as matplotlib draws it: a box, and ticks at round numbers whether or not the data reach them.</figcaption>
+</figure>
+
+The data ship with the package, and `vzs.datasets.describe("old_faithful")` names their source. The colour is yours to set: vanzelfsprekend never recolours a mark, so a scatter drawn before `apply` keeps whatever you gave it. Draw it after `apply` instead and the neutral cycle hands you the same near-black.
 
 ## Apply the range frame
 
-```python
-vzs.apply(ax, frame="data")
+```{.python}
+--8<-- "tutorial_old_faithful.py:step2"
 ```
+
+<figure markdown>
+![The same scatter with the box reduced to two grey spines that end at each variable's extremes](../figures/old_faithful_step_2.svg)
+<figcaption markdown>Step two. Two spines, each running from its variable's minimum to its maximum, and the furniture in grey.</figcaption>
+</figure>
 
 The box becomes two spines. Each runs from that variable's minimum to its maximum and no further, so the frame now says that the shortest eruption was a little under two minutes and the longest over five, and that nobody waited less than about forty-five minutes. The ticks stayed on round numbers but only the ones inside the data survive, and the tick marks, tick labels and spines turned grey. The points are untouched.
 
@@ -39,20 +42,18 @@ The same call is also a method on the axes, `ax.vzs.apply(frame="data")`. Every 
 
 ## Name the axes
 
-```python
-vzs.xlabel(ax, "eruption length (min)")
-vzs.ylabel(ax, "minutes to the next")
+```{.python}
+--8<-- "tutorial_old_faithful.py:step3"
 ```
+
+<figure markdown>
+![The finished figure: the x label under the right end of the bottom spine, the y label horizontal above the left spine](../figures/old_faithful_step_3.svg)
+<figcaption markdown>Step three. The x label sits under the right end of the bottom spine and the y label horizontal at the top of the left one.</figcaption>
+</figure>
 
 The x label sits under the right end of the bottom spine and the y label sits horizontal at the top of the left spine, where the eye arrives after reading the last tick. Neither is rotated.
 
 ## The result
-
-All four calls, as the gallery script draws it:
-
-```{.python}
---8<-- "gallery.py:old_faithful"
-```
 
 <figure markdown>
 ![Scatter of Old Faithful eruption length against the wait to the next eruption, two clusters, spines ending at the data's extremes](../figures/old_faithful.svg)
