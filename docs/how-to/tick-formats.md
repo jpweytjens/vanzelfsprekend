@@ -14,7 +14,7 @@ The second fires inside the window, when the data cover a narrow band far from z
 99.900 .. 100.075   →   −0.100  −0.075  −0.050  −0.025  0.000  0.025  ...   +1e2
 ```
 
-Both rules exist to make the labels shorter. That is Talbot, Lin and Hanrahan's fourth criterion, legibility, which their tick search scores and mizani's leaves out; matplotlib's formatter applies it after the search instead, and [whose decision is which](../explanation/decisions.md) says why the library leaves it there.
+Both rules exist to make the labels shorter. That is Talbot, Lin and Hanrahan's fourth criterion, legibility, which their tick search scores and mizani's leaves out; matplotlib's formatter applies it after the search instead, and [whose decision is which](../explanation/furniture.md) says why the library leaves it there.
 
 ## Say it in the label, once
 

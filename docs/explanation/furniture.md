@@ -1,14 +1,14 @@
-# Frame and meaning
+# Furniture and meaning
 
 *The marks are yours. The frame and the ticks are the library's, and they are two decisions, not one. Anything that says what a number means stays yours.*
 
-[Answers and comparisons](axis.md) says what the furniture is for. This page says who decides each part of it, because that answer is what makes the library safe to apply to a finished figure.
+[What to accent](accent.md) says what the furniture is for. This page says who decides each part of it, because that answer is what makes the library safe to apply to a finished figure.
 
 ## The marks are yours
 
 vanzelfsprekend never moves, resizes or recolours a mark you drew. A line stays where you plotted it, a scatter keeps its colour, a bar its width. That is why `apply` can read any axes, from a bare `plt.plot` to a seaborn grid: it has nothing to say about the marks and so nothing to get wrong about them. It is also what makes `restore` exact, since the library only ever touched things it can put back.
 
-## The furniture is the library's, and it is two decisions
+## The furniture is the library's, in two decisions
 
 matplotlib decides the spine and the ticks at once: the view limits set the spine's extent, and the ticks are whatever round numbers fall inside the view. Those are two jobs. Ticks are for reading values off; the spine's extent is a claim about the data's range. vanzelfsprekend separates them.
 

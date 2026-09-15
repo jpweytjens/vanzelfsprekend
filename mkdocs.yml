@@ -79,9 +79,9 @@ nav:
       - Style: reference/style.md
       - Registration: reference/registration.md
   - Explanation:
-      - Answers and comparisons: explanation/axis.md
-      - Why call order doesn't matter: explanation/hook.md
-      - Frame and meaning: explanation/decisions.md
-      - Sources and influences: explanation/ideas.md
+      - Furniture and meaning: explanation/furniture.md
+      - What to accent: explanation/accent.md
+      - The frame follows the axes: explanation/hook.md
       - Scope and limits: explanation/scope.md
+      - Sources and influences: explanation/sources.md
   - Changelog: changelog.md
