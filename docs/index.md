@@ -17,7 +17,7 @@ The marks stay yours throughout. The library never moves, resizes or recolours a
 
 Install it with `uv add vanzelfsprekend` or `pip install vanzelfsprekend`.
 
-Where to go next: the [tutorial](tutorial/old-faithful.md) builds six figures from scratch. The [how-to](how-to/frame-modes.md) pages answer one question each. The [gallery](gallery.md) shows what the range frame does to real data. The [reference](reference/axes.md) is generated from the docstrings. [What to accent](explanation/accent.md) says what the furniture is for, [The frame follows the axes](explanation/hook.md) why the order of your calls is free, and [Sources and influences](explanation/sources.md) where the ideas come from.
+Where to go next: the [tutorial](tutorial/old-faithful.md) builds six figures from scratch. The [how-to](how-to/index.md) pages answer one question each. The [gallery](gallery.md) shows what the range frame does to real data. The [reference](reference/axes.md) is generated from the docstrings. [What to accent](explanation/accent.md) says what the furniture is for, [The frame follows the axes](explanation/hook.md) why the order of your calls is free, and [Sources and influences](explanation/sources.md) where the ideas come from.
 
 The frame is Tufte's,[^tufte] the muting and the labels are Doumont's,[^doumont] and his caption to a graph he redrew says all three in one line.
 

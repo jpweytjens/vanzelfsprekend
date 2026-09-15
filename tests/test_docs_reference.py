@@ -19,3 +19,13 @@ def test_every_public_name_has_a_reference_directive():
     public = set(vanzelfsprekend.__all__)
     missing = public - documented_names()
     assert not missing, f"public names without a reference page: {sorted(missing)}"
+
+
+HOWTO = Path(__file__).parents[1] / "docs" / "how-to"
+
+
+def test_every_howto_page_is_linked_from_the_map():
+    index = (HOWTO / "index.md").read_text()
+    pages = {page.name for page in HOWTO.glob("*.md")} - {"index.md"}
+    missing = {page for page in pages if f"]({page})" not in index}
+    assert not missing, f"how-to pages without a row in the map: {sorted(missing)}"
