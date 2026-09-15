@@ -54,18 +54,9 @@ Six labels against eleven for the same spine, and the labels stay round, 45 to 9
 
 These four numbers are a starting point rather than a law, and the authors are the ones who say so: they call their components and their chosen weights ad hoc.[^adhoc] A figure that is not reading right is reason enough to turn them and look.
 
-Two things make that cheaper than it sounds. Only the ratios matter, since the score ranks candidate labellings and a common factor cannot change an ordering, so the defaults' sum of 1 is a convention rather than a requirement and raising one entry is the same edit as lowering the rest. And the far end is easy to recognise: at `coverage` around 5 the search gives up round numbers altogether and ticks the data's own extremes, `1.6, 2.1, 2.6` and so on, which is the signal to come back down.
+Two things make that cheaper than it sounds. Only the ratios matter, since the score ranks candidate labellings and a common factor cannot change an ordering, so the defaults' sum of 1 is a convention rather than a requirement and raising one entry is the same edit as lowering the rest. And both ends are easy to recognise: at `coverage` around 5 the search gives up round numbers altogether and ticks the data's own extremes, `1.6, 2.1, 2.6` and so on, which is the signal to come back down, while at exactly 0 nothing bounds the label range at all and the search does not return.
 
-## Which arguments take one axis at a time
-
-| argument | sets | per axis |
-|---|---|---|
-| `spacing` | the gap between ticks, in label heights | yes, `(x, y)` |
-| `n` | the tick count, overriding `spacing` | yes, `(x, y)`, either entry `None` |
-| `nice_numbers` | the seed set the step is built from | no, both axes |
-| `weights` | the four criteria's say | no, both axes |
-
-`nice_numbers` and `weights` are collections already, so a tuple of two of them would read badly. Set a `TalbotLocator` on the one axis instead, as above: a locator you set is kept, which is matplotlib's own arrangement, since `apply` installs a locator on both axes for you and dropping to `ax.yaxis` is how you tune one. The [locators how-to](locators.md) has that order, and both arguments reach the locator on linear axes only.
+`spacing` and `n` take an `(x, y)` tuple; `nice_numbers` and `weights` reach both axes, being collections already, so a tuple of two of them would read badly. The locator is their per-axis spelling, as above: a locator you set is kept, which is matplotlib's own arrangement, since `apply` installs a locator on both axes for you and dropping to `ax.yaxis` is how you tune one. The [locators how-to](locators.md) has that order, and both arguments reach the locator on linear axes only.
 
 If the spine ends are what you want rather than a labelling that happens to reach them, `frame="data"` puts them there and leaves the ticks alone. The [frame modes how-to](frame-modes.md) has the modes side by side.
 
