@@ -55,17 +55,26 @@ function displayResults(results) {
   }).join('');
 }
 
+var searchInput = document.getElementById('mkdocs-search-query');
+var ready = false;
+
 var searchWorker = new Worker(joinUrl(base_url, "search/worker.js"));
 searchWorker.postMessage({ init: true });
 searchWorker.onmessage = function (e) {
   if (e.data.results) displayResults(e.data.results);
+  if (e.data.allowSearch) {
+    // The index just became searchable: run whatever was typed while
+    // it was still loading, instead of leaving the panel empty.
+    ready = true;
+    if (searchInput.value.length > 0) searchWorker.postMessage({ query: searchInput.value });
+  }
 };
 
-document.getElementById('mkdocs-search-query').addEventListener('input', function () {
+searchInput.addEventListener('input', function () {
   var query = this.value;
   if (query.length === 0) {
     document.getElementById("mkdocs-search-results").innerHTML = "";
-  } else {
+  } else if (ready) {
     searchWorker.postMessage({ query: query });
   }
 });
