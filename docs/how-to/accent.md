@@ -15,7 +15,7 @@ A locator that places a tick at a feature, a peak or a median, puts a number on 
 <figcaption markdown>The peak's frequency is one of the ticks; `accent` colours its label and nothing else.</figcaption>
 </figure>
 
-With no arguments, `accent` colours every named feature on every axis that has one, in the accent ink. `at=` picks a subset, by name (`at=["peak"]`) or by position, and `color=` takes one colour for all of them or a name-to-colour map, `color={"Jun": "tol:gold", "Dec": "tol:red"}`, when each feature has its own meaning. `axis="x"` or `"y"` confines it to one axis.
+With no arguments, `accent` colours every named feature on every axis that has one, in the accent ink. `at=` picks a subset, by name (`at=["peak"]`) or by position, and `color=` takes one colour for all of them or a name-to-colour map, `color={"Jun": "tol:high_contrast.yellow", "Dec": "tol:high_contrast.red"}`, when each feature has its own meaning. `axis="x"` or `"y"` confines it to one axis.
 
 ## Name the tick instead of the value
 
@@ -27,4 +27,4 @@ With no arguments, `accent` colours every named feature on every axis that has o
 
 ## What it does not do
 
-`accent` adds no tick. The locator places the ticks and names them; `accent` reads the names and colours the labels. To put a tick at a value, install a [locator](locators.md) that has it. Like the frame, the accent re-applies on every draw, so it survives a resize or a re-tick, and `restore` reverts it. The [labour-income decomposition](../tutorial/labour-income.md) uses it on three panels at once, one colour per feature.
+`accent` adds no tick. The locator places the ticks and names them; `accent` reads the names and colours the labels. To put a tick at a value, install a [locator](locators.md) that has it. Like the frame, the accent re-applies on every draw, so it survives a resize or a re-tick, and `restore` reverts it. The [labour-income decomposition](../tutorial/labour-income.md) uses it on two panels at once, one colour per feature on one and one colour for the levels on the other.

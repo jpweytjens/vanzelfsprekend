@@ -59,7 +59,7 @@ fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 
 The [documentation](https://vanzelfsprekend.johannesweytjens.be/) has a [tutorial](https://vanzelfsprekend.johannesweytjens.be/tutorial/old-faithful/) that builds six figures, [how-to](https://vanzelfsprekend.johannesweytjens.be/how-to/) pages that answer one question each, the [gallery](https://vanzelfsprekend.johannesweytjens.be/gallery/), the [reference](https://vanzelfsprekend.johannesweytjens.be/reference/axes/) generated from the docstrings, and the explanation pages: [What to accent](https://vanzelfsprekend.johannesweytjens.be/explanation/accent/) says what the furniture is for, [The frame follows the axes](https://vanzelfsprekend.johannesweytjens.be/explanation/hook/) why the order of your calls is free, and [Sources and influences](https://vanzelfsprekend.johannesweytjens.be/explanation/sources/) where the ideas come from.
 
-The frame is Tufte's,[^tufte] the muting and the labels are Doumont's,[^doumont] and his caption to a graph he redrew says all three in one line.
+The frame is Tufte's,[^tufte] the muting and the labels are Doumont's,[^doumont] and his caption to a graph he redrew says the first two in one line.
 
 > The graph shows the data and nothing but the data: tick marks are relevant, not arbitrarily equidistant; nondata lines are gray, to make the data prominent.
 

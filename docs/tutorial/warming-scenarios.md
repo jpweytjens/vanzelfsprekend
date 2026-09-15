@@ -10,7 +10,7 @@ The observed global mean temperature, one point per year since 1850, and the fiv
 --8<-- "tutorial_warming.py:data"
 ```
 
-Each file opens with four lines naming its source, which `skip_header` steps over. The record is published against a 1961–1990 mean, and the scenarios against 1850–1900, so the observations are shifted to the scenarios' baseline before the two are drawn together.
+Each dataset's header names its source, and `vzs.datasets.describe` prints it. The record is published against a 1961–1990 mean, and the scenarios against 1850–1900, so the observations are shifted to the scenarios' baseline before the two are drawn together.
 
 ```{.python}
 --8<-- "tutorial_warming.py:draw"
