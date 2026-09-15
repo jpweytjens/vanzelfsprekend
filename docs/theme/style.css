@@ -312,3 +312,18 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
   .with-toc { display: block; }
   .page-toc { display: none; }
 }
+
+/* Search: the box sits among the section links; results replace nothing
+   and take the article's measure above the page content, hidden while empty. */
+.search { margin-left: auto; }
+.search input {
+  font: inherit; font-size: 0.9rem; color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid var(--ink-soft);
+  padding: 0.1em 0; width: 9em;
+}
+.search input:focus { outline: none; border-bottom-color: var(--link); }
+.search-results { max-width: 66ch; }
+.search-results:empty { display: none; }
+.search-results article { margin: 1.2rem 0; }
+.search-results h3 { margin: 0 0 0.2rem; font-size: 1rem; }
+.search-results p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }

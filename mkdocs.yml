@@ -19,6 +19,7 @@ hooks:
   - docs_hooks.py
 
 plugins:
+  - search
   - mkdocstrings:
       handlers:
         python:
