@@ -208,6 +208,27 @@ def frame_modes() -> None:
     save(fig, "frame_modes")
 
 
+def spine_reach() -> None:
+    """Render Old Faithful under two tick counts, the nice spine's reach following."""
+    table = vzs.datasets.load("old_faithful")
+    fig, axes = plt.subplots(1, 2, figsize=(6.5, 3.2))
+    fig.subplots_adjust(wspace=0.45)
+    # `n` rather than `spacing`, so the panel's size cannot change what the
+    # figure shows: a count is absolute where a gap in label heights is not.
+    for ax, n in zip(axes, (None, 8), strict=True):
+        ax.scatter(
+            table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK
+        )
+        vzs.apply(ax, n=n)
+        vzs.xlabel(ax, "eruption length (min)")
+        ax.set_title(
+            "apply(ax)" if n is None else f"apply(ax, n={n})",
+            color=vzs.palettes.TEXT_INK,
+        )
+    vzs.ylabel(axes[0], "minutes to the next")
+    save(fig, "spine_reach")
+
+
 def tick_spacing() -> None:
     """Render one warming record at two widths, the tick count following."""
     table = vzs.datasets.load("hadcrut5_annual")
@@ -465,6 +486,7 @@ def main() -> None:
     resonance_peak()
     small_multiples_grid()
     tick_spacing()
+    spine_reach()
     frame_modes()
     radian_axes()
     accented_peak()
