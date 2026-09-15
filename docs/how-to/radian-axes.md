@@ -8,7 +8,7 @@ The full grid the locator searches is `unit * q * 10**x`, with `unit` at 1 by de
 
 ## A change of unit
 
-Set `unit` to count in that step instead of in ones. `TalbotLocator(unit=np.pi)` runs the search in units of π and lands the ticks on `0, π, 2π, 3π, 4π`, the step now `π * q * 10**x`. Multiplying the grid by a constant is a linear rescaling, exact here because the nice-number search is scale-invariant, and it is the only way onto multiples of an irrational step, which no choice of `q` can reach. Set it *after* `apply` (or `range_frame`), the way [every locator goes on after the frame](locators.md), since `apply` installs the default locator and would otherwise overwrite yours.
+Set `unit` to count in that step instead of in ones. `TalbotLocator(unit=np.pi)` runs the search in units of π and lands the ticks on `0, π, 2π, 3π, 4π`, the step now `π * q * 10**x`. Multiplying the grid by a constant is a linear rescaling, exact here because the nice-number search is scale-invariant, and it is the only way onto multiples of an irrational step, which no choice of `q` can reach. Set it before or after `apply`; the frame [keeps a locator you set](locators.md).
 
 The locator places the ticks; matplotlib still writes them, and left alone it writes `3.14`, not `π`. Turning the value into "π/2" is a `FuncFormatter` you supply, because the library ships none: a tick label [stays a string matplotlib wrote](tick-formats.md), and the range frame does not touch it. This names π twice, once as the locator's `unit` and once inside the formatter that divides by π to find the fraction, so declare it once and read it in both places:
 
