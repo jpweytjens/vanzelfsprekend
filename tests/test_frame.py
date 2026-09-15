@@ -557,6 +557,23 @@ def test_n_overrides_spacing():
     np.testing.assert_allclose(ticks, vzs.TalbotLocator(n=3).tick_values(0, 100))
 
 
+def test_n_tuple_sets_each_axis():
+    x = _framed_ticks((4, 4), "x", n=(3, 9))
+    y = _framed_ticks((4, 4), "y", n=(3, 9))
+    assert len(x) < len(y)
+
+
+def test_n_tuple_entry_of_none_leaves_that_axis_to_spacing():
+    free = _framed_ticks((4, 4), "x", spacing=2)
+    pinned = _framed_ticks((4, 4), "x", n=(None, 9), spacing=2)
+    np.testing.assert_allclose(pinned, free)
+
+
+def test_rejects_malformed_n(scatter_ax):
+    with pytest.raises(ValueError, match="n must be"):
+        range_frame(scatter_ax, n=(1, 2, 3))
+
+
 def test_rejects_malformed_spacing(scatter_ax):
     with pytest.raises(ValueError, match="spacing"):
         range_frame(scatter_ax, spacing=(1, 2, 3))

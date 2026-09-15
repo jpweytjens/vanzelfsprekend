@@ -29,7 +29,7 @@ def _frame(
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode],
     spacing: float | tuple[float, float] | None,
-    n: int | None,
+    n: int | tuple[int | None, int | None] | None,
     offset: float | tuple[float | None, float | None] | None,
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
@@ -61,7 +61,7 @@ def range_frame(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] | None = None,
-    n: int | None = None,
+    n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -127,9 +127,11 @@ def range_frame(
         10 pt labels, about 2.5 cm and 1.4 cm, since an x label is three
         to five heights wide along its axis and a y label one. Halving
         the spacing doubles the ticks.
-    n : int, optional
-        The number of ticks to aim for, the same count on each axis,
-        overriding `spacing`.
+    n : int or tuple of (int or None), optional
+        The number of ticks to aim for, overriding `spacing`. A single
+        number sets both axes; a tuple `(x_n, y_n)` sets them
+        independently, like `spacing`, and `None` in either entry
+        leaves that axis to `spacing`.
     offset : float or tuple of (float or None), optional
         Outward displacement of the left and bottom spines, in points.
         A single number moves both spines; a tuple `(x_offset,
@@ -166,7 +168,7 @@ def apply(
     ax: Axes,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] | None = None,
-    n: int | None = None,
+    n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -416,7 +418,7 @@ class _Accessor:
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
         spacing: float | tuple[float, float] | None = None,
-        n: int | None = None,
+        n: int | tuple[int | None, int | None] | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
@@ -440,7 +442,7 @@ class _Accessor:
         self,
         frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
         spacing: float | tuple[float, float] | None = None,
-        n: int | None = None,
+        n: int | tuple[int | None, int | None] | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,

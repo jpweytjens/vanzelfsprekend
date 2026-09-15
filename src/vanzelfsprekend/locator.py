@@ -56,6 +56,24 @@ def parse_spacing(spacing: float | tuple[float, float] | None) -> dict[str, floa
     return {"x": pair[0], "y": pair[1]}
 
 
+def parse_n(
+    n: int | tuple[int | None, int | None] | None,
+) -> dict[str, int | None]:
+    """Resolve `n` into per-axis tick counts, keyed `'x'` and `'y'`.
+
+    `None`, whole or as either tuple entry, leaves that axis to
+    `spacing`, as `offset` reads `None` per end.
+    """
+    if n is None or isinstance(n, int):
+        return {"x": n, "y": n}
+    pair = tuple(n)
+    if len(pair) != 2 or not all(v is None or isinstance(v, int) for v in pair):
+        raise ValueError(
+            f"n must be an integer or a tuple of two integers or None, got {n!r}"
+        )
+    return {"x": pair[0], "y": pair[1]}
+
+
 def _label_height(axis: Axis) -> float:
     """Read the axis's major tick-label font size in points."""
     name = axis.axis_name  # ty: ignore[unresolved-attribute]

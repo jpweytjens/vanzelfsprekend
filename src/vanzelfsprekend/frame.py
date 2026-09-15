@@ -238,7 +238,7 @@ def install_frame(
     ax: Axes,
     mode: dict[str, tuple[str, str]],
     offsets: dict[str, float],
-    n: int | None,
+    n: dict[str, int | None],
     spacing: dict[str, float],
     nice_numbers: Sequence[float] | None,
     weights: dict[str, float] | None,
@@ -255,11 +255,11 @@ def install_frame(
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    mode, offsets, spacing : dict
-        Per-axis `(low, high)` frame modes, spine offset and tick
-        spacing, keyed `'x'` and `'y'`, from `parse_frame_args` and
-        `parse_spacing`.
-    n, nice_numbers, weights
+    mode, offsets, n, spacing : dict
+        Per-axis `(low, high)` frame modes, spine offset, tick count and
+        tick spacing, keyed `'x'` and `'y'`, from `parse_frame_args`,
+        `parse_n` and `parse_spacing`.
+    nice_numbers, weights
         Locator settings; see `range_frame`.
     kinds : dict
         Per-axis `AxisKind`, or `None` for an axis the caller decided
@@ -307,7 +307,7 @@ def install_frame(
             axis.isDefault_majloc or may_clobber,
             axis.get_major_locator(),
             lambda kind=kind, loose=loose, name=name, base=base: build_major_locator(
-                kind, loose, n, spacing[name], nice_numbers, weights, base
+                kind, loose, n[name], spacing[name], nice_numbers, weights, base
             ),
             axis.set_major_locator,
         )

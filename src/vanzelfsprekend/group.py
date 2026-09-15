@@ -29,6 +29,7 @@ from vanzelfsprekend.locator import (
     DateBreaksLocator,
     LogBreaksLocator,
     TalbotLocator,
+    parse_n,
     parse_spacing,
     visible_interval,
 )
@@ -148,7 +149,7 @@ def frame_unit(
     *,
     frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
     spacing: float | tuple[float, float] | None = None,
-    n: int | None = None,
+    n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
     nice_numbers: Sequence[float] | None = None,
     weights: dict[str, float] | None = None,
@@ -176,6 +177,7 @@ def frame_unit(
     """
     mode, offsets = parse_frame_args(frame, offset)
     spacings = parse_spacing(spacing)
+    ns = parse_n(n)
     unit = tuple(members)
     for ax in unit:
         snapshot_frame(ax)
@@ -220,7 +222,7 @@ def frame_unit(
             ax,
             mode,
             offsets,
-            n=n,
+            n=ns,
             spacing=spacings,
             nice_numbers=nice_numbers,
             weights=weights,

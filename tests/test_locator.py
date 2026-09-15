@@ -19,7 +19,12 @@ from vanzelfsprekend import (
     TalbotLocator,
     range_frame,
 )
-from vanzelfsprekend.locator import SPACING, AugmentedLocator, parse_spacing
+from vanzelfsprekend.locator import (
+    SPACING,
+    AugmentedLocator,
+    parse_n,
+    parse_spacing,
+)
 
 
 def test_parse_spacing_resolves_none_scalar_and_tuple():
@@ -29,6 +34,20 @@ def test_parse_spacing_resolves_none_scalar_and_tuple():
     assert parse_spacing(None) == {"x": SPACING[0], "y": SPACING[1]}
     assert parse_spacing(5.0) == {"x": 5.0, "y": 5.0}
     assert parse_spacing((6.0, 3.0)) == {"x": 6.0, "y": 3.0}
+
+
+def test_parse_n_resolves_none_scalar_and_tuple():
+    # n mirrors spacing's per-axis shape, and `None`, whole or per entry,
+    # leaves that axis to spacing.
+    assert parse_n(None) == {"x": None, "y": None}
+    assert parse_n(5) == {"x": 5, "y": 5}
+    assert parse_n((4, 6)) == {"x": 4, "y": 6}
+    assert parse_n((None, 6)) == {"x": None, "y": 6}
+
+
+def test_parse_n_rejects_a_malformed_tuple():
+    with pytest.raises(ValueError, match="n must be"):
+        parse_n((4, 5, 6))
 
 
 def test_matches_mizani_directly():
