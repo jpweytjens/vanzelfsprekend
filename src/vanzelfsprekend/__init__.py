@@ -3,6 +3,7 @@
 from importlib.metadata import version
 
 from vanzelfsprekend import (
+    datasets,
     palettes,
     style,  # noqa: F401  (import registers the style)
 )
@@ -41,6 +42,7 @@ __all__ = [
     "TalbotLocator",
     "accent",
     "apply",
+    "datasets",
     "label",
     "line_labels",
     "mute",

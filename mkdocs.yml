@@ -76,6 +76,7 @@ nav:
       - Labels: reference/labels.md
       - Locators: reference/locators.md
       - Palettes: reference/palettes.md
+      - Datasets: reference/datasets.md
       - Style: reference/style.md
       - Registration: reference/registration.md
   - Explanation:

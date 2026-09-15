@@ -32,6 +32,9 @@ Labels:
 - The x or y can be a feature of the artist's own points, a callable as the tick locators take, so a label anchors at a peak with the same x[argmax(y)] that marks its tick, and follows the data when it changes
 - Several names with one coordinate form a column that stacks in order, and a single point gets a name by being drawn as its own artist; labelling is deliberate, one name per label, never automatic
 
+Datasets:
+- The example datasets ship with the package: datasets.load reads one as a named array and datasets.describe returns its source and licence
+
 Small multiples:
 - One call treats a grid of axes on a shared scale, per figure, row or column, and keeps spines, ticks and axis labels only on the left column and bottom row
 
