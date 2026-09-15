@@ -2,7 +2,7 @@
 
 *Ticks can sit where the reader is looking, and then the axis annotates the figure.*
 
-Jean-luc Doumont's *Trees, maps and theorems* redraws a resonance curve three times, from the software's default to a version where every mark on the page earns its place. This lesson follows his sequence with vanzelfsprekend, one call per step, so you can see what each one buys. The curve is a Lorentzian with sampled points around it, a construction rather than a measurement, and the script is `examples/tutorial_resonance.py`.
+Jean-luc Doumont's *Trees, maps and theorems* redraws a resonance curve three times, from the software's default to a version where every mark on the page earns its place. This lesson follows his sequence with vanzelfsprekend, one call per step, so you can see what each one buys. The curve is a Lorentzian with sampled points around it, a construction rather than a measurement. The [complete script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/tutorial_resonance.py) draws every step and saves each figure.
 
 ## The data and the default figure
 

@@ -2,7 +2,7 @@
 
 *The legend goes, each scenario is named where its line ends, and the frame's right end is the last projected year.*
 
-The observed global mean temperature, one point per year since 1850, and the five scenarios the IPCC assessed for the rest of the century, fanning out from the present. The observations are the Met Office's HadCRUT5 record and the scenarios are the best estimates behind figure SPM.8 of the sixth assessment report, both shipped with the examples and each file naming its source. This is the right half of the front page's figure, built one call at a time; the script is `examples/tutorial_warming.py`.
+The observed global mean temperature, one point per year since 1850, and the five scenarios the IPCC assessed for the rest of the century, fanning out from the present. The observations are the Met Office's HadCRUT5 record and the scenarios are the best estimates behind figure SPM.8 of the sixth assessment report, shipped as `vzs.datasets.load("hadcrut5_annual")` and `load("spm8_scenarios")`, each naming its source under `describe`. This is the right half of the front page's figure, built one call at a time. The [complete script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/tutorial_warming.py) draws every step and saves each figure.
 
 ## The data and the default figure
 

@@ -2,7 +2,7 @@
 
 *When the ticks are the slowest, the median and the fastest winner, the axis tells the story and the caption can go.*
 
-A century of winners' average speeds at the Tour de France, the Giro d'Italia and the Vuelta a España, one race per panel. The data are the editions' published averages, compiled in `examples/data/grand_tour_speeds.csv` with its sources. This lesson builds the figure one call at a time, as the resonance peak did; the script is `examples/tutorial_grand_tours.py`.
+A century of winners' average speeds at the Tour de France, the Giro d'Italia and the Vuelta a España, one race per panel. The data are the editions' published averages, `vzs.datasets.load("grand_tour_speeds")`, with their sources under `describe`. This lesson builds the figure one call at a time, as the resonance peak did. The [complete script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/tutorial_grand_tours.py) draws every step and saves each figure.
 
 ## The data and the default figure
 

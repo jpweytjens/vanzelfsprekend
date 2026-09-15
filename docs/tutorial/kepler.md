@@ -2,7 +2,7 @@
 
 *Colour one planet and name it, and the eye finds it before a word is read.*
 
-The eight planets obey Kepler's third law: the square of a planet's orbital period _T_ equals the cube of its semi-major axis _a_. In astronomical units and years the constant is one, so _T_ = _a_<sup>3/2</sup>, and on log-log axes the planets fall on a single straight line. This lesson builds the gallery's `kepler` one call at a time, drawing that line and picking Earth out of the other seven. The measurements are the NASA Planetary Fact Sheet, and the script is `examples/tutorial_kepler.py`.
+The eight planets obey Kepler's third law: the square of a planet's orbital period _T_ equals the cube of its semi-major axis _a_. In astronomical units and years the constant is one, so _T_ = _a_<sup>3/2</sup>, and on log-log axes the planets fall on a single straight line. This lesson builds the gallery's `kepler` one call at a time, drawing that line and picking Earth out of the other seven. The measurements are the NASA Planetary Fact Sheet, `vzs.datasets.load("planets")`. The [complete script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/tutorial_kepler.py) draws every step and saves each figure.
 
 ## The data and the default figure
 

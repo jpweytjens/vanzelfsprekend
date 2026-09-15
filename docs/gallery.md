@@ -2,7 +2,7 @@
 
 *Fourteen figures in the order a reader should meet them, from one call to ticks that are the argument.*
 
-Every figure comes from `examples/gallery.py`; regenerate them with `uv run --group examples examples/gallery.py`. The datasets ship with the package, and `vzs.datasets.describe` names each one's source and licence; what is not a measurement says so.
+Every figure below the comparison comes from the [gallery script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/gallery.py); the comparison itself is the [front page's script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/warming_scenarios.py). Regenerate them with `uv run --group examples examples/gallery.py` and `uv run --group examples examples/warming_scenarios.py`. The datasets ship with the package, and `vzs.datasets.describe` names each one's source and licence; what is not a measurement says so.
 
 <figure markdown>
 ![The same global-warming plot twice: matplotlib defaults with a boxed legend on the left, the vanzelfsprekend range frame with each emission scenario labelled at its line's end on the right](warming_scenarios.svg)

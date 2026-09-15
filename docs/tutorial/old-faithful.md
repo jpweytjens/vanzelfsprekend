@@ -2,7 +2,7 @@
 
 *Four calls turn a default scatter into a range frame that reports both variables' extremes for free.*
 
-Old Faithful erupts for between one and five minutes, and the wait until the next eruption is between forty and a hundred minutes. Plotted against each other the two form two clusters: short eruptions are followed by short waits, long by long. The data are 272 observations from Azzalini and Bowman's 1990 paper, shipped with the examples.
+Old Faithful erupts for between one and five minutes, and the wait until the next eruption is between forty and a hundred minutes. Plotted against each other the two form two clusters: short eruptions are followed by short waits, long by long. The data are 272 observations from Azzalini and Bowman's 1990 paper, `vzs.datasets.load("old_faithful")`. The [complete script](https://github.com/jpweytjens/vanzelfsprekend/blob/main/examples/tutorial_old_faithful.py) draws every step and saves each figure.
 
 Start with the scatter as matplotlib draws it, then add the frame and the labels one call at a time.
 
