@@ -326,3 +326,5 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 .search-results article { margin: 1.2rem 0; }
 .search-results h3 { margin: 0 0 0.2rem; font-size: 1rem; }
 .search-results p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+.search-results ul { margin: 0.2rem 0 0; padding-left: 1.2em; }
+.search-results li { font-size: 0.9rem; }

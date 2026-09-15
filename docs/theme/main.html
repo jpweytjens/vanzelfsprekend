@@ -68,9 +68,7 @@
 </div>
 {% if 'search' in config.plugins %}
 <script>var base_url = {{ base_url | tojson }};</script>
-{% for script in config.extra_javascript %}
-<script src="{{ script | url }}"></script>
-{% endfor %}
+<script src="{{ 'search.js' | url }}"></script>
 {% endif %}
 </body>
 </html>
