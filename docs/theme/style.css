@@ -327,10 +327,10 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
    measure above the page content, hidden while empty. */
 .search input {
   font: inherit; font-size: 0.9rem; color: var(--ink);
-  background: transparent; border: 0; border-bottom: 1px solid var(--ink-soft);
+  background: transparent; border: 0;
   padding: 0.1em 0; width: 9em;
 }
-.search input:focus { outline: none; border-bottom-color: var(--link); }
+.search input:focus { outline: none; }
 .search-results { max-width: 66ch; }
 .search-results:empty { display: none; }
 .search-results article { margin: 1.2rem 0; }
