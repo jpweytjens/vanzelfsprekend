@@ -54,7 +54,7 @@ The bottom spine stands 24 points off and the left spine sits 6 points inside, w
 <figcaption markdown>Step four. The x ticks mark the band edges and the peak's own frequency. The y ticks mark zero and the maximum, with a minor tick at half power, where the linewidth is read.</figcaption>
 </figure>
 
-`FeatureLocator` takes fixed numbers and callables in one list. The `16` and `19` are the band edges; the callable finds the frequency of the highest measured point, 17.2 GHz here. A tick at the peak is worth more than a tick at 17 because the peak is what the reader came to find. `SummaryLocator` is the same idea over one axis's own values, and it sets the half-power minor tick. Inward ticks keep the marks off the labels now that the labels do the talking.
+`FeatureLocator` takes fixed numbers and callables in one list. The `16` and `19` are the band edges; the callable finds the frequency of the highest measured point, 17.2 GHz here. A tick at the peak is worth more than a tick at 17 because the peak is what the reader came to find. `SummaryLocator` is the same idea over one axis's own values, and it sets the half-power minor tick. Inward ticks keep the marks off the labels now that the labels do the talking. The frame is applied again in `feature` mode, which ends each spine at its outermost mark: the x spine runs from 16 to 19 and the y spine from zero to the peak.
 
 ## Replace the legend with labels
 

@@ -36,7 +36,7 @@ The data ship with the package, and `vzs.datasets.describe("old_faithful")` name
 
 The box becomes two spines. Each runs from that variable's minimum to its maximum and no further, so the frame now says that the shortest eruption was a little under two minutes and the longest over five, and that nobody waited less than about forty-five minutes. The ticks stayed on round numbers but only the ones inside the data survive, and the tick marks, tick labels and spines turned grey. The points are untouched.
 
-The `frame="data"` argument is what puts the spine ends exactly at the extremes. The default, `nice`, ends them at the outermost round tick instead. The [frame modes how-to](../how-to/frame-modes.md) has the three modes side by side.
+The `frame="data"` argument is what puts the spine ends exactly at the extremes. The default, `nice`, ends them at the outermost round tick instead. The [frame modes how-to](../how-to/frame-modes.md) has the four modes side by side.
 
 The same call is also a method on the axes, `ax.vzs.apply(frame="data")`. Every entry point is, with matplotlib's spelling where it has one, so the `vzs.xlabel(ax, ...)` below is also `ax.vzs.set_xlabel(...)`. The how-to pages use that form; the [registration reference](../reference/registration.md) has the rule.
 

@@ -108,8 +108,8 @@ def main() -> None:
     ax.xaxis.set_major_formatter("{x:g}")
     ax.yaxis.set_major_formatter("{x:.0f}")
     vzs.tick_direction(ax, "in")
-    # --8<-- [end:step4]
     vzs.apply(ax, frame="feature", offset=(24, -6))
+    # --8<-- [end:step4]
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
     ax.legend()
