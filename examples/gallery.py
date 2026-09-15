@@ -80,11 +80,6 @@ def grand_tours() -> None:
         speeds[table["year"].astype(int) - first] = table[column]
         speeds_of[ax] = speeds
         ax.plot(dates, speeds, color=color, label=label)
-    for ax, speeds in speeds_of.items():
-        ax.yaxis.set_major_locator(
-            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
-        )
-        ax.yaxis.set_major_formatter("{x:.1f}")
     # Plot before apply: the axis becomes a date axis when date data
     # arrives, and apply detects date-ness at call time.
     vzs.small_multiples(
@@ -94,6 +89,11 @@ def grand_tours() -> None:
         spacing=(5, 4),
         ylabel="winner's average\nspeed (km/h)",
     )
+    for ax, speeds in speeds_of.items():
+        ax.yaxis.set_major_locator(
+            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+        )
+        ax.yaxis.set_major_formatter("{x:.1f}")
     for ax in axes:
         vzs.line_labels(ax)
     save(fig, "grand_tours")

@@ -536,3 +536,34 @@ def test_spacing_reaches_the_grid():
         counts.append(len(axes[0].xaxis.get_majorticklocs()))
         plt.close(fig)
     assert counts[1] < counts[0]
+
+
+def test_summary_locator_set_after_small_multiples_ticks_each_panel():
+    fig, axes = plt.subplots(3, 1)
+    rows = [
+        np.array([30.0, 35.0, 40.0]),
+        np.array([25.0, 33.0, 41.0]),
+        np.array([28.0, 36.0, 44.0]),
+    ]
+    for ax, y in zip(axes, rows, strict=True):
+        ax.plot([0, 1, 2], y)
+    vzs.small_multiples(axes, compare="column", frame="data")
+    for ax, y in zip(axes, rows, strict=True):
+        ax.yaxis.set_major_locator(
+            vzs.SummaryLocator(y, [np.nanmin, np.nanmedian, np.nanmax])
+        )
+    fig.canvas.draw()
+    for ax, y in zip(axes, rows, strict=True):
+        assert list(ax.get_yticks()) == [y.min(), np.median(y), y.max()]
+    assert len({tuple(ax.get_ylim()) for ax in axes}) == 1
+    plt.close(fig)
+
+
+def test_summary_locator_set_before_small_multiples_is_replaced():
+    fig, axes = plt.subplots(3, 1)
+    for ax in axes:
+        ax.plot([0, 1, 2], [30.0, 35.0, 40.0])
+        ax.yaxis.set_major_locator(vzs.SummaryLocator([30.0, 35.0, 40.0], [np.nanmin]))
+    vzs.small_multiples(axes, compare="column", frame="data")
+    assert all(isinstance(ax.yaxis.get_major_locator(), GroupLocator) for ax in axes)
+    plt.close(fig)
