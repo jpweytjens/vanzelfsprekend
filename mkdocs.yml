@@ -64,6 +64,7 @@ nav:
       - Axis labels: how-to/axis-labels.md
       - Direct labels: how-to/direct-labels.md
       - Locators: how-to/locators.md
+      - Accent: how-to/accent.md
       - Tick spacing: how-to/tick-spacing.md
       - Tick formats: how-to/tick-formats.md
       - Non-decimal ticks: how-to/radian-axes.md

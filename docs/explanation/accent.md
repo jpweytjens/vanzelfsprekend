@@ -2,7 +2,7 @@
 
 *Compared to what?[^compare] A graph answers a comparison. In one graph the ticks can carry it, and across graphs a shared scale.*
 
-A graph, like a paragraph, is there to answer a question.[^doumont] Doumont lists the usual ones: how items compare, how values spread along a scale, how two variables relate, how one changes over time. One level up sits the comparison of comparisons, how those answers differ across subsets of the data. The marks carry the data. The furniture around them decides how easily the question gets answered, and the furniture is the part vanzelfsprekend owns.
+A graph, like a paragraph, is there to answer a question.[^doumont] Doumont lists the usual ones: how items compare, how values spread along a scale, how two variables relate, how one changes over time. One level up sits the comparison of comparisons, how those answers differ across subsets of the data. The marks carry the data. The furniture around them decides how easily the question gets answered, and the furniture is the part vanzelfsprekend owns. The [accent how-to](../how-to/accent.md) has the calls.
 
 ## Ticks that answer the question
 
