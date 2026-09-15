@@ -16,6 +16,6 @@ The tick count is the locator's doing, not the hook's, and it works for the same
 
 A hook that only reads and writes furniture can be undone. `apply` records the state of everything it is about to touch, the spines, ticks, tick labels, axis labels and colour cycle, and `restore` puts the record back and disconnects the hook. Nothing else was touched, so nothing else needs putting back, and the marks were never touched at all. [Furniture and meaning](furniture.md) is the rule that keeps that true.
 
-## The cost
+## A failure at draw time warns once
 
-A hook that runs at draw time also fails at draw time, inside matplotlib's rendering, where an exception would abort the draw and leave a blank figure. So the hook catches errors and gives up on that draw, and a bug in the library shows as a frame that did not update rather than as a traceback. The entry points run the hook once when called and let errors through, so a mistake in your arguments still surfaces where you made it. A switch to surface draw-time errors is a planned addition.
+A hook that runs at draw time also fails at draw time, inside matplotlib's rendering, where an exception would abort the draw and leave a blank figure. So the hook catches the error and gives up on that draw, and says so once: the first failure on an axes raises a `UserWarning` with the traceback attached, and later redraws of that axes stay quiet rather than repeating it. The frame may then be stale, which is what the warning says. The entry points run the same updates once when called and let errors through, so a mistake in your arguments still surfaces where you made it.
