@@ -39,7 +39,6 @@ def draw(axis: np.ndarray, period: np.ndarray) -> tuple[plt.Figure, plt.Axes]:
     fig, ax = plt.subplots(figsize=(5, 3.5))
     ax.set_xscale("log")
     ax.set_yscale("log")
-    # The planets in order of distance, joined into the line they obey.
     ax.plot(axis, period, marker="o")
     # --8<-- [end:draw]
     return fig, ax
@@ -53,7 +52,6 @@ def draw_muted(
     ax.set_xscale("log")
     ax.set_yscale("log")
     # --8<-- [start:step3]
-    # Mute the seven to grey so the one coloured mark carries the eye.
     ax.plot(axis, period, marker="o", color=vzs.palettes.DATA_INK)
     ax.plot(
         axis[earth],
