@@ -4,10 +4,10 @@ Each is a CSV whose header comments name its source and licence;
 `describe` returns them and `load` reads the table. The names:
 
 - `anscombe`: Anscombe's quartet, four x,y sets with near-identical summary statistics.
-- `co2_stations_monthly`: monthly mean CO2 at four NOAA stations, 2016-2025.
+- `co2_stations_monthly`: monthly mean CO2 at four stations.
 - `grand_tour_speeds`: winners' average speed per grand tour edition, gaps as `nan`.
 - `hadcrut5_annual`: annual global mean temperature anomaly, HadCRUT5.
-- `mammals`: body and brain mass of 62 land mammal species.
+- `mammals`: body and brain mass of land mammal species.
 - `old_faithful`: Old Faithful eruption durations and the wait to the next.
 - `planets`: semi-major axis and orbital period of the eight planets.
 - `spm8_scenarios`: assessed warming per IPCC AR6 scenario, figure SPM.8.
