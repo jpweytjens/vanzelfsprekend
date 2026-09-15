@@ -122,7 +122,7 @@ nav a:hover, nav a.current:hover { color: var(--link-hover); }
 /* The repo link is a mark, not a section: an icon among the words says so
    without needing a place of its own. It takes the nav's ink, so the dark
    ground turns it over with everything else. */
-.repo { align-self: center; display: flex; }
+.repo { align-self: center; display: flex; margin-left: auto; }
 .repo svg { width: 1.05em; height: 1.05em; }
 
 /* Sidenotes */
@@ -315,7 +315,6 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 
 /* Search: the box sits among the section links; results replace nothing
    and take the article's measure above the page content, hidden while empty. */
-.search { margin-left: auto; }
 .search input {
   font: inherit; font-size: 0.9rem; color: var(--ink);
   background: transparent; border: 0; border-bottom: 1px solid var(--ink-soft);
