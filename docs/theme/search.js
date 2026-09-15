@@ -16,6 +16,18 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;');
 }
 
+// Class names (AugmentedLocator) are single lunr tokens that stemming
+// misses (a query for "Augmented" stems to "augment"), so every term
+// is also sent as a wildcard: lunr ORs the two clauses, matching both
+// stemmed prose and an exact, unstemmed class name.
+function withPrefixes(query) {
+  return query.split(/\s+/).filter(function (term) {
+    return term.length > 0;
+  }).map(function (term) {
+    return term.charAt(term.length - 1) === '*' ? term : term + ' ' + term + '*';
+  }).join(' ');
+}
+
 var pageTitles = {};
 fetch(joinUrl(base_url, "search/search_index.json"))
   .then(function (r) { return r.json(); })
@@ -66,7 +78,7 @@ searchWorker.onmessage = function (e) {
     // The index just became searchable: run whatever was typed while
     // it was still loading, instead of leaving the panel empty.
     ready = true;
-    if (searchInput.value.length > 0) searchWorker.postMessage({ query: searchInput.value });
+    if (searchInput.value.length > 0) searchWorker.postMessage({ query: withPrefixes(searchInput.value) });
   }
 };
 
@@ -75,6 +87,6 @@ searchInput.addEventListener('input', function () {
   if (query.length === 0) {
     document.getElementById("mkdocs-search-results").innerHTML = "";
   } else if (ready) {
-    searchWorker.postMessage({ query: query });
+    searchWorker.postMessage({ query: withPrefixes(query) });
   }
 });
