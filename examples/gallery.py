@@ -213,17 +213,22 @@ def spine_reach() -> None:
     table = vzs.datasets.load("old_faithful")
     # `n` rather than `spacing`, so the panel's size cannot change what the
     # figure shows: a count is absolute where a gap in label heights is not.
+    # The third panel tunes the y axis alone, the way the how-to recommends:
+    # a locator set on one axis is kept, where `n` and `weights` reach both.
+    coverage = vzs.TalbotLocator(weights={"coverage": 0.5})
     settings = (
-        ("apply(ax)", {}),
-        ("n=8", {"n": 8}),
-        ('weights={"coverage": 0.5}', {"weights": {"coverage": 0.5}}),
+        ("apply(ax)", None, {}),
+        ("n=(None, 8)", None, {"n": (None, 8)}),
+        ('y: weights={"coverage": 0.5}', coverage, {}),
     )
     fig, axes = plt.subplots(1, 3, figsize=(9, 3.2))
     fig.subplots_adjust(wspace=0.5)
-    for ax, (title, kwargs) in zip(axes, settings, strict=True):
+    for ax, (title, locator, kwargs) in zip(axes, settings, strict=True):
         ax.scatter(
             table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK
         )
+        if locator is not None:
+            ax.yaxis.set_major_locator(locator)
         vzs.apply(ax, **kwargs)
         ax.set_title(title, color=vzs.palettes.TEXT_INK)
     save(fig, "spine_reach")

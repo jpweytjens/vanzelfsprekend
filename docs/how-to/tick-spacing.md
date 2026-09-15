@@ -22,13 +22,13 @@ Both go to the default locator, so a locator you set afterwards replaces them al
 
 More ticks is not only a denser axis. Under the default `nice` frame each spine ends at the outermost tick, so the tick step also decides how much of the data the frame covers, and a step too coarse for the data leaves the extremes outside it.
 
-Old Faithful's waits run from 43 minutes to 96. At the count this panel chooses, the y axis steps by ten, the outermost ticks inside the data are 50 and 90, and the spine between them leaves the shortest and longest waits outside. Asking for more ticks moves the step to five, and the spine reaches 45 and 95 instead:
+Old Faithful's waits run from 43 minutes to 96. At the count this panel chooses, the y axis steps by ten, the outermost ticks inside the data are 50 and 90, and the spine between them leaves the shortest and longest waits outside. Asking for more ticks on that axis moves the step to five, and the spine reaches 45 and 95 instead:
 
 ```python
-ax.vzs.apply(n=8)
+ax.vzs.apply(n=(None, 8))
 ```
 
-The reach arrives with a bill. `n` is one count for both axes, so the x axis picks up a tick every half minute and still ends where it did, at 2 and at 5, while the y axis carries eleven labels where three were readable. Density is the wrong lever here: what the figure wants is for the labels to span the data, and that is a criterion the locator already scores.
+The reach arrives with a bill: eleven labels where three were readable. Density is the wrong lever here, because what the figure wants is for the labels to span the data, and that is a criterion the locator already scores.
 
 ## Ask for coverage instead
 
@@ -38,28 +38,31 @@ The reach arrives with a bill. `n` is one count for both axes, so the x axis pic
 {"simplicity": 0.25, "coverage": 0.2, "density": 0.5, "legibility": 0.05}
 ```
 
-`coverage` is how far the labels span the data and `density` how near their count is to the target, so raising coverage asks for the reach directly rather than buying it with labels:
+`coverage` is how far the labels span the data and `density` how near their count is to the target, so raising coverage asks for the reach directly instead of buying it with labels. The weights reach both axes at once and usually one axis needs them, so set the locator on that axis and leave the other to the call:
 
 ```python
-ax.vzs.apply(weights={"coverage": 0.5})
+ax.yaxis.set_major_locator(vzs.TalbotLocator(weights={"coverage": 0.5}))
+ax.vzs.apply()
 ```
 
 <figure markdown>
-![The Old Faithful scatter three times. Under a bare apply the y spine runs from 50 to 90 with points outside both ends; under n=8 it reaches 45 to 95 under eleven labels, with the x axis crowded to a label every half minute; under a raised coverage weight it reaches the same 45 to 95 under six labels, with the x axis back to two](../figures/spine_reach.svg)
-<figcaption markdown>The same scatter three ways. `n=8` and `weights={"coverage": 0.5}` reach the same spine, from 45 to 95, on eleven labels and on six.</figcaption>
+![The Old Faithful scatter three times over identical x axes. Under a bare apply the y spine runs from 50 to 90 with points outside both of its ends; under n=(None, 8) it reaches 45 to 95 under eleven labels; under a coverage weight set on the y axis it reaches the same 45 to 95 under six](../figures/spine_reach.svg)
+<figcaption markdown>The same scatter three ways, differing along y alone. `n=(None, 8)` and a raised coverage weight reach the same spine, from 45 to 95, on eleven labels and on six.</figcaption>
 </figure>
 
-Six labels against eleven for the same spine, and the x axis is back to the two ticks it chose on its own. The labels stay round, 45 to 95 in tens, and the count still follows the panel, so the same call on a small panel gives 45, 70 and 95 and keeps the reach.
+Six labels against eleven for the same spine, and the labels stay round, 45 to 95 in tens. The count still follows the panel, so the same locator on a 3 cm panel gives 45, 70 and 95 and keeps the reach.
+
+Only the ratios between the weights matter. The score ranks candidate labellings, and a common factor cannot change an ordering, so the defaults' sum of 1 is Talbot's convention rather than a requirement: raising one entry and lowering the others proportionally are the same edit.
 
 ## Which arguments take one axis at a time
 
 | argument | sets | per axis |
 |---|---|---|
 | `spacing` | the gap between ticks, in label heights | yes, `(x, y)` |
-| `n` | the tick count, overriding `spacing` | no, one count for both |
-| `nice_numbers` | the seed set the step is built from | no |
-| `weights` | the four criteria's say | no |
+| `n` | the tick count, overriding `spacing` | yes, `(x, y)`, either entry `None` |
+| `nice_numbers` | the seed set the step is built from | no, both axes |
+| `weights` | the four criteria's say | no, both axes |
 
-Where only one axis should change, set a `TalbotLocator` on it and leave the other to the call, since a locator you set is kept: `ax.yaxis.set_major_locator(vzs.TalbotLocator(weights={"coverage": 0.5}))` gives the y axis the reach above and leaves x at its own count. The [locators how-to](locators.md) has that order, and `nice_numbers` and `weights` reach the locator on linear axes only.
+`nice_numbers` and `weights` are collections already, so a tuple of two of them would read badly. Set a `TalbotLocator` on the one axis instead, as above: a locator you set is kept, which is matplotlib's own arrangement, since `apply` installs a locator on both axes for you and dropping to `ax.yaxis` is how you tune one. The [locators how-to](locators.md) has that order, and both arguments reach the locator on linear axes only.
 
 If the spine ends are what you want rather than a labelling that happens to reach them, `frame="data"` puts them there and leaves the ticks alone. The [frame modes how-to](frame-modes.md) has the modes side by side.
