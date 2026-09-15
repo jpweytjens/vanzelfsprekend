@@ -30,25 +30,40 @@ The data ship with the package, and `vzs.datasets.describe("old_faithful")` name
 ```
 
 <figure markdown>
-![The same scatter with the box reduced to two grey spines that end at each variable's extremes](../figures/old_faithful_step_2.svg)
-<figcaption markdown>Step two. Two spines, each running from its variable's minimum to its maximum, and the furniture in grey.</figcaption>
+![The same scatter with the box reduced to two grey spines running between round ticks, the most extreme points falling outside the spines at all four ends](../figures/old_faithful_step_2.svg)
+<figcaption markdown>Step two. The box becomes two grey spines running between round ticks, and the extreme points fall outside them.</figcaption>
 </figure>
 
-The box becomes two spines. Each runs from that variable's minimum to its maximum and no further, so the frame now says that the shortest eruption was a little under two minutes and the longest over five, and that nobody waited less than about forty-five minutes. The ticks stayed on round numbers but only the ones inside the data survive, and the tick marks, tick labels and spines turned grey. The points are untouched.
+The box becomes two spines, and the tick marks, tick labels and spines turn grey. The ticks stayed on round numbers but only the ones inside the data survive, so the x spine runs from 2 to 5 and the y spine from 50 to 90. The points are untouched.
 
-The `frame="data"` argument is what puts the spine ends exactly at the extremes. The default, `nice`, ends them at the outermost round tick instead. The [frame modes how-to](../how-to/frame-modes.md) has the four modes side by side.
+That leaves the extremes outside the frame. The eruptions run from 1.6 minutes to 5.1 against a spine that stops at 2 and at 5, and the waits from 43 minutes to 96 against a spine from 50 to 90. Nothing is broken: a bare `apply` uses the `nice` mode, which ends each spine at the outermost tick, and the outermost tick is inside the data by construction.
 
-The same call is also a method on the axes, `ax.vzs.apply(frame="data")`. Every entry point is, with matplotlib's spelling where it has one, so the `vzs.xlabel(ax, ...)` below is also `ax.vzs.set_xlabel(...)`. The how-to pages use that form; the [registration reference](../reference/registration.md) has the rule.
-
-## Name the axes
+## End the spines at the data
 
 ```{.python}
 --8<-- "tutorial_old_faithful.py:step3"
 ```
 
 <figure markdown>
-![The finished figure: the x label under the right end of the bottom spine, the y label horizontal above the left spine](../figures/old_faithful_step_3.svg)
-<figcaption markdown>Step three. The x label sits under the right end of the bottom spine and the y label horizontal at the top of the left one.</figcaption>
+![The same scatter with the spines reaching a little past their outermost ticks to end at the data's extremes](../figures/old_faithful_step_3.svg)
+<figcaption markdown>Step three. The ticks do not move; the spines reach out past them to the extremes.</figcaption>
+</figure>
+
+The ticks do not move. Each spine now runs from that variable's minimum to its maximum and no further, reaching a little past its outermost tick at both ends, so the frame says that the shortest eruption was a little under two minutes and the longest a little over five, and that nobody waited less than about forty-five minutes or more than about ninety-five. That reading is free: it costs no caption and no extra ink, and it is where the range frame gets its name.
+
+Which mode suits a figure depends on where the extremes fall. Under `nice` the spine ends on a labelled tick, which reads cleanly when the extremes sit near round numbers and strands points outside the frame when they do not, as here. `loose` strands nothing, and pays for it in air: on this data it brackets out to 1 and 6 minutes, where no eruption is near. `data` is the one that does not depend on where the round numbers happen to fall, since the ends are the extremes themselves. The [frame modes how-to](../how-to/frame-modes.md) has the four side by side.
+
+The same call is also a method on the axes, `ax.vzs.apply(frame="data")`. Every entry point is, with matplotlib's spelling where it has one, so the `vzs.xlabel(ax, ...)` below is also `ax.vzs.set_xlabel(...)`. The how-to pages use that form; the [registration reference](../reference/registration.md) has the rule.
+
+## Name the axes
+
+```{.python}
+--8<-- "tutorial_old_faithful.py:step4"
+```
+
+<figure markdown>
+![The finished figure: the x label under the right end of the bottom spine, the y label horizontal above the left spine](../figures/old_faithful_step_4.svg)
+<figcaption markdown>Step four. The x label sits under the right end of the bottom spine and the y label horizontal at the top of the left one.</figcaption>
 </figure>
 
 The x label sits under the right end of the bottom spine and the y label sits horizontal at the top of the left spine, where the eye arrives after reading the last tick. Neither is rotated.

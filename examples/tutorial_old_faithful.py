@@ -45,7 +45,7 @@ def save(fig: plt.Figure, step: int) -> None:
 
 
 def main() -> None:
-    """Render the three steps."""
+    """Render the four steps."""
     FIGURES.mkdir(exist_ok=True)
     table = data()
 
@@ -54,17 +54,23 @@ def main() -> None:
 
     fig, ax = draw(table)
     # --8<-- [start:step2]
-    vzs.apply(ax, frame="data")
+    vzs.apply(ax)
     # --8<-- [end:step2]
     save(fig, 2)
 
     fig, ax = draw(table)
-    vzs.apply(ax, frame="data")
     # --8<-- [start:step3]
-    vzs.xlabel(ax, "eruption length (min)")
-    vzs.ylabel(ax, "minutes to the next")
+    vzs.apply(ax, frame="data")
     # --8<-- [end:step3]
     save(fig, 3)
+
+    fig, ax = draw(table)
+    vzs.apply(ax, frame="data")
+    # --8<-- [start:step4]
+    vzs.xlabel(ax, "eruption length (min)")
+    vzs.ylabel(ax, "minutes to the next")
+    # --8<-- [end:step4]
+    save(fig, 4)
 
 
 if __name__ == "__main__":
