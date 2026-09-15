@@ -225,9 +225,7 @@ def spine_reach() -> None:
             table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK
         )
         vzs.apply(ax, **kwargs)
-        vzs.xlabel(ax, "eruption length (min)")
         ax.set_title(title, color=vzs.palettes.TEXT_INK)
-    vzs.ylabel(axes[0], "minutes to the next")
     save(fig, "spine_reach")
 
 
