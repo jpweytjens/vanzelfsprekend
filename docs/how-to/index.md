@@ -8,7 +8,7 @@
 | Move the axis label to the spine's end | [axis labels](axis-labels.md) |
 | Name each line without a legend | `line_labels` on [direct labels](direct-labels.md) |
 | Label one point inside the plot | `label` on [direct labels](direct-labels.md) |
-| Put a tick at a value that matters, a threshold or a peak | `FeatureLocator` or `AugmentedLocator` on [locators](locators.md) |
+| Put a tick at a value that matters, a threshold or a peak | `FeatureLocator` on [locators](locators.md) |
 | Draw attention to that tick | `accent` on [accent](accent.md) |
 | Get fewer or more ticks | `spacing` and `n` on [tick spacing](tick-spacing.md) |
 | Put the unit or a common factor on the ticks | [tick formats](tick-formats.md) |
