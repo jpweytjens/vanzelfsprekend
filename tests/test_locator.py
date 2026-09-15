@@ -50,6 +50,26 @@ def test_parse_n_rejects_a_malformed_tuple():
         parse_n((4, 5, 6))
 
 
+def test_weights_that_never_terminate_are_rejected():
+    # simplicity, coverage and density each bound one of the search's three
+    # loops; at zero that loop has no termination condition and the search
+    # hangs, so reject them rather than let a figure hang on a draw.
+    for key in ("simplicity", "coverage", "density"):
+        with pytest.raises(ValueError, match="must be positive"):
+            TalbotLocator(weights={key: 0.0})
+        with pytest.raises(ValueError, match="must be positive"):
+            TalbotLocator(weights={key: -1.0})
+
+
+def test_zero_legibility_is_allowed():
+    # mizani's legibility is the constant 1, so its weight shifts every
+    # candidate equally and cannot change which one wins or whether the
+    # search ends.
+    plain = TalbotLocator().tick_values(43.0, 96.0)
+    zeroed = TalbotLocator(weights={"legibility": 0.0}).tick_values(43.0, 96.0)
+    np.testing.assert_allclose(zeroed, plain)
+
+
 def test_matches_mizani_directly():
     expected = breaks_extended(n=5, only_inside=True)((0.3, 9.7))
     result = TalbotLocator(n=5).tick_values(0.3, 9.7)

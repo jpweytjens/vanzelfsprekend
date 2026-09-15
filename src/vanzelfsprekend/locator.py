@@ -205,6 +205,20 @@ class TalbotLocator(BreaksLocator):
                     f"{sorted(valid_keys)}"
                 )
         merged_weights = {**_DEFAULT_WEIGHTS, **(weights or {})}
+        # Each of these three is the only term that decays in one of the
+        # search's three nested loops, so it alone makes that loop's pruning
+        # bound fall below the best score and stop. At zero the loop runs
+        # forever. `legibility` is mizani's constant 1 and needs no floor.
+        unbounded = sorted(
+            key
+            for key in ("simplicity", "coverage", "density")
+            if merged_weights[key] <= 0
+        )
+        if unbounded:
+            raise ValueError(
+                f"weights {unbounded} must be positive; each bounds one of the "
+                "tick search's loops, which does not terminate without it"
+            )
         self._q = tuple(nice_numbers) if nice_numbers is not None else _DEFAULT_Q
         self._w = (
             merged_weights["simplicity"],
