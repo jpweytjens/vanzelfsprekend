@@ -17,7 +17,6 @@ import numpy as np
 
 import vanzelfsprekend as vzs
 
-DATA = Path(__file__).parent / "data"
 FIGURES = Path(__file__).parents[1] / "docs" / "figures"
 
 JERSEYS = {
@@ -30,9 +29,7 @@ JERSEYS = {
 def data() -> tuple[list[dt.date], dict[str, np.ndarray]]:
     """Return one date per year and each race's speeds, gaps left as NaN."""
     # --8<-- [start:data]
-    table = np.genfromtxt(
-        DATA / "grand_tour_speeds.csv", delimiter=",", names=True, skip_header=5
-    )
+    table = vzs.datasets.load("grand_tour_speeds")
     first, last = int(table["year"][0]), int(table["year"][-1])
     years = np.arange(first, last + 1)
     dates = [dt.date(year, 7, 1) for year in years]

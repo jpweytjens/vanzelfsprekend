@@ -17,7 +17,6 @@ import numpy as np
 
 import vanzelfsprekend as vzs
 
-DATA = Path(__file__).parent / "data"
 FIGURES = Path(__file__).parents[1] / "docs" / "figures"
 
 SCENARIOS = {
@@ -32,12 +31,8 @@ SCENARIOS = {
 def data() -> tuple[np.ndarray, np.ndarray, float]:
     """Return the observed record, the scenarios, and the 1850-1900 baseline."""
     # --8<-- [start:data]
-    observed = np.genfromtxt(
-        DATA / "hadcrut5_annual.csv", delimiter=",", names=True, skip_header=4
-    )
-    projected = np.genfromtxt(
-        DATA / "spm8_scenarios.csv", delimiter=",", names=True, skip_header=4
-    )
+    observed = vzs.datasets.load("hadcrut5_annual")
+    projected = vzs.datasets.load("spm8_scenarios")
     baseline = observed["anomaly_c"][observed["year"] <= 1900].mean()
     # --8<-- [end:data]
     return observed, projected, baseline

@@ -1,6 +1,6 @@
 """Build the Kepler figure one call at a time, saving a figure per step.
 
-The planet data is `examples/data/planets.csv` (NASA Planetary Fact Sheet);
+The planet data is `vzs.datasets.load("planets")` (NASA Planetary Fact Sheet);
 in AU and years the eight planets are collinear on log-log axes, the law
 T = a**1.5. The final step is the gallery's `kepler`; the earlier steps
 exist so the tutorial can show what each call buys. Steps two onward draw
@@ -8,7 +8,6 @@ inside the `vanzelfsprekend` style, so the line width and mark size come
 from there.
 """
 
-import io
 from pathlib import Path
 
 import matplotlib
@@ -20,18 +19,13 @@ import numpy as np
 
 import vanzelfsprekend as vzs
 
-DATA = Path(__file__).parent / "data"
 FIGURES = Path(__file__).parents[1] / "docs" / "figures"
 
 
 def data() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Return the planets' semi-major axis, orbital period, and an Earth mask."""
     # --8<-- [start:data]
-    lines = (DATA / "planets.csv").read_text().splitlines()
-    body = "\n".join(line for line in lines if not line.startswith("#"))
-    table = np.genfromtxt(
-        io.StringIO(body), delimiter=",", names=True, dtype=None, encoding="utf-8"
-    )
+    table = vzs.datasets.load("planets")
     axis = table["semi_major_axis_au"]
     period = table["orbital_period_year"]
     earth = table["name"] == "Earth"

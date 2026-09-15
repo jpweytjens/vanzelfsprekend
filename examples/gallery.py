@@ -1,13 +1,12 @@
 """Render sample vanzelfsprekend figures to PNG and SVG for eyeballing.
 
-Every figure draws a dataset from `examples/data` (each file carries its
-source and licence in its header) or an honest construction that says so:
+Every figure draws one of the package's datasets (`vzs.datasets.describe`
+names each one's source and licence) or an honest construction that says so:
 Anscombe built his quartet by hand, and the power profiles are model
 curves, not measurements.
 """
 
 import datetime as dt
-import io
 import shutil
 from pathlib import Path
 
@@ -20,7 +19,6 @@ import numpy as np
 
 import vanzelfsprekend as vzs
 
-DATA = Path(__file__).parent / "data"
 OUTPUT = Path(__file__).parent / "output"
 DOCS = Path(__file__).parents[1] / "docs"
 FIGURES = DOCS / "figures"
@@ -45,20 +43,9 @@ def save(fig: plt.Figure, name: str) -> None:
     plt.close(fig)
 
 
-def load(name: str, usecols: tuple[int, ...] | None = None) -> np.ndarray:
-    """Read a CSV from `examples/data` into a named array.
-
-    Strips the provenance comments first: `genfromtxt` with `names=True`
-    would read the field names from the first line even when commented.
-    """
-    lines = (DATA / name).read_text().splitlines()
-    body = "\n".join(line for line in lines if not line.startswith("#"))
-    return np.genfromtxt(io.StringIO(body), delimiter=",", names=True, usecols=usecols)
-
-
 def anscombe() -> None:
     """Render Anscombe's quartet with data frames and quartile ticks."""
-    table = load("anscombe.csv")
+    table = vzs.datasets.load("anscombe")
     fig, axes = plt.subplots(2, 2, figsize=(7, 5))
     fig.subplots_adjust(hspace=0.55, wspace=0.35)
     numerals = ["I", "II", "III", "IV"]
@@ -76,7 +63,7 @@ def anscombe() -> None:
 
 def grand_tours() -> None:
     """Render a century of grand tour winners' speeds, one race per panel."""
-    table = load("grand_tour_speeds.csv")
+    table = vzs.datasets.load("grand_tour_speeds")
     first, last = int(table["year"][0]), int(table["year"][-1])
     years = np.arange(first, last + 1)
     dates = [dt.date(year, 7, 1) for year in years]
@@ -149,13 +136,7 @@ def kepler() -> None:
     it in that colour. The gallery renders under the `vanzelfsprekend` style,
     so the line width and mark size come from there, not from this figure.
     """
-    # planets.csv carries a name column, so read it with per-column dtypes
-    # rather than the all-numeric `load`; the comment strip is load's.
-    lines = (DATA / "planets.csv").read_text().splitlines()
-    body = "\n".join(line for line in lines if not line.startswith("#"))
-    table = np.genfromtxt(
-        io.StringIO(body), delimiter=",", names=True, dtype=None, encoding="utf-8"
-    )
+    table = vzs.datasets.load("planets")
     axis, period, earth = (
         table["semi_major_axis_au"],
         table["orbital_period_year"],
@@ -185,7 +166,7 @@ def kepler() -> None:
 
 def waiting_times() -> None:
     """Render the bimodal Old Faithful waiting times as a histogram."""
-    table = load("old_faithful.csv")
+    table = vzs.datasets.load("old_faithful")
     fig, ax = plt.subplots(figsize=(5, 3.5))
     vzs.apply(ax, frame="data")
     ax.hist(table["waiting"], bins=27)
@@ -196,7 +177,7 @@ def waiting_times() -> None:
 
 def old_faithful() -> None:
     """Render Old Faithful's eruption durations against the wait to the next."""
-    table = load("old_faithful.csv")
+    table = vzs.datasets.load("old_faithful")
     fig, ax = plt.subplots(figsize=(5, 3.5))
     # --8<-- [start:old_faithful]
     ax.scatter(table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK)
@@ -209,7 +190,7 @@ def old_faithful() -> None:
 
 def frame_modes() -> None:
     """Render one warming record under the four frame modes."""
-    table = load("hadcrut5_annual.csv")
+    table = vzs.datasets.load("hadcrut5_annual")
     year, anomaly = table["year"], table["anomaly_c"]
     fig, axes = plt.subplots(2, 2, figsize=(6.5, 5))
     fig.subplots_adjust(hspace=0.55, wspace=0.4)
@@ -229,7 +210,7 @@ def frame_modes() -> None:
 
 def tick_spacing() -> None:
     """Render one warming record at two widths, the tick count following."""
-    table = load("hadcrut5_annual.csv")
+    table = vzs.datasets.load("hadcrut5_annual")
     fig = plt.figure(figsize=(9, 2.8))
     grid = fig.add_gridspec(1, 2, width_ratios=[5, 1], wspace=0.4)
     for spec in grid:
@@ -341,7 +322,7 @@ def small_multiples_grid() -> None:
     South Pole, while the northern stations ride a few ppm above the
     southern.
     """
-    table = load("co2_stations_monthly.csv")
+    table = vzs.datasets.load("co2_stations_monthly")
     dates = [
         dt.date(int(year), int(month), 15)
         for year, month in zip(table["year"], table["month"], strict=True)

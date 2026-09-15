@@ -16,7 +16,6 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 import vanzelfsprekend as vzs
 
@@ -24,7 +23,6 @@ sys.path.insert(0, str(Path(__file__).parents[1]))  # docs_hooks.py is at the re
 
 import docs_hooks
 
-DATA = Path(__file__).parent / "data"
 DOCS = Path(__file__).parents[1] / "docs"
 
 SCENARIOS = {
@@ -36,17 +34,10 @@ SCENARIOS = {
 }
 
 
-def load(name: str) -> np.ndarray:
-    """Read a CSV from `examples/data`, skipping its provenance comments."""
-    lines = (DATA / name).read_text().splitlines()
-    body = "\n".join(line for line in lines if not line.startswith("#"))
-    return np.genfromtxt(io.StringIO(body), delimiter=",", names=True)
-
-
 def draw_data(ax: plt.Axes) -> None:
     """Draw the observed record and the five scenario fans on `ax`."""
-    observed = load("hadcrut5_annual.csv")
-    projected = load("spm8_scenarios.csv")
+    observed = vzs.datasets.load("hadcrut5_annual")
+    projected = vzs.datasets.load("spm8_scenarios")
     baseline = observed["anomaly_c"][observed["year"] <= 1900].mean()
     ax.scatter(
         observed["year"],
