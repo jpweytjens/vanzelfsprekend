@@ -426,13 +426,13 @@ def accented_peak() -> None:
     power = 1 / (1 + ((frequency - 17.2) / 0.3) ** 2)
     fig, ax = plt.subplots(figsize=(5, 3))
     ax.plot(frequency, power, color=vzs.palettes.DATA_INK)
+    # --8<-- [start:accented_peak]
     peak = vzs.FeatureLocator(frequency, power, {"peak": lambda x, y: x[np.argmax(y)]})
     ax.xaxis.set_major_locator(vzs.AugmentedLocator(vzs.TalbotLocator(), peak))
     ax.xaxis.set_major_formatter("{x:.1f}")
     vzs.apply(ax)
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")
-    # --8<-- [start:accented_peak]
     ax.vzs.accent(axis="x")
     # --8<-- [end:accented_peak]
     save(fig, "accented_peak")
