@@ -209,22 +209,24 @@ def frame_modes() -> None:
 
 
 def spine_reach() -> None:
-    """Render Old Faithful under two tick counts, the nice spine's reach following."""
+    """Render Old Faithful three ways, the nice spine's reach following the ticks."""
     table = vzs.datasets.load("old_faithful")
-    fig, axes = plt.subplots(1, 2, figsize=(6.5, 3.2))
-    fig.subplots_adjust(wspace=0.45)
     # `n` rather than `spacing`, so the panel's size cannot change what the
     # figure shows: a count is absolute where a gap in label heights is not.
-    for ax, n in zip(axes, (None, 8), strict=True):
+    settings = (
+        ("apply(ax)", {}),
+        ("n=8", {"n": 8}),
+        ('weights={"coverage": 0.5}', {"weights": {"coverage": 0.5}}),
+    )
+    fig, axes = plt.subplots(1, 3, figsize=(9, 3.2))
+    fig.subplots_adjust(wspace=0.5)
+    for ax, (title, kwargs) in zip(axes, settings, strict=True):
         ax.scatter(
             table["eruptions"], table["waiting"], s=10, color=vzs.palettes.DATA_INK
         )
-        vzs.apply(ax, n=n)
+        vzs.apply(ax, **kwargs)
         vzs.xlabel(ax, "eruption length (min)")
-        ax.set_title(
-            "apply(ax)" if n is None else f"apply(ax, n={n})",
-            color=vzs.palettes.TEXT_INK,
-        )
+        ax.set_title(title, color=vzs.palettes.TEXT_INK)
     vzs.ylabel(axes[0], "minutes to the next")
     save(fig, "spine_reach")
 
