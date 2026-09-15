@@ -10,16 +10,12 @@ The full grid the locator searches is `unit * q * 10**x`, with `unit` at 1 by de
 
 Set `unit` to count in that step instead of in ones. `TalbotLocator(unit=np.pi)` runs the search in units of π and lands the ticks on `0, π, 2π, 3π, 4π`, the step now `π * q * 10**x`. Multiplying the grid by a constant is a linear rescaling, exact here because the nice-number search is scale-invariant, and it is the only way onto multiples of an irrational step, which no choice of `q` can reach. Set it before or after `apply`; the frame [keeps a locator you set](locators.md).
 
-The locator places the ticks; matplotlib still writes them, and left alone it writes `3.14`, not `π`. Turning the value into "π/2" is a `FuncFormatter` you supply, because the library ships none: a tick label [stays a string matplotlib wrote](tick-formats.md), and the range frame does not touch it. This names π twice, once as the locator's `unit` and once inside the formatter that divides by π to find the fraction, so declare it once and read it in both places:
+The locator places the ticks; matplotlib still writes them, and left alone it writes `3.14`, not `π`. Turning the value into "π/2" is a `FuncFormatter` you supply, because the library ships none: a tick label [stays a string matplotlib wrote](tick-formats.md), and the range frame does not touch it. The formatter has to divide by the same constant the locator counts in, or the labels drift off the ticks they sit under:
 
 ```python
-pi = np.pi  # one authority: the locator and the formatter both read it
-
-ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
+ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=np.pi))
 ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
 ```
-
-Change that one `pi` and the ticks and their labels move together, where two separate literals would drift apart the moment one was edited.
 
 ## The other unit on top
 

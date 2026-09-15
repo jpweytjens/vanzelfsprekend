@@ -377,10 +377,8 @@ def radian_axes() -> None:
 
     from matplotlib.ticker import FuncFormatter
 
-    pi = np.pi  # one authority: the locator and the formatter both read it
-
     def pi_fraction(value: float, _pos: int) -> str:
-        turns = Fraction(value / pi).limit_denominator(100)
+        turns = Fraction(value / np.pi).limit_denominator(100)
         if turns == 0:
             return "0"
         sign = "-" if turns < 0 else ""
@@ -388,15 +386,20 @@ def radian_axes() -> None:
         head = "π" if num == 1 else f"{num}π"
         return f"{sign}{head}" if den == 1 else f"{sign}{head}/{den}"
 
-    theta = np.linspace(0, 4 * pi, 400)
-    v_l = 9.7 * np.sin(theta + pi / 3)  # leads
-    v_c = 6.7 * np.sin(theta - pi / 3)  # lags
-    v_r = 8.7 * np.sin(theta - pi / 8)
+    theta = np.linspace(0, 4 * np.pi, 400)
+    v_l = 9.7 * np.sin(theta + np.pi / 3)  # leads
+    v_c = 6.7 * np.sin(theta - np.pi / 3)  # lags
+    v_r = 8.7 * np.sin(theta - np.pi / 8)
     v_tot = (v_l + v_r + v_c) / np.sqrt(3)  # their exact sum
 
     yellow = "tol:high_contrast.yellow"
     ax.hlines(
-        xmin=0, xmax=4 * pi, y=0, color=vzs.palettes.DATA_INK, linewidth=1, alpha=0.15
+        xmin=0,
+        xmax=4 * np.pi,
+        y=0,
+        color=vzs.palettes.DATA_INK,
+        linewidth=1,
+        alpha=0.15,
     )
     ax.plot(theta, v_l, color=yellow, alpha=0.3, label="$V_L$")
     ax.plot(theta, v_c, color=yellow, alpha=0.3, label="$V_C$")
@@ -407,7 +410,7 @@ def radian_axes() -> None:
     vzs.apply(ax, frame=("data", "feature"), offset=(10, 5))
     vzs.tick_direction(ax, "in")
 
-    ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=pi))
+    ax.xaxis.set_major_locator(vzs.TalbotLocator(unit=np.pi))
     ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
 
     secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
