@@ -128,7 +128,8 @@ def range_frame(
         to five heights wide along its axis and a y label one. Halving
         the spacing doubles the ticks.
     n : int, optional
-        The number of ticks to aim for per axis, overriding `spacing`.
+        The number of ticks to aim for, the same count on each axis,
+        overriding `spacing`.
     offset : float or tuple of (float or None), optional
         Outward displacement of the left and bottom spines, in points.
         A single number moves both spines; a tuple `(x_offset,
