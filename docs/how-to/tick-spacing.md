@@ -52,7 +52,9 @@ ax.vzs.apply()
 
 Six labels against eleven for the same spine, and the labels stay round, 45 to 95 in tens. The count still follows the panel, so the same locator on a 3 cm panel gives 45, 70 and 95 and keeps the reach.
 
-Only the ratios between the weights matter. The score ranks candidate labellings, and a common factor cannot change an ordering, so the defaults' sum of 1 is Talbot's convention rather than a requirement: raising one entry and lowering the others proportionally are the same edit.
+These four numbers are a starting point rather than a law, and the authors are the ones who say so: they call their components and their chosen weights ad hoc.[^adhoc] A figure that is not reading right is reason enough to turn them and look.
+
+Two things make that cheaper than it sounds. Only the ratios matter, since the score ranks candidate labellings and a common factor cannot change an ordering, so the defaults' sum of 1 is a convention rather than a requirement and raising one entry is the same edit as lowering the rest. And the far end is easy to recognise: at `coverage` around 5 the search gives up round numbers altogether and ticks the data's own extremes, `1.6, 2.1, 2.6` and so on, which is the signal to come back down.
 
 ## Which arguments take one axis at a time
 
@@ -66,3 +68,5 @@ Only the ratios between the weights matter. The score ranks candidate labellings
 `nice_numbers` and `weights` are collections already, so a tuple of two of them would read badly. Set a `TalbotLocator` on the one axis instead, as above: a locator you set is kept, which is matplotlib's own arrangement, since `apply` installs a locator on both axes for you and dropping to `ax.yaxis` is how you tune one. The [locators how-to](locators.md) has that order, and both arguments reach the locator on linear axes only.
 
 If the spine ends are what you want rather than a labelling that happens to reach them, `frame="data"` puts them there and leaves the ticks alone. The [frame modes how-to](frame-modes.md) has the modes side by side.
+
+[^adhoc]: "To some extent, our proposed optimization components and the chosen weights are ad hoc." Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043.
