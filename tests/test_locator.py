@@ -22,6 +22,7 @@ from vanzelfsprekend import (
 from vanzelfsprekend.locator import (
     SPACING,
     AugmentedLocator,
+    _extend_to_cover_log,
     parse_n,
     parse_spacing,
 )
@@ -287,6 +288,80 @@ def test_log_loose_ticks_bound_the_range():
     ticks = LogBreaksLocator(loose=True).tick_values(30, 4000)
     assert ticks.min() <= 30
     assert ticks.max() >= 4000
+
+
+def test_log_extension_keeps_a_within_decade_grid_on_round_numbers():
+    # Inside a single decade breaks_log returns an evenly spaced grid, not a
+    # geometric one. Extending it by the ratio of the first two ticks invented
+    # 0.9308 and 1.7308, which the axis then labelled 9.30769e-01.
+    out = _extend_to_cover_log(np.array([1.1, 1.3, 1.5]), 1.099, 1.568)
+    np.testing.assert_allclose(out, [0.9, 1.1, 1.3, 1.5, 1.7])
+
+
+def test_log_extension_reads_two_ticks_as_geometric():
+    # Two ticks fit an arithmetic and a geometric progression equally well, and
+    # on a log axis the geometric reading is the right one: 0.1 and 10 step by a
+    # factor of 100, so the tick above is 1000, not 0.1 + 9.9 twice over.
+    out = _extend_to_cover_log(np.array([0.1, 10.0]), 0.387, 30.047)
+    np.testing.assert_allclose(out, [0.1, 10.0, 1000.0])
+
+
+def test_log_extension_leaves_a_decade_grid_geometric():
+    out = _extend_to_cover_log(np.array([0.1, 1.0, 10.0]), 0.05, 30.0)
+    np.testing.assert_allclose(out, [0.01, 0.1, 1.0, 10.0, 100.0])
+
+
+@settings(max_examples=200, deadline=None)
+@given(
+    first=st.floats(1.0, 9.0),
+    step=st.floats(0.05, 2.0),
+    size=st.integers(3, 6),
+    below=st.floats(0.0, 3.0),
+    above=st.floats(0.0, 3.0),
+)
+def test_log_extension_keeps_an_arithmetic_grid_evenly_spaced(
+    first, step, size, below, above
+):
+    # Whatever the extension adds to an evenly spaced grid has to continue that
+    # spacing. Anything else lands on a value no formatter can write shortly.
+    ticks = first + step * np.arange(size)
+    # Descending by whole steps has to stay positive to be a log tick at all,
+    # so only ask for a low end the grid can actually reach.
+    below = min(below, max(0.0, np.ceil(first / step) - 1))
+    vmin, vmax = ticks[0] - below * step, ticks[-1] + above * step
+    out = _extend_to_cover_log(ticks, vmin, vmax)
+    assert out[0] <= vmin * (1 + 1e-9)
+    assert out[-1] >= vmax * (1 - 1e-9)
+    np.testing.assert_allclose(np.diff(out), step, rtol=1e-6)
+
+
+@settings(max_examples=200, deadline=None)
+@given(
+    exponent=st.integers(-4, 4),
+    ratio=st.sampled_from([2.0, 5.0, 10.0, 100.0]),
+    size=st.integers(2, 6),
+    below=st.floats(0.0, 2.5),
+    above=st.floats(0.0, 2.5),
+)
+def test_log_extension_keeps_a_geometric_grid_geometric(
+    exponent, ratio, size, below, above
+):
+    # The mirror property: a grid that steps by a constant factor keeps that
+    # factor, so a decade grid stays on decades however far it has to reach.
+    ticks = (10.0**exponent) * ratio ** np.arange(size)
+    vmin, vmax = ticks[0] / ratio**below, ticks[-1] * ratio**above
+    out = _extend_to_cover_log(ticks, vmin, vmax)
+    assert out[0] <= vmin * (1 + 1e-9)
+    assert out[-1] >= vmax * (1 - 1e-9)
+    np.testing.assert_allclose(out[1:] / out[:-1], ratio, rtol=1e-6)
+
+
+def test_log_extension_stops_rather_than_stepping_through_zero():
+    # An evenly spaced grid cannot reach a low end less than one step below its
+    # first tick without crossing zero, which is not a point on a log axis. The
+    # grid is left short of the data rather than given a tick at or below 0.
+    out = _extend_to_cover_log(np.array([1.0, 2.0, 3.0]), 0.1, 3.0)
+    np.testing.assert_allclose(out, [1.0, 2.0, 3.0])
 
 
 def test_log_loose_pair_frees_only_the_high_end():

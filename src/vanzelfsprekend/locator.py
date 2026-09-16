@@ -1164,15 +1164,33 @@ def _extend_to_cover_log(
 ) -> np.ndarray:
     if ticks.size < 2:
         return ticks
-    out = list(ticks)
-    lo_ratio = out[1] / out[0]
-    if ends[0] and np.isfinite(lo_ratio) and lo_ratio > 1:
+    out = [float(t) for t in ticks]
+    diffs = np.diff(out)
+    ratios = np.asarray(out[1:]) / np.asarray(out[:-1])
+    # `breaks_log` steps by a constant factor across decades but by a constant
+    # amount inside one (1.1, 1.3, 1.5), so extend along whichever progression
+    # the grid follows. Two ticks fit both, and on a log axis the geometric
+    # reading is the right one, so only three or more can name it arithmetic.
+    arithmetic = bool(
+        len(out) >= 3
+        and np.allclose(diffs, diffs[0], rtol=1e-9)
+        and not np.allclose(ratios, ratios[0], rtol=1e-9)
+    )
+    step, ratio = float(diffs[0]), float(ratios[0])
+    if not arithmetic and not (np.isfinite(ratio) and ratio > 1):
+        return np.asarray(out)
+    if ends[0]:
         while out[0] > vmin * (1 + 1e-9):
-            out.insert(0, out[0] * out[0] / out[1])
-    hi_ratio = out[-1] / out[-2]
-    if ends[1] and np.isfinite(hi_ratio) and hi_ratio > 1:
+            below = out[0] - step if arithmetic else out[0] / ratio
+            if not np.isfinite(below) or below <= 0 or below >= out[0]:
+                break
+            out.insert(0, below)
+    if ends[1]:
         while out[-1] < vmax * (1 - 1e-9):
-            out.append(out[-1] * out[-1] / out[-2])
+            above = out[-1] + step if arithmetic else out[-1] * ratio
+            if not np.isfinite(above) or above <= out[-1]:
+                break
+            out.append(above)
     return np.asarray(out)
 
 
