@@ -396,6 +396,9 @@ def _restore_member(ax: Axes) -> None:
     secondary_state = state.get("secondary")
     if secondary_state is not None:
         for entry in secondary_state:
+            above_text = entry.get("ylabel_above_text")
+            if above_text is not None:
+                above_text.remove()
             entry["secax"].remove()
 
     clear_state(ax)
@@ -463,20 +466,26 @@ class _Accessor:
         text: str,
         flush: bool = True,
         labelpad: float | None = None,
+        where: str = "bottom",
         **kwargs: Any,
     ) -> Text:
         """End-of-spine x-label; see `vanzelfsprekend.xlabel`."""
-        return xlabel(self._ax, text, flush=flush, labelpad=labelpad, **kwargs)
+        return xlabel(
+            self._ax, text, flush=flush, labelpad=labelpad, where=where, **kwargs
+        )
 
     def set_ylabel(
         self,
         text: str,
         place: str = "above",
         labelpad: float | None = None,
+        where: str = "left",
         **kwargs: Any,
     ) -> Text:
         """End-of-spine y-label; see `vanzelfsprekend.ylabel`."""
-        return ylabel(self._ax, text, place=place, labelpad=labelpad, **kwargs)
+        return ylabel(
+            self._ax, text, place=place, labelpad=labelpad, where=where, **kwargs
+        )
 
     def line_labels(
         self,

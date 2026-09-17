@@ -112,6 +112,10 @@ def _mirror_style(ax: Axes, entry: dict) -> bool:
         changed = True
 
     host_axis = ax.xaxis if entry["axis"] == "x" else ax.yaxis
+    sec_axis = secax.xaxis if entry["axis"] == "x" else secax.yaxis
+    if to_rgba(sec_axis.label.get_color()) != to_rgba(host_axis.label.get_color()):
+        sec_axis.label.set_color(host_axis.label.get_color())
+        changed = True
     ticks = host_axis.get_major_ticks()
     if not ticks:
         return changed

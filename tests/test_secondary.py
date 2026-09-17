@@ -200,3 +200,91 @@ def test_unmuted_host_gives_an_unmuted_secondary():
     assert secax.spines["top"].get_edgecolor() == ax.spines["bottom"].get_edgecolor()
     assert secax.spines["top"].get_linewidth() == ax.spines["bottom"].get_linewidth()
     plt.close(fig)
+
+
+def _frac_x(ax, pixel_x):
+    return float(ax.transAxes.inverted().transform((pixel_x, 0))[0])
+
+
+def test_xlabel_where_top_is_flush_with_the_top_tick_labels():
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    label = vzs.xlabel(ax, "degrees", where="top")
+    fig.canvas.draw()
+    assert label is secax.xaxis.label
+    assert label.get_text() == "degrees"
+    assert label.get_horizontalalignment() == "right"
+    last = secax.xaxis.get_ticklabels()[-1].get_window_extent()
+    assert label.get_position()[0] == pytest.approx(_frac_x(ax, last.x1), abs=1e-6)
+    plt.close(fig)
+
+
+def test_xlabel_where_top_without_a_secondary_raises():
+    fig, ax = _sin_axes()
+    with pytest.raises(ValueError, match="secondary_frame"):
+        vzs.xlabel(ax, "degrees", where="top")
+    plt.close(fig)
+
+
+def test_ylabel_where_right_stacks_above_the_top_tick_label():
+    fig, ax = plt.subplots()
+    ax.plot(np.linspace(0, 2 * np.pi, 50), np.linspace(0, 2 * np.pi, 50))
+    vzs.apply(ax)
+    ax.yaxis.set_major_locator(vzs.TalbotLocator(unit=np.pi))
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad), where="right")
+    label = vzs.ylabel(ax, "degrees", where="right")
+    fig.canvas.draw()
+    top = secax.yaxis.get_ticklabels()[-1].get_window_extent()
+    box = label.get_window_extent()
+    assert box.x0 == pytest.approx(top.x0, abs=1.0)
+    assert box.y0 > top.y1
+    plt.close(fig)
+
+
+def test_ylabel_where_right_beside_sits_level_with_the_top_tick():
+    fig, ax = plt.subplots()
+    ax.plot(np.linspace(0, 2 * np.pi, 50), np.linspace(0, 2 * np.pi, 50))
+    vzs.apply(ax)
+    ax.yaxis.set_major_locator(vzs.TalbotLocator(unit=np.pi))
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad), where="right")
+    label = vzs.ylabel(ax, "degrees", where="right", place="beside")
+    fig.canvas.draw()
+    assert label is secax.yaxis.label
+    assert label.get_rotation() == 0
+    assert label.get_horizontalalignment() == "left"
+    top = secax.yaxis.get_ticklabels()[-1].get_window_extent()
+    box = label.get_window_extent()
+    assert box.x0 > top.x1
+    assert abs((box.y0 + box.y1) / 2 - (top.y0 + top.y1) / 2) < 3.0
+    plt.close(fig)
+
+
+def test_secondary_label_takes_the_hosts_label_ink():
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    vzs.xlabel(ax, "degrees", where="top")
+    fig.canvas.draw()
+    to_rgba = matplotlib.colors.to_rgba
+    assert to_rgba(secax.xaxis.label.get_color()) == to_rgba(ax.xaxis.label.get_color())
+    plt.close(fig)
+
+
+def test_restore_removes_a_secondary_above_label():
+    fig, ax = plt.subplots()
+    ax.plot(np.linspace(0, 2 * np.pi, 50), np.linspace(0, 2 * np.pi, 50))
+    vzs.apply(ax)
+    vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad), where="right")
+    label = vzs.ylabel(ax, "degrees", where="right")
+    fig.canvas.draw()
+    assert label in ax.texts
+    vzs.restore(ax)
+    fig.canvas.draw()
+    assert label not in ax.texts
+    plt.close(fig)
+
+
+def test_accessor_labels_take_where():
+    fig, ax = _sin_axes()
+    secax = ax.vzs.secondary_frame((np.rad2deg, np.deg2rad))
+    assert ax.vzs.set_xlabel("degrees", where="top") is secax.xaxis.label
+    plt.close(fig)

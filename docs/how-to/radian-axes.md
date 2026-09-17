@@ -22,8 +22,11 @@ ax.xaxis.set_major_formatter(FuncFormatter(pi_fraction))
 A second axis carrying the same data in the other unit is one call. `vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))` adds a degree axis along the top, the pair of functions converting each way between radians and degrees:
 
 ```python
-secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+ax.vzs.secondary_frame((np.rad2deg, np.deg2rad))
+ax.vzs.set_xlabel("degrees", where="top")
 ```
+
+The label is the host's own `set_xlabel` pointed at the top spine: `where` names the spine, in the words `secondary_frame` takes, and the label sits at its right end in the frame's ink exactly as the bottom one does. A `set_ylabel(where="right")` does the same for a secondary along the right, stacked above its top tick label or level beside it.
 
 It mirrors the host's ticks rather than running a search of its own, so `0, 180, 360, 540, 720` land directly under the π ticks and whole degrees need no formatter. Because it mirrors, neither `unit` nor `nice_numbers` applies to it: the degree ticks are wherever the π ticks are. The mirror carries an [accent](../reference/axes.md#vanzelfsprekend.accent) too: a feature tick picked out on the host is picked out in degrees as well, and a label the host blanks stays blank above. The [axes reference](../reference/axes.md) has the rest of what `secondary_frame` takes.
 

@@ -17,11 +17,14 @@ def xlabel(
     text: str,
     flush: bool = True,
     labelpad: float | None = None,
+    where: str = "bottom",
     **kwargs: Any,
 ) -> Text:
     """Set an x-label that sits below the right end of the bottom spine.
 
-    Call after `range_frame`.
+    Call after `range_frame`. With `where='top'` the label goes on a
+    `secondary_frame` along the top instead, placed by the same rule
+    against that axis's own tick labels.
 
     Parameters
     ----------
@@ -44,6 +47,10 @@ def xlabel(
         edge is set by the *widest* tick label (matplotlib's own per-draw
         computation). `None` keeps matplotlib's default (rcParam
         `axes.labelpad`, 4.0).
+    where : {'bottom', 'top'}
+        The spine the label belongs to: the host's own bottom spine (the
+        default), or a secondary frame added with
+        `secondary_frame(where='top')`.
     **kwargs
         `matplotlib.text.Text` properties forwarded to `set_xlabel`, for
         styling: `color`, `fontsize`, `fontweight`, and the like.
@@ -54,13 +61,26 @@ def xlabel(
     -------
     matplotlib.text.Text
         The label artist.
+
+    Raises
+    ------
+    ValueError
+        If `where` is not `'bottom'` or `'top'`, or names a side with no
+        secondary frame on it.
     """
-    _labels_state(ax)["xlabel_flush"] = flush
-    ax.set_xlabel(text, labelpad=labelpad, **kwargs)
-    ax.xaxis.label.set_horizontalalignment("right")
+    if where == "bottom":
+        target, store = ax, _labels_state(ax)
+    elif where == "top":
+        store = _secondary_entry(ax, where)
+        target = store["secax"]
+    else:
+        raise ValueError(f"where must be 'bottom' or 'top', got {where!r}")
+    store["xlabel_flush"] = flush
+    target.set_xlabel(text, labelpad=labelpad, **kwargs)
+    target.xaxis.label.set_horizontalalignment("right")
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
-    return ax.xaxis.label
+    return target.xaxis.label
 
 
 def ylabel(
@@ -68,13 +88,17 @@ def ylabel(
     text: str,
     place: str = "above",
     labelpad: float | None = None,
+    where: str = "left",
     **kwargs: Any,
 ) -> Text:
     """Set a horizontal y-label at the top of the left spine.
 
     Call after `range_frame`. The two placements are Doumont's two
     recommended y-labels (*Trees, maps and theorems*): `'above'` is his
-    "better graph", `'beside'` his "good graph".
+    "better graph", `'beside'` his "good graph". With `where='right'`
+    the label goes on a `secondary_frame` along the right instead,
+    placed by the same rules against that axis's own tick labels, and
+    `'beside'` then sits to the right of them.
 
     Parameters
     ----------
@@ -97,6 +121,10 @@ def ylabel(
         label sets the reference edge follows the placement: `'beside'`
         measures from the *widest* one (matplotlib's own per-draw
         computation), `'above'` from the top one.
+    where : {'left', 'right'}
+        The spine the label belongs to: the host's own left spine (the
+        default), or a secondary frame added with
+        `secondary_frame(where='right')`.
     **kwargs
         `matplotlib.text.Text` properties for styling the label, such as
         `color`, `fontsize`, `fontweight`. For `'beside'` they go to
@@ -113,7 +141,9 @@ def ylabel(
     Raises
     ------
     ValueError
-        If `place` is not `'above'` or `'beside'`.
+        If `place` is not `'above'` or `'beside'`, if `where` is not
+        `'left'` or `'right'`, or if `where` names a side with no
+        secondary frame on it.
 
     Notes
     -----
@@ -127,40 +157,70 @@ def ylabel(
     """
     if place not in ("above", "beside"):
         raise ValueError(f"place must be 'above' or 'beside', got {place!r}")
-    ls = _labels_state(ax)
-    ls["ylabel_place"] = place
-    if place == "above":
-        result = _set_ylabel_above(ax, text, ls, labelpad, kwargs)
+    if where == "left":
+        target, store = ax, _labels_state(ax)
+    elif where == "right":
+        store = _secondary_entry(ax, where)
+        target = store["secax"]
     else:
-        above_text = ls.get("ylabel_above_text")
+        raise ValueError(f"where must be 'left' or 'right', got {where!r}")
+    store["ylabel_place"] = place
+    if place == "above":
+        result = _set_ylabel_above(ax, target, text, store, labelpad, kwargs)
+    else:
+        above_text = store.get("ylabel_above_text")
         if above_text is not None:
             above_text.remove()
-            ls["ylabel_above_text"] = None
-        ax.yaxis.set_label_position("left")
-        ax.yaxis._autolabelpos = True  # ty: ignore[unresolved-attribute]
-        ax.set_ylabel(text, labelpad=labelpad, **kwargs)
-        ax.yaxis.label.set_rotation(0)
-        ax.yaxis.label.set_verticalalignment("center_baseline")
-        ax.yaxis.label.set_horizontalalignment("right")
-        result = ax.yaxis.label
+            store["ylabel_above_text"] = None
+        target.yaxis.set_label_position(where)
+        target.yaxis._autolabelpos = True  # ty: ignore[invalid-assignment]
+        target.set_ylabel(text, labelpad=labelpad, **kwargs)
+        target.yaxis.label.set_rotation(0)
+        target.yaxis.label.set_verticalalignment("center_baseline")
+        # the label reads outward from the tick labels: to the left of a
+        # left axis's, to the right of a right axis's
+        target.yaxis.label.set_horizontalalignment(
+            "right" if where == "left" else "left"
+        )
+        result = target.yaxis.label
     add_applier(ax, "labels", _apply_labels)
     run_appliers(ax)
     return result
 
 
+def _secondary_entry(ax: Axes, where: str) -> dict:
+    """Return the `secondary_frame` state on the `where` spine, or raise."""
+    state = get_state(ax) or {}
+    for entry in state.get("secondary", []):
+        if entry["spine"] == where:
+            return entry
+    raise ValueError(
+        f"no secondary frame on the {where}; call "
+        f"secondary_frame(ax, functions, where={where!r}) first"
+    )
+
+
 def _set_ylabel_above(
-    ax: Axes, text: str, ls: dict, labelpad: float | None, kwargs: dict
+    ax: Axes,
+    target: Axes,
+    text: str,
+    store: dict,
+    labelpad: float | None,
+    kwargs: dict,
 ) -> Text:
     """Create or update the managed above-label and empty the axis label.
 
-    The above-label is a clip-free text child styled to match the axis
-    label; the draw hook positions it over the top tick label. `labelpad`
-    rides on `ax.yaxis.labelpad`, matplotlib's own store for the gap, so
+    The above-label is a clip-free text child of the host `ax`, styled to
+    match `target`'s axis label (the host's own, or a secondary frame's);
+    the draw hook positions it over `target`'s top tick label. It lives
+    on the host because a secondary axes is a hairline strip whose axes
+    fractions cannot place anything. `labelpad` rides on
+    `target.yaxis.labelpad`, matplotlib's own store for the gap, so
     `None` means the same thing here as it does under `'beside'`. `kwargs`
     are `Text` style properties applied to the above-label, overriding the
     axis-label defaults copied in on first creation.
     """
-    above_text = ls.get("ylabel_above_text")
+    above_text = store.get("ylabel_above_text")
     if above_text is None:
         above_text = ax.text(
             0.0,
@@ -171,15 +231,15 @@ def _set_ylabel_above(
             verticalalignment="bottom",
             clip_on=False,
         )
-        above_text.set_fontproperties(ax.yaxis.label.get_fontproperties())
-        above_text.set_color(ax.yaxis.label.get_color())
-        ls["ylabel_above_text"] = above_text
+        above_text.set_fontproperties(target.yaxis.label.get_fontproperties())
+        above_text.set_color(target.yaxis.label.get_color())
+        store["ylabel_above_text"] = above_text
     above_text.set_text(text)
     if kwargs:
         above_text.update(kwargs)
     # only the managed text renders while 'above' is active; the pad still
     # lives on the axis, where `_place_ylabel_above` reads it each draw
-    ax.set_ylabel("", labelpad=labelpad)
+    target.set_ylabel("", labelpad=labelpad)
     return above_text
 
 
@@ -210,15 +270,16 @@ def _label_props(label: Text) -> dict:
     }
 
 
-def _drawn_spine_span(ax: Axes, name: str) -> tuple[float, float] | None:
-    """Return the span the frame applier drew the spine over, or `None`.
+def _drawn_spine_span(ax: Axes, spine: str) -> tuple[float, float] | None:
+    """Return the span the applier drew the named spine over, or `None`.
 
     `_frame_span` reports where a loose end wants to sit, which
     `_fit_view` then crops to a pinned view before setting the
     spine's bounds. A label belongs at the spine's drawn end, so it
-    reads the bounds rather than re-deriving the crop.
+    reads the bounds rather than re-deriving the crop. A secondary's
+    spine is trimmed to the same span by `secondary_frame`'s applier.
     """
-    bounds = ax.spines["bottom" if name == "x" else "left"].get_bounds()
+    bounds = ax.spines[spine].get_bounds()
     return None if bounds is None else (float(bounds[0]), float(bounds[1]))
 
 
@@ -259,46 +320,68 @@ def _apply_labels(ax: Axes) -> bool:
     state = get_state(ax)
     if state is None or "frame" not in state:
         return False
-    frame_state = state["frame"]
-    active = frame_state["active"]
-    ls = state.get("labels", {})
+    active = state["frame"]["active"]
     changed = False
-    if "x" in active and ax.get_xlabel():
-        span = _drawn_spine_span(ax, "x")
-        if span is not None:
-            vmin, vmax = ax.get_xlim()
-            frac = _axes_fraction(ax.xaxis, _span_end(ax.xaxis, span), vmin, vmax)
-            if ls["xlabel_flush"]:
-                flush_frac = _xlabel_flush_frac(ax)
-                if flush_frac is not None:
-                    frac = max(frac, flush_frac)
-            pos = ax.xaxis.label.get_position()
-            if pos[0] != frac:
-                ax.xaxis.label.set_position((frac, pos[1]))
-                changed = True
-    above_text = ls.get("ylabel_above_text")
-    if "y" in active and above_text is not None:
-        changed = _place_ylabel_above(ax, above_text) or changed
-    elif "y" in active and ax.get_ylabel():
-        span = _drawn_spine_span(ax, "y")
-        if span is not None:
-            locs = ax.yaxis.get_majorticklocs()
-            top = _visible_end_tick(ax.yaxis)
-            vmin, vmax = ax.get_ylim()
-            # A 'data' end runs the spine past the end tick, to the data.
-            # The label belongs at whichever the frame ends on; comparing
-            # in axes fractions reads the same either way the axis points,
-            # and the tick label's own offset applies only when it wins.
-            frac = _axes_fraction(ax.yaxis, _span_end(ax.yaxis, span), vmin, vmax)
-            if top is not None:
-                tick_frac = _axes_fraction(ax.yaxis, float(locs[top]), vmin, vmax)
-                if tick_frac >= frac:
-                    frac = tick_frac + _top_label_offset(ax, top) / ax.bbox.height
-            pos = ax.yaxis.label.get_position()
-            if pos[1] != frac:
-                ax.yaxis.label.set_position((pos[0], frac))
-                changed = True
+    # The host's own labels, then each secondary frame's: a secondary
+    # mirrors one host axis, so its label follows that axis's frame.
+    targets = [(ax, "bottom", "left", state.get("labels", {}))] + [
+        (entry["secax"], entry["spine"], entry["spine"], entry)
+        for entry in state.get("secondary", [])
+    ]
+    for target, x_spine, y_spine, store in targets:
+        if "x" in active and target.get_xlabel() and x_spine in ("bottom", "top"):
+            flush = store.get("xlabel_flush", True)
+            changed = _place_xlabel(target, x_spine, flush) or changed
+        if "y" not in active or y_spine not in ("left", "right"):
+            continue
+        above_text = store.get("ylabel_above_text")
+        if above_text is not None:
+            changed = _place_ylabel_above(target, y_spine, above_text) or changed
+        elif target.get_ylabel():
+            changed = _place_ylabel_beside(target, y_spine) or changed
     return changed
+
+
+def _place_xlabel(ax: Axes, spine: str, flush: bool) -> bool:
+    """Anchor `ax`'s x-label at the drawn end of `spine`, or flush past it."""
+    span = _drawn_spine_span(ax, spine)
+    if span is None:
+        return False
+    vmin, vmax = ax.get_xlim()
+    frac = _axes_fraction(ax.xaxis, _span_end(ax.xaxis, span), vmin, vmax)
+    if flush:
+        flush_frac = _xlabel_flush_frac(ax)
+        if flush_frac is not None:
+            frac = max(frac, flush_frac)
+    pos = ax.xaxis.label.get_position()
+    if pos[0] == frac:
+        return False
+    ax.xaxis.label.set_position((frac, pos[1]))
+    return True
+
+
+def _place_ylabel_beside(ax: Axes, spine: str) -> bool:
+    """Level `ax`'s y-label with the top tick, or the drawn end of `spine`."""
+    span = _drawn_spine_span(ax, spine)
+    if span is None:
+        return False
+    locs = ax.yaxis.get_majorticklocs()
+    top = _visible_end_tick(ax.yaxis)
+    vmin, vmax = ax.get_ylim()
+    # A 'data' end runs the spine past the end tick, to the data.
+    # The label belongs at whichever the frame ends on; comparing
+    # in axes fractions reads the same either way the axis points,
+    # and the tick label's own offset applies only when it wins.
+    frac = _axes_fraction(ax.yaxis, _span_end(ax.yaxis, span), vmin, vmax)
+    if top is not None:
+        tick_frac = _axes_fraction(ax.yaxis, float(locs[top]), vmin, vmax)
+        if tick_frac >= frac:
+            frac = tick_frac + _top_label_offset(ax, top) / ax.bbox.height
+    pos = ax.yaxis.label.get_position()
+    if pos[1] == frac:
+        return False
+    ax.yaxis.label.set_position((pos[0], frac))
+    return True
 
 
 def _apply_date_offset(ax: Axes) -> bool:
@@ -353,14 +436,15 @@ def _apply_date_offset(ax: Axes) -> bool:
     return changed
 
 
-def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
+def _place_ylabel_above(ax: Axes, spine: str, above_text: Text) -> bool:
     """Stack the managed above-label over the top tick label, left aligned.
 
     Anchored on the topmost drawn tick label's measured left/top edge,
     so it tracks the tick label's rendered width, and lifted clear of it
     by `ax.yaxis.labelpad`. A `'data'` end runs the spine past that tick,
     so the lift clears whichever of the two reaches higher. The above-label
-    is a plain `transAxes` text child, so a `set_position` sticks; nothing
+    is a plain text child in its own axes' `transAxes` (the host's, even
+    for a secondary frame's label), so a `set_position` sticks; nothing
     else moves it each draw.
     """
     labels = ax.yaxis.get_ticklabels()
@@ -371,8 +455,8 @@ def _place_ylabel_above(ax: Axes, above_text: Text) -> bool:
         bbox = labels[top].get_window_extent()
     except RuntimeError:
         return False
-    left, upper = ax.transAxes.inverted().transform((bbox.x0, bbox.y1))
-    span = _drawn_spine_span(ax, "y")
+    left, upper = above_text.get_transform().inverted().transform((bbox.x0, bbox.y1))
+    span = _drawn_spine_span(ax, spine)
     if span is not None:
         vmin, vmax = ax.get_ylim()
         end = _axes_fraction(ax.yaxis, _span_end(ax.yaxis, span), vmin, vmax)
