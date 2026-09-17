@@ -326,8 +326,10 @@ def test_log_extension_keeps_an_arithmetic_grid_evenly_spaced(
     # spacing. Anything else lands on a value no formatter can write shortly.
     ticks = first + step * np.arange(size)
     # Descending by whole steps has to stay positive to be a log tick at all,
-    # so only ask for a low end the grid can actually reach.
-    below = min(below, max(0.0, np.ceil(first / step) - 1))
+    # so only ask for a low end the grid can actually reach. The tolerance
+    # keeps a quotient one ulp above a whole number from rounding up to the
+    # next one, which would ask for a low end at zero.
+    below = min(below, max(0.0, np.ceil(first / step - 1e-9) - 1))
     vmin, vmax = ticks[0] - below * step, ticks[-1] + above * step
     out = _extend_to_cover_log(ticks, vmin, vmax)
     assert out[0] <= vmin * (1 + 1e-9)
