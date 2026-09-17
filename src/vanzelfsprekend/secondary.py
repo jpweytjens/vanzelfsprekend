@@ -10,8 +10,7 @@ from matplotlib.ticker import FixedLocator, Formatter
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import visible_interval
-from vanzelfsprekend.mute import LINE_WIDTH
-from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.ticks import _tick_geometry
 
 _WHERE = {"top": "x", "bottom": "x", "left": "y", "right": "y"}
 
@@ -27,8 +26,10 @@ def secondary_frame(
     (radians and degrees, degrees C and F, a count and its log), never a
     second dataset. A secondary axis is created on the `where` side, its
     major ticks are kept sitting exactly under the host's (relabelled
-    through `functions`), its spine, ticks and labels take the frame ink,
-    and it follows the host every draw and tears down with `restore(ax)`.
+    through `functions`), its spine and tick marks take the host's ink,
+    width and tick direction, and it follows the host every draw, so a
+    later `mute` or `tick_direction` on the host reaches it too. It tears
+    down with `restore(ax)`.
 
     Parameters
     ----------
@@ -66,27 +67,20 @@ def secondary_frame(
     # membership check to the `Literal` sides each maker wants.
     secax = make(where, functions=functions)  # ty: ignore[invalid-argument-type]
 
-    # One-shot styling: colours do not drift, only positions do.
-    spine = secax.spines[where]
-    spine.set_edgecolor(LINE_INK)
-    spine.set_linewidth(LINE_WIDTH)
-    secax.tick_params(
-        which="both", color=LINE_INK, width=LINE_WIDTH, labelcolor=TEXT_INK
-    )
     # Match the frame's stand-off: a loose `range_frame` pushes the host's
     # axis spine outward by a few points, so mirror that offset onto the
     # secondary and the two feel the same. Points are resize-invariant, so
-    # this is one-shot like the colours.
+    # this is one-shot, unlike the ink and tick style the applier follows.
     host_spine = "bottom" if axis_name == "x" else "left"
     position = ax.spines[host_spine].get_position()
     if isinstance(position, tuple) and position[0] == "outward":
-        spine.set_position(("outward", position[1]))
+        secax.spines[where].set_position(("outward", position[1]))
 
     state = ensure_state(ax)
-    state.setdefault("secondary", []).append(
-        {"secax": secax, "axis": axis_name, "forward": forward, "spine": where}
-    )
+    entry = {"secax": secax, "axis": axis_name, "forward": forward, "spine": where}
+    state.setdefault("secondary", []).append(entry)
     add_applier(ax, "secondary", _apply_secondary)
+    _mirror_style(ax, entry)
     # A SecondaryAxis is used as an axes but is not an `Axes` subclass in
     # the stubs (both descend from the private base).
     return secax  # ty: ignore[invalid-return-type]
@@ -99,7 +93,40 @@ def _apply_secondary(ax: Axes) -> bool:
         return False
     changed = False
     for entry in state["secondary"]:
+        changed = _mirror_style(ax, entry) or changed
         changed = _mirror_one(ax, entry) or changed
+    return changed
+
+
+def _mirror_style(ax: Axes, entry: dict) -> bool:
+    """Give the secondary's spine and tick marks the host's ink and direction."""
+    host_spine = ax.spines["bottom" if entry["axis"] == "x" else "left"]
+    secax = entry["secax"]
+    spine = secax.spines[entry["spine"]]
+    changed = False
+    if spine.get_edgecolor() != host_spine.get_edgecolor():
+        spine.set_edgecolor(host_spine.get_edgecolor())
+        changed = True
+    if spine.get_linewidth() != host_spine.get_linewidth():
+        spine.set_linewidth(host_spine.get_linewidth())
+        changed = True
+
+    host_axis = ax.xaxis if entry["axis"] == "x" else ax.yaxis
+    ticks = host_axis.get_major_ticks()
+    if not ticks:
+        return changed
+    mark = ticks[0].tick1line
+    geometry = _tick_geometry(host_axis)
+    style = {
+        "direction": geometry["direction"],
+        "length": geometry["major_length"],
+        "color": to_rgba(mark.get_color()),
+        "width": mark.get_markeredgewidth(),
+    }
+    if entry.get("style") != style:
+        secax.tick_params(which="major", **style)
+        entry["style"] = style
+        changed = True
     return changed
 
 

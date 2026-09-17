@@ -159,3 +159,44 @@ def test_secondary_mirrors_only_features_blanking():
     assert _sec_label_at(secax, 90).get_text() != ""
     assert _sec_label_at(secax, 180).get_text() == ""
     plt.close(fig)
+
+
+def test_secondary_follows_a_later_mute_ink():
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    fig.canvas.draw()
+    vzs.mute(ax, line_ink="red", line_width=1.4)
+    fig.canvas.draw()
+    to_rgba = matplotlib.colors.to_rgba
+    assert secax.spines["top"].get_edgecolor() == to_rgba("red")
+    assert secax.spines["top"].get_linewidth() == 1.4
+    tick = secax.xaxis.get_major_ticks()[0]
+    assert to_rgba(tick.tick2line.get_color()) == to_rgba("red")
+    assert tick.tick2line.get_markeredgewidth() == 1.4
+    plt.close(fig)
+
+
+def test_secondary_follows_a_later_tick_direction():
+    fig, ax = _sin_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    fig.canvas.draw()
+    vzs.tick_direction(ax, "in")
+    fig.canvas.draw()
+    assert secax.xaxis.get_tick_params()["direction"] == "in"
+    vzs.tick_direction(ax, "none")
+    fig.canvas.draw()
+    assert secax.xaxis.get_tick_params()["length"] == 0
+    plt.close(fig)
+
+
+def test_unmuted_host_gives_an_unmuted_secondary():
+    # A range frame without mute keeps matplotlib's black spines; the
+    # secondary takes the host's ink, whatever it is, not the palette's.
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [0, 1])
+    vzs.range_frame(ax)
+    secax = vzs.secondary_frame(ax, (lambda v: 2 * v, lambda v: v / 2))
+    fig.canvas.draw()
+    assert secax.spines["top"].get_edgecolor() == ax.spines["bottom"].get_edgecolor()
+    assert secax.spines["top"].get_linewidth() == ax.spines["bottom"].get_linewidth()
+    plt.close(fig)
