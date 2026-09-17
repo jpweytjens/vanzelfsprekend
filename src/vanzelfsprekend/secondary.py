@@ -4,7 +4,9 @@ from collections.abc import Callable
 
 import numpy as np
 from matplotlib.axes import Axes
-from matplotlib.ticker import FixedLocator
+from matplotlib.axis import Axis
+from matplotlib.colors import to_rgba
+from matplotlib.ticker import FixedLocator, Formatter
 
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import visible_interval
@@ -51,6 +53,9 @@ def secondary_frame(
     -----
     Sets no tick formatter: a mirrored degree axis is already whole
     numbers, and any other unit takes the default numeric formatter.
+    An accent on the host is mirrored too: each secondary tick label
+    takes the colour of the host label under it, and is blanked when
+    `accent(only_features=True)` blanks the host's.
     """
     if where not in _WHERE:
         raise ValueError(f"where must be one of {sorted(_WHERE)}, got {where!r}")
@@ -117,4 +122,61 @@ def _mirror_one(ax: Axes, entry: dict) -> bool:
         if spine.get_bounds() != (lo, hi):
             spine.set_bounds(lo, hi)
             changed = True
+
+    return _mirror_labels(host_axis, sec_axis, forward, entry) or changed
+
+
+def _mirror_labels(
+    host_axis: Axis, sec_axis: Axis, forward: Callable, entry: dict
+) -> bool:
+    """Copy each host tick label's colour and blankness onto the tick under it.
+
+    The hook runs after a draw, so the host's labels already carry
+    whatever `accent` gave them; mirroring the labels rather than the
+    accent state also follows a later re-accent or its removal.
+    """
+    changed = False
+    host_ticks = list(
+        zip(host_axis.get_majorticklocs(), host_axis.get_major_ticks(), strict=False)
+    )
+    blank: list[float] = []
+    for loc, tick in zip(
+        sec_axis.get_majorticklocs(), sec_axis.get_major_ticks(), strict=False
+    ):
+        host = next(
+            (t for p, t in host_ticks if np.isclose(float(forward(p)), loc)), None
+        )
+        if host is None:
+            continue
+        colour = host.label1.get_color()
+        if to_rgba(tick.label1.get_color()) != to_rgba(colour):
+            tick.label1.set_color(colour)
+            changed = True
+        if host.label1.get_text() == "":
+            blank.append(loc)
+    if blank or entry.get("blank"):
+        formatter = sec_axis.get_major_formatter()
+        if not isinstance(formatter, _Blanking):
+            sec_axis.set_major_formatter(_Blanking(formatter, entry))
+            changed = True
+        if entry.get("blank") != blank:
+            entry["blank"] = blank
+            changed = True
     return changed
+
+
+class _Blanking(Formatter):
+    """Wrap the secondary's formatter, writing nothing at the host's blanked ticks."""
+
+    def __init__(self, inner: Formatter, entry: dict) -> None:
+        self._inner = inner
+        self._entry = entry
+
+    def set_locs(self, locs: list[float]) -> None:
+        super().set_locs(locs)
+        self._inner.set_locs(locs)
+
+    def __call__(self, x: float, pos: int | None = None) -> str:
+        if any(np.isclose(x, b) for b in self._entry.get("blank", [])):
+            return ""
+        return self._inner(x, pos)

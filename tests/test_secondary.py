@@ -9,7 +9,7 @@ from matplotlib.ticker import FixedLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend.mute import LINE_WIDTH
-from vanzelfsprekend.palettes import LINE_INK, TEXT_INK
+from vanzelfsprekend.palettes import ACCENT_INK, LINE_INK, TEXT_INK
 
 
 def _sin_axes():
@@ -110,4 +110,52 @@ def test_accessor_secondary_frame():
     secax = ax.vzs.secondary_frame((np.rad2deg, np.deg2rad))
     fig.canvas.draw()
     np.testing.assert_allclose(secax.xaxis.get_majorticklocs(), [0, 90, 180, 270, 360])
+    plt.close(fig)
+
+
+def _peak_axes():
+    # A Talbot grid in units of pi plus one named feature, the peak; 201
+    # points put a sample exactly on pi/2, so the peak is that tick.
+    fig, ax = plt.subplots()
+    x = np.linspace(0, 2 * np.pi, 201)
+    y = np.sin(x)
+    ax.plot(x, y)
+    vzs.apply(ax)
+    ax.xaxis.set_major_locator(
+        vzs.AugmentedLocator(
+            vzs.TalbotLocator(unit=np.pi),
+            vzs.FeatureLocator(x, y, {"peak": lambda x, y: x[np.argmax(y)]}),
+        )
+    )
+    return fig, ax
+
+
+def _sec_label_at(secax, position):
+    axis = secax.xaxis
+    for loc, tick in zip(
+        axis.get_majorticklocs(), axis.get_major_ticks(), strict=False
+    ):
+        if np.isclose(loc, position):
+            return tick.label1
+    raise AssertionError(f"no secondary tick at {position}")
+
+
+def test_secondary_mirrors_the_hosts_accent():
+    fig, ax = _peak_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    vzs.accent(ax)
+    fig.canvas.draw()
+    to_rgba = matplotlib.colors.to_rgba
+    assert to_rgba(_sec_label_at(secax, 90).get_color()) == to_rgba(ACCENT_INK)
+    assert to_rgba(_sec_label_at(secax, 180).get_color()) == to_rgba(TEXT_INK)
+    plt.close(fig)
+
+
+def test_secondary_mirrors_only_features_blanking():
+    fig, ax = _peak_axes()
+    secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
+    vzs.accent(ax, only_features=True)
+    fig.canvas.draw()
+    assert _sec_label_at(secax, 90).get_text() != ""
+    assert _sec_label_at(secax, 180).get_text() == ""
     plt.close(fig)

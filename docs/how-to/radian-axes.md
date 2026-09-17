@@ -25,7 +25,7 @@ A second axis carrying the same data in the other unit is one call. `vzs.seconda
 secax = vzs.secondary_frame(ax, (np.rad2deg, np.deg2rad))
 ```
 
-It mirrors the host's ticks rather than running a search of its own, so `0, 180, 360, 540, 720` land directly under the π ticks and whole degrees need no formatter. Because it mirrors, neither `unit` nor `nice_numbers` applies to it: the degree ticks are wherever the π ticks are. The [axes reference](../reference/axes.md) has the rest of what `secondary_frame` takes.
+It mirrors the host's ticks rather than running a search of its own, so `0, 180, 360, 540, 720` land directly under the π ticks and whole degrees need no formatter. Because it mirrors, neither `unit` nor `nice_numbers` applies to it: the degree ticks are wherever the π ticks are. The mirror carries an [accent](../reference/axes.md#vanzelfsprekend.accent) too: a feature tick picked out on the host is picked out in degrees as well, and a label the host blanks stays blank above. The [axes reference](../reference/axes.md) has the rest of what `secondary_frame` takes.
 
 ## A different set of nice numbers
 
