@@ -41,7 +41,7 @@ Either entry can itself be a pair `(low, high)` that sets the two ends of one sp
 ax.vzs.range_frame(frame=(("loose", "data"), "inside"))
 ```
 
-The ticks follow the ends: the loose end takes the round number just beyond the data while the other end keeps its ticks inside, so that record gets ticks at 1900, 1950 and 2000 under a spine from 1900 to 2023.
+The ticks follow the ends: the loose end takes the round year just below the data, 1900, while the other end stops at the last observation, so the spine runs from 1900 to 2023.
 
 A spine with a `loose` end also stands off the plot by 8 points: a loose frame rounds outward past the data, so the spine is a detached reference scale rather than the data's own edge, and the gap says so. The other modes sit flush, `flexible` included, since its ticks fall on either side of the data. The `offset` argument sets that gap yourself, in points, and like `frame` takes a tuple `(x, y)` to move the bottom and left spine apart; a `None` in either slot keeps that spine's mode default:
 
