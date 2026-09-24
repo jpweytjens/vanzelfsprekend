@@ -1129,3 +1129,17 @@ def test_flexible_on_the_linear_axis_of_a_date_plot():
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (8.0, 16.0)
     plt.close(fig)
+
+
+def test_bad_weight_raises_and_leaves_axes_untouched():
+    # The date x axis is installed before the linear y; a weight the y
+    # locator refuses must fail before either is touched.
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(30)]
+    ax.plot(days, np.arange(30.0))
+    x_locator = ax.xaxis.get_major_locator()
+    with pytest.raises(ValueError, match="must be positive"):
+        range_frame(ax, weights={"density": 0.0})
+    assert get_state(ax) is None
+    assert ax.xaxis.get_major_locator() is x_locator
+    plt.close(fig)

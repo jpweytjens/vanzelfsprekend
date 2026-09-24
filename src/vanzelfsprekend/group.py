@@ -21,6 +21,7 @@ from vanzelfsprekend.frame import (
     axis_kind,
     check_placements,
     install_frame,
+    locator_class,
     parse_frame_args,
     snapshot_frame,
 )
@@ -198,6 +199,16 @@ def frame_unit(
             kinds[name] = kind_of[key]
         check_placements(mode, kinds)
         kinds_of[ax] = kinds
+    # The same guarantee for the linear locator's own arguments: build one,
+    # discarded, so a weight it refuses fails here rather than after the
+    # first axis is installed. The constructor stays the one authority.
+    linear = (
+        locator_class(kind) is TalbotLocator
+        for kinds in kinds_of.values()
+        for kind in kinds.values()
+    )
+    if any(linear):
+        TalbotLocator(nice_numbers=nice_numbers, weights=weights)
     for ax in unit:
         snapshot_frame(ax)
         state = ensure_state(ax)
