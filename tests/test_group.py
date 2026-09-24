@@ -365,3 +365,13 @@ def test_grouped_refresh_reinstalls_breaks_locator():
     assert second is not first
     fig.canvas.draw()
     plt.close(fig)
+
+
+def test_flexible_shared_pair_gets_one_span():
+    fig, (a, b) = plt.subplots(1, 2, sharey=True)
+    a.plot([0, 1], [7.5, 10.0])
+    b.plot([0, 1], [11.0, 15.3])
+    vzs.apply(a, frame=("inside", "flexible"), n=5)
+    fig.canvas.draw()
+    assert a.spines["left"].get_bounds() == b.spines["left"].get_bounds() == (8.0, 16.0)
+    plt.close(fig)

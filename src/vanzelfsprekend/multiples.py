@@ -63,7 +63,7 @@ def _place_labels(
 def small_multiples(
     axes: Iterable[Axes],
     compare: Literal["figure", "row", "column"] = "figure",
-    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
     spacing: float | tuple[float, float] | None = None,
     n: int | None = None,
     offset: float | None = None,

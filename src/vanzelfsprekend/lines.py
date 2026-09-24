@@ -56,7 +56,7 @@ def line_labels(
     at : {'end', 'start'}
         Which end of each line to label. `'end'` anchors at the last
         finite point, text to its right; `'start'` at the first finite
-        point, text to its left (slopegraph-style). On a `'nice'` or
+        point, text to its left (slopegraph-style). On an `'inside'` or
         `'data'` frame, start labels can collide with the y tick
         labels; `frame='loose'` leaves a gutter for them.
     labelcolor : color, list of color, or 'linecolor'

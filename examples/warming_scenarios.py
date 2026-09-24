@@ -66,7 +66,7 @@ def main() -> None:
     plain.set_ylabel("warming (°C vs 1850–1900)")
     plain.legend()
 
-    vzs.apply(treated, frame=("data", "nice"))
+    vzs.apply(treated, frame=("data", "inside"))
     draw_data(treated)
     vzs.line_labels(treated)
     vzs.label(treated, "observed", x=1930)

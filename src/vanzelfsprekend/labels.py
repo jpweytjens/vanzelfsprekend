@@ -36,11 +36,11 @@ def xlabel(
         Where the label's right edge sits. `True` (the default) pushes it
         out to the rightmost tick label's right edge, so the label and the
         tick-label row share a flush right margin. `False` anchors it at
-        the spine end (the last tick in `'nice'` mode, the data max in
+        the spine end (the last tick in `'inside'` mode, the data max in
         `'data'`), lining up with the *centre* of that tick label. The
         nudge is strictly outward (clamped never to move left of the
         spine end), so it only takes effect where the last tick sits at
-        the spine end (`'nice'`/`'loose'` mode); in `'data'` mode, where
+        the spine end (`'inside'`/`'flexible'`/`'loose'`); in `'data'` mode, where
         the spine already reaches past the last tick label, it is a no-op.
     labelpad : float, optional
         Gap in points between the label and the tick-label column, whose

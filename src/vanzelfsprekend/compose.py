@@ -59,7 +59,7 @@ def _frame(
 
 def range_frame(
     ax: Axes,
-    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
     spacing: float | tuple[float, float] | None = None,
     n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
@@ -100,24 +100,25 @@ def range_frame(
     ----------
     ax : matplotlib.axes.Axes
         The axes to modify, in place.
-    frame : {'nice', 'data', 'loose', 'feature'} or tuple of two of them
-        `'nice'` ends the spines at the outermost ticks, `'data'` at
-        the exact data minimum and maximum. `'loose'` ends the spines
-        at nice numbers bounding the data (frame may extend up to one
-        tick step beyond the data). `'feature'` ends the spines at
-        the outermost mark a `FixedLocator` sets on that axis (as
-        `FeatureLocator`, `SummaryLocator`, and `QuartileLocator` do,
-        or as an `AugmentedLocator`'s `.extra` side does), even when
-        it lies beyond the data, growing the view to keep it on
-        screen; unlike `'loose'` it sits flush by default (offset
-        0). A tuple `(x_mode, y_mode)` sets the bottom and left spine
-        independently, and either entry may itself be a pair
-        `(low, high)` setting that spine's two ends on their own:
-        `(("loose", "data"), "nice")` runs the bottom
-        spine from the tick below the data to the last observation.
-        All three read the data cut back to the view, so a view pinned
-        inside the data with `set_xlim` crops the frame to the data on
-        screen, and a view wider than the data changes nothing.
+    frame : {'inside', 'flexible', 'loose', 'data', 'feature'} or tuple
+        Where each spine ends. `'inside'`, `'flexible'` and `'loose'`
+        end it at the outermost tick and differ in where that tick may
+        fall: inside the data, either side of it as the tick search
+        prefers, or at or beyond it. `'data'` ends it at the exact data
+        minimum and maximum. `'feature'` ends it at the outermost mark
+        a `FixedLocator` sets on that axis (as `FeatureLocator`,
+        `SummaryLocator`, and `QuartileLocator` do, or as an
+        `AugmentedLocator`'s `.extra` side does), even when it lies
+        beyond the data. A tick or mark past the data grows the view to
+        keep it on screen. `'flexible'` needs a linear axis and raises
+        on a log or date axis. A tuple `(x_mode, y_mode)` sets the
+        bottom and left spine independently, and either entry may
+        itself be a pair `(low, high)` setting that spine's two ends on
+        their own: `(("loose", "data"), "inside")` runs the bottom spine
+        from the tick below the data to the last observation. All modes
+        read the data cut back to the view, so a view pinned inside the
+        data with `set_xlim` crops the frame to the data on screen, and
+        a view wider than the data changes nothing.
     spacing : float or tuple of two floats, optional
         The gap to aim for between ticks, in tick-label heights, so the
         number of ticks follows the axis's length and the labels' size:
@@ -166,7 +167,7 @@ def range_frame(
 
 def apply(
     ax: Axes,
-    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
     spacing: float | tuple[float, float] | None = None,
     n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
@@ -419,7 +420,7 @@ class _Accessor:
 
     def apply(
         self,
-        frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+        frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
         spacing: float | tuple[float, float] | None = None,
         n: int | tuple[int | None, int | None] | None = None,
         offset: float | tuple[float | None, float | None] | None = None,
@@ -443,7 +444,7 @@ class _Accessor:
 
     def range_frame(
         self,
-        frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+        frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
         spacing: float | tuple[float, float] | None = None,
         n: int | tuple[int | None, int | None] | None = None,
         offset: float | tuple[float | None, float | None] | None = None,

@@ -83,13 +83,13 @@ def main() -> None:
 
     fig, ax = draw(observed, projected, baseline)
     # --8<-- [start:step2]
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "inside"))
     # --8<-- [end:step2]
     ax.legend()
     save(fig, 2)
 
     fig, ax = draw(observed, projected, baseline)
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "inside"))
     # --8<-- [start:step3]
     vzs.ylabel(ax, "warming (°C vs 1850–1900)")
     # --8<-- [end:step3]
@@ -97,7 +97,7 @@ def main() -> None:
     save(fig, 3)
 
     fig, ax = draw(observed, projected, baseline)
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "inside"))
     vzs.ylabel(ax, "warming (°C vs 1850–1900)")
     # --8<-- [start:step4]
     vzs.line_labels(ax)
@@ -105,7 +105,7 @@ def main() -> None:
     save(fig, 4)
 
     fig, ax = draw(observed, projected, baseline)
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "inside"))
     vzs.ylabel(ax, "warming (°C vs 1850–1900)")
     vzs.line_labels(ax)
     # --8<-- [start:step5]

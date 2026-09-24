@@ -323,7 +323,7 @@ def _plot_dates(ax):
 
 
 @pytest.mark.parametrize("plot", [_plot_linear, _plot_log, _plot_dates])
-@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+@pytest.mark.parametrize("frame", ["inside", "data", "loose"])
 def test_apply_frames_a_lone_axes_exactly_as_range_frame(plot, frame):
     # mute must not disturb the frame: same spines, same view, on every scale and mode.
     fig_applied, applied = plt.subplots()

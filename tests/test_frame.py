@@ -8,6 +8,7 @@ from matplotlib.ticker import FixedLocator, MultipleLocator
 
 import vanzelfsprekend as vzs
 from vanzelfsprekend import range_frame
+from vanzelfsprekend.frame import MODES, PLACEMENT
 from vanzelfsprekend.hook import get_state
 from vanzelfsprekend.locator import AugmentedLocator
 
@@ -27,7 +28,7 @@ def outermost_ticks(axis):
     return min(ticks), max(ticks)
 
 
-def test_nice_frame_bounds_equal_outermost_ticks(scatter_ax):
+def test_inside_frame_bounds_equal_outermost_ticks(scatter_ax):
     ax = range_frame(scatter_ax)
     ax.figure.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
@@ -102,29 +103,29 @@ def test_invalid_frame_raises(scatter_ax):
 
 
 def test_mixed_frame_modes_per_spine(scatter_ax):
-    ax = range_frame(scatter_ax, frame=("data", "nice"))
+    ax = range_frame(scatter_ax, frame=("data", "inside"))
     ax.figure.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == tuple(ax.xaxis.get_data_interval())
     assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
 
 
 def test_loose_in_tuple_offsets_only_that_spine(scatter_ax):
-    ax = range_frame(scatter_ax, frame=("loose", "nice"))
+    ax = range_frame(scatter_ax, frame=("loose", "inside"))
     assert ax.spines["bottom"].get_position() == ("outward", 8)
     assert ax.spines["left"].get_position() == ("outward", 0)
 
 
 def test_per_end_modes_parse_to_pairs(scatter_ax):
-    ax = range_frame(scatter_ax, frame=(("loose", "data"), "nice"))
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), "inside"))
     assert ax._vanzelfsprekend_state["frame"]["mode"] == {
         "x": ("loose", "data"),
-        "y": ("nice", "nice"),
+        "y": ("inside", "inside"),
     }
 
 
 @pytest.mark.parametrize(
     "frame",
-    [(("loose", "tight"), "nice"), (("loose",), "nice"), ("nice", ("data",) * 3)],
+    [(("loose", "tight"), "inside"), (("loose",), "inside"), ("inside", ("data",) * 3)],
 )
 def test_invalid_per_end_modes_raise(scatter_ax, frame):
     with pytest.raises(ValueError, match="frame"):
@@ -132,7 +133,7 @@ def test_invalid_per_end_modes_raise(scatter_ax, frame):
 
 
 def test_per_end_modes_end_each_spine_end_on_its_own(scatter_ax):
-    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("data", "nice")))
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("data", "inside")))
     ax.figure.canvas.draw()
     xticks = ax.xaxis.get_majorticklocs()
     xmin, xmax = ax.xaxis.get_data_interval()
@@ -144,7 +145,7 @@ def test_per_end_modes_end_each_spine_end_on_its_own(scatter_ax):
 
 
 def test_per_end_loose_view_covers_only_the_loose_end(scatter_ax):
-    ax = range_frame(scatter_ax, frame=(("loose", "data"), "nice"))
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), "inside"))
     ax.figure.canvas.draw()
     xmin, xmax = ax.xaxis.get_data_interval()
     lo, hi = ax.get_xlim()
@@ -153,7 +154,7 @@ def test_per_end_loose_view_covers_only_the_loose_end(scatter_ax):
 
 
 def test_per_end_loose_offsets_that_spine(scatter_ax):
-    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("nice", "data")))
+    ax = range_frame(scatter_ax, frame=(("loose", "data"), ("inside", "data")))
     assert ax.spines["bottom"].get_position() == ("outward", 8)
     assert ax.spines["left"].get_position() == ("outward", 0)
 
@@ -162,7 +163,7 @@ def test_record_starts_at_the_round_year_and_ends_at_its_last_observation():
     fig, ax = plt.subplots()
     years = np.arange(1903, 2024)
     ax.plot(years, np.linspace(-0.3, 1.2, years.size))
-    range_frame(ax, frame=(("loose", "data"), "nice"), n=3)
+    range_frame(ax, frame=(("loose", "data"), "inside"), n=3)
     fig.canvas.draw()
     np.testing.assert_allclose(ax.xaxis.get_majorticklocs(), [1900, 1950, 2000])
     assert ax.spines["bottom"].get_bounds() == (1900.0, 2023.0)
@@ -170,7 +171,7 @@ def test_record_starts_at_the_round_year_and_ends_at_its_last_observation():
 
 
 def test_loose_in_tuple_bounds_only_that_axis(scatter_ax):
-    ax = range_frame(scatter_ax, frame=("loose", "nice"))
+    ax = range_frame(scatter_ax, frame=("loose", "inside"))
     ax.figure.canvas.draw()
     xlo, xhi = ax.spines["bottom"].get_bounds()
     dmin, dmax = ax.xaxis.get_data_interval()
@@ -179,7 +180,7 @@ def test_loose_in_tuple_bounds_only_that_axis(scatter_ax):
     assert ax.spines["left"].get_bounds() == outermost_ticks(ax.yaxis)
 
 
-@pytest.mark.parametrize("frame", [("nice", "tight"), ("nice",), ("nice",) * 3])
+@pytest.mark.parametrize("frame", [("inside", "tight"), ("inside",), ("inside",) * 3])
 def test_invalid_frame_tuple_raises(scatter_ax, frame):
     with pytest.raises(ValueError, match="frame"):
         range_frame(scatter_ax, frame=frame)
@@ -223,7 +224,7 @@ def test_linear_axis_minor_locator_untouched(scatter_ax):
     assert scatter_ax.xaxis.get_minor_locator() is before
 
 
-def test_log_nice_frame_bounds_equal_outermost_ticks(log_scatter_ax):
+def test_log_inside_frame_bounds_equal_outermost_ticks(log_scatter_ax):
     ax = range_frame(log_scatter_ax)
     ax.figure.canvas.draw()
     assert ax.spines["bottom"].get_bounds() == outermost_ticks(ax.xaxis)
@@ -368,7 +369,7 @@ def test_loose_frame_bounds_contain_data(scatter_ax):
         assert hi == ticks.max()
 
 
-def test_nice_frame_leaves_view_limits_alone():
+def test_inside_frame_leaves_view_limits_alone():
     fig, ax = plt.subplots()
     rng = np.random.default_rng(0)
     x, y = rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50)
@@ -398,7 +399,7 @@ def test_loose_frame_offsets_spines_outward_by_default(scatter_ax):
     assert ax.spines["left"].get_position() == ("outward", 8)
 
 
-def test_nice_frame_keeps_spines_in_place(scatter_ax):
+def test_inside_frame_keeps_spines_in_place(scatter_ax):
     ax = range_frame(scatter_ax)
     assert ax.spines["bottom"].get_position() == ("outward", 0)
 
@@ -478,8 +479,8 @@ def test_frame_span_interval_override_data_mode():
     plt.close(fig)
 
 
-def test_frame_span_interval_override_nice_mode():
-    fig, ax = _framed_ax("nice")
+def test_frame_span_interval_override_inside_mode():
+    fig, ax = _framed_ax("inside")
     get_state(ax)["frame"]["intervals"] = {"x": lambda: (1.5, 8.5)}
     fig.canvas.draw()
     ticks = [t for t in ax.xaxis.get_majorticklocs() if 1.5 <= t <= 8.5]
@@ -499,7 +500,7 @@ def test_frame_span_interval_override_loose_mode():
 
 
 def test_frame_span_interval_override_per_end_modes():
-    fig, ax = _framed_ax((("loose", "data"), "nice"))
+    fig, ax = _framed_ax((("loose", "data"), "inside"))
     get_state(ax)["frame"]["intervals"] = {"x": lambda: (3.1, 6.9)}
     fig.canvas.draw()
     ticks = sorted(ax.xaxis.get_majorticklocs())
@@ -587,7 +588,7 @@ def test_data_frame_under_cropped_view_ends_at_the_visible_data(scatter_ax):
     assert ax.spines["bottom"].get_bounds() == (2.0, dmax)
 
 
-def test_nice_frame_under_cropped_view_refits_ticks_to_visible_data(scatter_ax):
+def test_inside_frame_under_cropped_view_refits_ticks_to_visible_data(scatter_ax):
     ax = range_frame(scatter_ax)
     ax.set_xlim(3.5, 30.0)
     ax.figure.canvas.draw()
@@ -813,7 +814,7 @@ def test_feature_warns_once_across_draws(recwarn):
 
 def test_per_end_loose_frame_view_covers_a_fixed_tick_past_that_end():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame=("nice", ("loose", "data")))
+    range_frame(ax, frame=("inside", ("loose", "data")))
     ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
     fig.canvas.draw()
     assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
@@ -823,7 +824,7 @@ def test_per_end_loose_frame_view_covers_a_fixed_tick_past_that_end():
 
 def test_per_end_loose_frame_under_pinned_view_crops_only_the_loose_end():
     fig, ax = _two_values_ax()
-    range_frame(ax, frame=("nice", ("loose", "data")))
+    range_frame(ax, frame=("inside", ("loose", "data")))
     ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7900]))
     ax.set_ylim(7600, 8000)
     fig.canvas.draw()
@@ -965,3 +966,166 @@ def test_range_frame_refresh_after_scale_change(scatter_ax):
     scatter_ax.set_xscale("log")
     range_frame(scatter_ax)
     assert isinstance(scatter_ax.xaxis.get_major_locator(), vzs.LogBreaksLocator)
+
+
+@pytest.fixture
+def mixed_flexible_ax():
+    # y data 7.5..15.3 at n=5: flexible ticks 8..16, inside at the
+    # bottom, past the data at the top (calibrated, mizani 4f205c27).
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [7.5, 15.3])
+    yield ax
+    plt.close(fig)
+
+
+# Each mode on y data 7.5..15.3 at n=5, every value written out rather
+# than read from PLACEMENT, so a wrong mapping cannot move the expectation
+# with it. Ticks calibrated against mizani 4f205c27: inside 7.5..15 by
+# 2.5, flexible 8..16 by 2, loose 6..16 by 2. `feature` keeps the user's
+# FixedLocator [7, 12, 17] and ends at its outermost marks.
+MODE_TABLE = {
+    # mode: (placement, ticks, spine bounds, offset)
+    "inside": (("inside", "inside"), [7.5, 10, 12.5, 15], (7.5, 15.0), 0),
+    "flexible": (("flexible", "flexible"), [8, 10, 12, 14, 16], (8.0, 16.0), 0),
+    "loose": (("loose", "loose"), [6, 8, 10, 12, 14, 16], (6.0, 16.0), 8),
+    "data": (("inside", "inside"), [7.5, 10, 12.5, 15], (7.5, 15.3), 0),
+    "feature": (None, [7, 12, 17], (7.0, 17.0), 0),
+}
+
+
+def test_mode_table_covers_every_mode():
+    # A mode added to PLACEMENT without a row here fails, so the table
+    # below stays exhaustive.
+    assert tuple(MODE_TABLE) == MODES
+
+
+@pytest.mark.parametrize("mode", list(MODE_TABLE))
+def test_every_mode_places_ticks_and_ends_the_spine(mixed_flexible_ax, mode):
+    placement, ticks, bounds, offset = MODE_TABLE[mode]
+    ax = mixed_flexible_ax
+    if mode == "feature":
+        ax.yaxis.set_major_locator(FixedLocator([7.0, 12.0, 17.0]))
+    range_frame(ax, frame=("inside", mode), n=5)
+    ax.figure.canvas.draw()
+    if placement is not None:
+        assert ax.yaxis.get_major_locator()._placement == placement
+    np.testing.assert_allclose(ax.yaxis.get_majorticklocs(), ticks)
+    assert ax.spines["left"].get_bounds() == pytest.approx(bounds)
+    assert ax.spines["left"].get_position() == ("outward", offset)
+
+
+def test_placement_mapping_is_the_documented_table():
+    assert PLACEMENT == {
+        "inside": "inside",
+        "flexible": "flexible",
+        "loose": "loose",
+        "data": "inside",
+        "feature": "inside",
+    }
+    assert MODES == ("inside", "flexible", "loose", "data", "feature")
+
+
+def test_nice_is_not_a_mode(scatter_ax):
+    with pytest.raises(ValueError, match="frame"):
+        range_frame(scatter_ax, frame="nice")
+
+
+def test_flexible_spine_ends_at_the_outermost_ticks(mixed_flexible_ax):
+    ax = range_frame(mixed_flexible_ax, frame=("inside", "flexible"), n=5)
+    ax.figure.canvas.draw()
+    np.testing.assert_allclose(ax.yaxis.get_majorticklocs(), [8, 10, 12, 14, 16])
+    assert ax.spines["left"].get_bounds() == (8.0, 16.0)
+    lo, hi = ax.get_ylim()
+    assert hi == 16.0  # grown to the past-data tick
+    assert lo == pytest.approx(7.5 - 0.05 * 7.8)  # inside tick: margin kept
+
+
+def test_flexible_keeps_margins_when_ticks_land_on_the_data():
+    # End to end for the float-dust case: ticks at +-0.3 (mizani gives
+    # +-0.30000000000000004) are on the data, so the autoscaled view
+    # keeps matplotlib's 5% margins.
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [-0.3, 0.3])
+    range_frame(ax, frame=("inside", "flexible"), n=5)
+    fig.canvas.draw()
+    lo, hi = ax.get_ylim()
+    assert lo == pytest.approx(-0.33)
+    assert hi == pytest.approx(0.33)
+    plt.close(fig)
+
+
+def test_flexible_pinned_view_crops_to_the_shown_ticks(mixed_flexible_ax):
+    # A pinned view cuts the data to 7.5..15.0 before the search, which
+    # then gives 7, 9, ..., 15 (calibrated); the view stays pinned and the
+    # spine keeps only the ticks it shows.
+    ax = mixed_flexible_ax
+    ax.set_ylim(7.0, 15.0)
+    range_frame(ax, frame=("inside", "flexible"), n=5)
+    ax.figure.canvas.draw()
+    assert ax.get_ylim() == (7.0, 15.0)
+    np.testing.assert_allclose(ax.yaxis.get_majorticklocs(), [7, 9, 11, 13, 15])
+    assert ax.spines["left"].get_bounds() == (7.0, 15.0)
+
+
+def test_flexible_view_growth_keeps_an_inverted_axis(mixed_flexible_ax):
+    ax = mixed_flexible_ax
+    ax.invert_yaxis()
+    range_frame(ax, frame=("inside", "flexible"), n=5)
+    ax.figure.canvas.draw()
+    top, bottom = ax.get_ylim()
+    assert top > bottom
+    assert top == 16.0
+
+
+def test_per_end_flexible_and_data():
+    # y 2.6..10.7 under placement ("flexible", "inside") at n=5 gives
+    # 2, 4, ..., 10 (calibrated): the low tick falls below the data, the
+    # high end stops exactly at the data.
+    fig, ax = plt.subplots()
+    ax.plot([0, 1], [2.6, 10.7])
+    range_frame(ax, frame=("inside", ("flexible", "data")), n=5)
+    fig.canvas.draw()
+    np.testing.assert_allclose(ax.yaxis.get_majorticklocs(), [2, 4, 6, 8, 10])
+    assert ax.spines["left"].get_bounds() == (2.0, 10.7)
+    assert ax.get_ylim()[0] == 2.0
+    plt.close(fig)
+
+
+def test_flexible_follows_a_user_locator(mixed_flexible_ax):
+    ax = mixed_flexible_ax
+    ax.yaxis.set_major_locator(FixedLocator([8.0, 12.0, 20.0]))
+    range_frame(ax, frame=("inside", "flexible"))
+    ax.figure.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (8.0, 20.0)
+    assert ax.get_ylim()[1] >= 20.0
+
+
+def test_flexible_on_log_axis_raises_and_leaves_axes_untouched():
+    fig, ax = plt.subplots()
+    ax.plot([1, 2], [10, 1000])
+    ax.set_yscale("log")
+    with pytest.raises(ValueError, match="flexible"):
+        range_frame(ax, frame="flexible")
+    assert get_state(ax) is None
+    assert ax.spines["top"].get_visible()
+    plt.close(fig)
+
+
+def test_flexible_on_date_axis_raises_and_leaves_axes_untouched():
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(30)]
+    ax.plot(days, np.arange(30.0))
+    with pytest.raises(ValueError, match="flexible"):
+        range_frame(ax, frame="flexible")
+    assert get_state(ax) is None
+    plt.close(fig)
+
+
+def test_flexible_on_the_linear_axis_of_a_date_plot():
+    fig, ax = plt.subplots()
+    days = [dt.datetime(2024, 1, 1) + dt.timedelta(days=i) for i in range(30)]
+    ax.plot(days, np.linspace(7.5, 15.3, 30))
+    range_frame(ax, frame=("inside", "flexible"), n=5)
+    fig.canvas.draw()
+    assert ax.spines["left"].get_bounds() == (8.0, 16.0)
+    plt.close(fig)

@@ -247,7 +247,7 @@ def _expected_span(ticks, dmin, dmax, frame):
     ticks = sorted(ticks)
     if frame == "data":
         return (dmin, dmax)
-    if frame == "nice":
+    if frame == "inside":
         inside = [t for t in ticks if dmin <= t <= dmax]
         return (min(inside), max(inside))
     below = [t for t in ticks if t <= dmin + 1e-9]
@@ -258,7 +258,7 @@ def _expected_span(ticks, dmin, dmax, frame):
     )
 
 
-@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+@pytest.mark.parametrize("frame", ["inside", "data", "loose"])
 def test_bottom_spine_spans_figure_x_union(frame):
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, frame=frame)
@@ -270,7 +270,7 @@ def test_bottom_spine_spans_figure_x_union(frame):
     plt.close(fig)
 
 
-@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+@pytest.mark.parametrize("frame", ["inside", "data", "loose"])
 def test_column_compare_bottom_spine_trims_to_its_column(frame):
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, compare="column", frame=frame)
@@ -282,7 +282,7 @@ def test_column_compare_bottom_spine_trims_to_its_column(frame):
     plt.close(fig)
 
 
-@pytest.mark.parametrize("frame", ["nice", "data", "loose"])
+@pytest.mark.parametrize("frame", ["inside", "data", "loose"])
 def test_row_compare_left_spine_trims_to_its_row(frame):
     fig, axes = _grid22()
     vzs.small_multiples(axes.flat, compare="row", frame=frame)

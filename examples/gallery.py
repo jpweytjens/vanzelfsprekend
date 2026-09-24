@@ -122,7 +122,7 @@ def seaborn_lineplot() -> None:
     # Plot before apply: the axis becomes a date axis when date data
     # arrives, and apply detects date-ness at call time. line_labels
     # replaces seaborn's legend, hiding it in the process.
-    vzs.apply(ax, frame=("data", "nice"))
+    vzs.apply(ax, frame=("data", "inside"))
     vzs.line_labels(ax, labels=list("ABCD"))
     save(fig, "seaborn_lineplot")
 
@@ -194,7 +194,7 @@ def frame_modes() -> None:
     year, anomaly = table["year"], table["anomaly_c"]
     fig, axes = plt.subplots(2, 2, figsize=(6.5, 5))
     fig.subplots_adjust(hspace=0.55, wspace=0.4)
-    for ax, mode in zip(axes.flat, ("nice", "loose", "data", "feature"), strict=True):
+    for ax, mode in zip(axes.flat, ("inside", "loose", "data", "feature"), strict=True):
         if mode == "feature":
             # Mark the 2 °C Paris target the record has not reached: the spine
             # climbs to it while the low end stays at the data. Set the marks
@@ -270,7 +270,7 @@ def power_profiles() -> None:
     fig, ax = plt.subplots(figsize=(7, 3.5))
     ax.set_xscale("log")
     # The sprinter's one-second power runs above the outermost tick, so a
-    # 'nice' y end would leave the curve spilling over the ylabel. A 'data'
+    # 'inside' y end would leave the curve spilling over the ylabel. A 'data'
     # end takes the spine, and with it the label, up past the peak.
     vzs.apply(ax, frame=("data", "data"))
     # Four peer series, so opt into colour: the muted scheme carries the
@@ -364,7 +364,7 @@ def small_multiples_grid() -> None:
         ax.plot(dates, table[column], color=vzs.palettes.DATA_INK)
         ax.set_title(title, color=vzs.palettes.TEXT_INK)
     vzs.small_multiples(
-        axes.flat, frame=("data", "nice"), spacing=(5, 4), ylabel="CO₂ (ppm)"
+        axes.flat, frame=("data", "inside"), spacing=(5, 4), ylabel="CO₂ (ppm)"
     )
     save(fig, "small_multiples")
 

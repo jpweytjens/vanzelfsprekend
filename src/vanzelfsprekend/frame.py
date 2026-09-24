@@ -16,6 +16,7 @@ from vanzelfsprekend.locator import (
     BreaksLocator,
     DateBreaksLocator,
     LogBreaksLocator,
+    Placement,
     PlacementPair,
     TalbotLocator,
     visible_interval,
@@ -24,7 +25,21 @@ from vanzelfsprekend.locator import (
 FrameMode = str | tuple[str, str]
 """One axis's frame mode: a mode for both ends, or a `(low, high)` pair."""
 
-MODES = ("nice", "data", "loose", "feature")
+PLACEMENT: dict[str, Placement] = {
+    "inside": "inside",
+    "flexible": "flexible",
+    "loose": "loose",
+    "data": "inside",
+    "feature": "inside",
+}
+"""Each frame mode's tick placement; the authority for the modes themselves.
+
+`inside`, `flexible` and `loose` end the spine at the outermost tick and
+differ only in where that tick may fall. `data` and `feature` end it at
+the data or a mark, so their ticks must stay inside the spine.
+"""
+
+MODES: tuple[str, ...] = tuple(PLACEMENT)
 
 
 def parse_frame_args(
@@ -36,10 +51,11 @@ def parse_frame_args(
     Every axis comes out as a `(low, high)` pair of modes, whatever
     the spelling given.
     """
+    names = ", ".join(repr(m) for m in MODES)
     invalid = ValueError(
-        "frame must be 'nice', 'data', 'loose' or 'feature', a tuple of two "
-        "of them, or a tuple whose entries are each a mode or a (low, high) "
-        f"pair of modes, got {frame!r}"
+        f"frame must be one of {names}, a tuple of two of them, or a tuple "
+        "whose entries are each a mode or a (low, high) pair of modes, "
+        f"got {frame!r}"
     )
 
     def ends(axis_mode: FrameMode) -> tuple[str, str]:
@@ -197,6 +213,31 @@ def locator_class(kind: AxisKind | None) -> type[BreaksLocator] | None:
     return TalbotLocator
 
 
+def check_placements(
+    mode: dict[str, tuple[str, str]], kinds: dict[str, AxisKind | None]
+) -> None:
+    """Raise if an axis's frame asks for a placement its locator cannot give.
+
+    Runs before anything is modified, so a refused frame leaves the axes
+    as it was. Reads each locator class's own `PLACEMENTS`.
+    """
+    for name in ("x", "y"):
+        kind = kinds[name]
+        cls = locator_class(kind)
+        # `kind is None` is implied by `cls is None`; stated so ty narrows `kind`.
+        if cls is None or kind is None:
+            continue
+        wanted = {PLACEMENT[m] for m in mode[name]}
+        refused = sorted(wanted - set(cls.PLACEMENTS))
+        if refused:
+            scale = "date" if kind.is_date else kind.scale
+            raise ValueError(
+                f"frame {mode[name]!r} on the {name}-axis needs placement "
+                f"{refused}, which a {scale} axis does not take; flexible "
+                "needs a linear axis"
+            )
+
+
 def build_major_locator(
     kind: AxisKind,
     placement: PlacementPair,
@@ -316,10 +357,7 @@ def install_frame(
                 stacklevel=stacklevel,
             )
             continue
-        placement: PlacementPair = (
-            "loose" if mode[name][0] == "loose" else "inside",
-            "loose" if mode[name][1] == "loose" else "inside",
-        )
+        placement: PlacementPair = (PLACEMENT[mode[name][0]], PLACEMENT[mode[name][1]])
         base = axis.get_transform().base if kind.scale == "log" else None  # ty: ignore[unresolved-attribute]
         installed = frame_state["installed"]
         may_clobber = name in grouped
@@ -453,7 +491,8 @@ def _apply_frame(ax: Axes) -> bool:
                 ax, name, axis, ends, frame_state, interval
             )
         span = _frame_span(axis, ends, interval=interval)
-        if span is not None and ("loose" in ends or "feature" in ends):
+        reaches = "feature" in ends or any(PLACEMENT[e] != "inside" for e in ends)
+        if span is not None and reaches:
             span, grew = _fit_view(ax, name, span, ends, marks)
             changed = changed or grew
         if span is None:
@@ -474,11 +513,11 @@ def _fit_view(
 ) -> tuple[tuple[float, float] | None, bool]:
     """Reconcile a spine that reaches past the view along `name`.
 
-    A `loose` or `feature` end can sit at a tick outside the autoscaled
-    view; spines are not clipped, so the view must grow to cover it. A
-    view the user pinned is a crop: each such end keeps only the ticks
+    A `loose`, `flexible` or `feature` end can sit at a tick outside the
+    autoscaled view; spines are not clipped, so the view must grow to
+    cover it. A view the user pinned is a crop: each such end keeps only the ticks
     the view still shows — the fixed `marks` for a `feature` end, all
-    major ticks for a `loose` end. Returns the span to draw and whether
+    major ticks for a `loose` or `flexible` end. Returns the span to draw and whether
     the view changed.
     """
     axis = ax.xaxis if name == "x" else ax.yaxis
@@ -496,7 +535,7 @@ def _fit_view(
     marks_in = [t for t in (marks or []) if vmin <= t <= vmax]
 
     def edge(i: int, pick: Callable[[list[float]], float]) -> float | None:
-        if ends[i] not in ("loose", "feature"):
+        if ends[i] != "feature" and PLACEMENT[ends[i]] == "inside":
             return span[i]
         pool = marks_in if ends[i] == "feature" else all_ticks
         return pick(pool) if pool else None
@@ -533,9 +572,9 @@ def _frame_span(
             return outer(marks) if marks else None
         if mode == "data":
             return datum
-        if mode == "nice":
+        if mode == "inside":
             return outer(inside) if inside else None
-        if interval is None:
+        if mode == "flexible" or interval is None:
             return outer(ticks)
         # Loose over an injected interval: end at the drawn tick
         # bounding it, since ticks inside the interval cannot bracket

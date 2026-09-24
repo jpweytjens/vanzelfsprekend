@@ -19,6 +19,7 @@ from vanzelfsprekend.frame import (
     AxisKind,
     FrameMode,
     axis_kind,
+    check_placements,
     install_frame,
     parse_frame_args,
     snapshot_frame,
@@ -147,7 +148,7 @@ def axis_kinds(members: Sequence[Axes], name: str) -> set[AxisKind]:
 def frame_unit(
     members: Mapping[Axes, Mapping[str, Sequence[Axes] | None]],
     *,
-    frame: FrameMode | tuple[FrameMode, FrameMode] = "nice",
+    frame: FrameMode | tuple[FrameMode, FrameMode] = "inside",
     spacing: float | tuple[float, float] | None = None,
     n: int | tuple[int | None, int | None] | None = None,
     offset: float | tuple[float | None, float | None] | None = None,
@@ -179,6 +180,24 @@ def frame_unit(
     spacings = parse_spacing(spacing)
     ns = parse_n(n)
     unit = tuple(members)
+    # Read every member's kinds and refuse an impossible placement before
+    # anything is snapshotted or installed, so a refusal leaves no trace.
+    kind_of: dict[tuple[str, frozenset[int]], AxisKind | None] = {}
+    kinds_of: dict[Axes, dict[str, AxisKind | None]] = {}
+    for ax in unit:
+        kinds: dict[str, AxisKind | None] = {}
+        for name in ("x", "y"):
+            group = members[ax].get(name)
+            if group is None:
+                kinds[name] = None
+                continue
+            key = (name, frozenset(id(member) for member in group))
+            if key not in kind_of:
+                found = axis_kinds(group, name)
+                kind_of[key] = found.pop() if len(found) == 1 else None
+            kinds[name] = kind_of[key]
+        check_placements(mode, kinds)
+        kinds_of[ax] = kinds
     for ax in unit:
         snapshot_frame(ax)
         state = ensure_state(ax)
@@ -205,19 +224,7 @@ def frame_unit(
                 ax.get_autoscalex_on() if name == "x" else ax.get_autoscaley_on()
             )
 
-    kind_of: dict[tuple[str, frozenset[int]], AxisKind | None] = {}
     for ax in unit:
-        kinds: dict[str, AxisKind | None] = {}
-        for name in ("x", "y"):
-            group = members[ax].get(name)
-            if group is None:
-                kinds[name] = None
-                continue
-            key = (name, frozenset(id(member) for member in group))
-            if key not in kind_of:
-                found = axis_kinds(group, name)
-                kind_of[key] = found.pop() if len(found) == 1 else None
-            kinds[name] = kind_of[key]
         install_frame(
             ax,
             mode,
@@ -226,7 +233,7 @@ def frame_unit(
             spacing=spacings,
             nice_numbers=nice_numbers,
             weights=weights,
-            kinds=kinds,
+            kinds=kinds_of[ax],
             grouped=set(get_state(ax)["group"]["members"]),  # ty: ignore[not-subscriptable]
             stacklevel=stacklevel,
         )
