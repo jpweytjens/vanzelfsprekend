@@ -52,9 +52,8 @@ def test_parse_n_rejects_a_malformed_tuple():
 
 
 def test_weights_that_never_terminate_are_rejected():
-    # simplicity, coverage and density each bound one of the search's three
-    # loops; at zero that loop has no termination condition and the search
-    # hangs, so reject them rather than let a figure hang on a draw.
+    # mizani rejects them (has2k1/mizani#81); TalbotLocator builds one search
+    # at construction so the error surfaces at the call, not the first draw.
     for key in ("simplicity", "coverage", "density"):
         with pytest.raises(ValueError, match="must be positive"):
             TalbotLocator(weights={key: 0.0})
@@ -72,7 +71,7 @@ def test_zero_legibility_is_allowed():
 
 
 def test_matches_mizani_directly():
-    expected = breaks_extended(n=5, only_inside=True)((0.3, 9.7))
+    expected = breaks_extended(n=5, placement="inside")((0.3, 9.7))
     result = TalbotLocator(n=5).tick_values(0.3, 9.7)
     np.testing.assert_allclose(result, expected)
 
@@ -111,34 +110,34 @@ def test_empty_axes_draw_does_not_raise():
 
 
 def test_loose_ticks_bound_the_range():
-    ticks = TalbotLocator(loose=True).tick_values(-3.2, 4.1)
+    ticks = TalbotLocator(placement="loose").tick_values(-3.2, 4.1)
     assert ticks.min() <= -3.2
     assert ticks.max() >= 4.1
     steps = np.diff(ticks)
     np.testing.assert_allclose(steps, steps[0])
 
 
-def test_loose_without_extension_when_already_covered():
-    ticks = TalbotLocator(loose=True).tick_values(0.0, 100.0)
+def test_loose_ticks_may_sit_on_the_data_ends():
+    ticks = TalbotLocator(placement="loose").tick_values(0.0, 100.0)
     assert ticks.min() == 0.0
     assert ticks.max() == 100.0
 
 
 def test_loose_pair_frees_only_the_high_end():
-    ticks = TalbotLocator(n=3, loose=(False, True)).tick_values(-7.7, 196.9)
+    ticks = TalbotLocator(n=3, placement=("inside", "loose")).tick_values(-7.7, 196.9)
     np.testing.assert_allclose(ticks, [0, 100, 200])
 
 
 def test_loose_pair_keeps_the_nice_end_inside():
-    ticks = TalbotLocator(loose=(True, False)).tick_values(0.3, 9.7)
+    ticks = TalbotLocator(placement=("loose", "inside")).tick_values(0.3, 9.7)
     assert ticks.min() <= 0.3
     assert ticks.max() <= 9.7
     steps = np.diff(ticks)
     np.testing.assert_allclose(steps, steps[0])
 
 
-def test_loose_pair_extends_only_the_loose_end():
-    ticks = TalbotLocator(loose=(False, True)).tick_values(0.3, 9.7)
+def test_loose_pair_covers_only_the_loose_end():
+    ticks = TalbotLocator(placement=("inside", "loose")).tick_values(0.3, 9.7)
     assert ticks.min() >= 0.3
     assert ticks.max() >= 9.7
 
@@ -146,7 +145,7 @@ def test_loose_pair_extends_only_the_loose_end():
 def test_loose_pair_view_limits_cover_only_the_loose_end():
     fig, ax = plt.subplots()
     ax.scatter([0.3, 9.7], [0, 1])
-    ax.xaxis.set_major_locator(TalbotLocator(loose=(True, False)))
+    ax.xaxis.set_major_locator(TalbotLocator(placement=("loose", "inside")))
     fig.canvas.draw()
     lo, hi = ax.get_xlim()
     assert lo <= 0.3
@@ -169,7 +168,7 @@ def test_view_limits_degenerate_does_not_raise():
 
 def test_loose_bounds_large_magnitude_range():
     vmin, vmax = -3049020730.258315, 2605259400.20343
-    ticks = TalbotLocator(n=5, loose=True).tick_values(vmin, vmax)
+    ticks = TalbotLocator(n=5, placement="loose").tick_values(vmin, vmax)
     assert ticks.min() <= vmin
     assert ticks.max() >= vmax
 
@@ -204,13 +203,13 @@ def test_view_limits_round_numbers_rounds_outward():
 
 
 def test_nice_numbers_forwarded_to_mizani():
-    expected = breaks_extended(n=5, Q=[1, 2.5, 5], only_inside=True)((0.4, 9.6))
+    expected = breaks_extended(n=5, Q=[1, 2.5, 5], placement="inside")((0.4, 9.6))
     result = TalbotLocator(nice_numbers=[1, 2.5, 5]).tick_values(0.4, 9.6)
     np.testing.assert_allclose(result, expected)
 
 
 def test_weights_merged_over_defaults_in_slot_order():
-    expected = breaks_extended(n=5, only_inside=True, w=(0.25, 0.4, 0.5, 0.05))(
+    expected = breaks_extended(n=5, placement="inside", w=(0.25, 0.4, 0.5, 0.05))(
         (0.3, 9.7)
     )
     result = TalbotLocator(weights={"coverage": 0.4}).tick_values(0.3, 9.7)
@@ -260,7 +259,7 @@ def test_range_frame_nice_numbers_forwarded_to_both_axes():
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     range_frame(ax, nice_numbers=nice)
     fig.canvas.draw()
-    expected = breaks_extended(n=5, Q=nice, only_inside=True)
+    expected = breaks_extended(n=5, Q=nice, placement="inside")
     for axis in (ax.xaxis, ax.yaxis):
         np.testing.assert_allclose(
             axis.get_majorticklocs(), expected(tuple(axis.get_data_interval()))
@@ -285,7 +284,7 @@ def test_log_base_two():
 
 
 def test_log_loose_ticks_bound_the_range():
-    ticks = LogBreaksLocator(loose=True).tick_values(30, 4000)
+    ticks = LogBreaksLocator(placement="loose").tick_values(30, 4000)
     assert ticks.min() <= 30
     assert ticks.max() >= 4000
 
@@ -367,12 +366,12 @@ def test_log_extension_stops_rather_than_stepping_through_zero():
 
 
 def test_log_loose_pair_frees_only_the_high_end():
-    ticks = LogBreaksLocator(n=4, loose=(False, True)).tick_values(30, 4000)
+    ticks = LogBreaksLocator(n=4, placement=("inside", "loose")).tick_values(30, 4000)
     np.testing.assert_allclose(ticks, [100, 1000, 10000])
 
 
 def test_log_loose_pair_frees_only_the_low_end():
-    ticks = LogBreaksLocator(n=4, loose=(True, False)).tick_values(30, 4000)
+    ticks = LogBreaksLocator(n=4, placement=("loose", "inside")).tick_values(30, 4000)
     np.testing.assert_allclose(ticks, [10, 100, 1000])
 
 
@@ -380,7 +379,7 @@ def test_log_loose_pair_view_limits_cover_only_the_loose_end():
     fig, ax = plt.subplots()
     ax.set_yscale("log")
     ax.plot([1, 2, 3], [30, 400, 4000])
-    ax.yaxis.set_major_locator(LogBreaksLocator(loose=(False, True)))
+    ax.yaxis.set_major_locator(LogBreaksLocator(placement=("inside", "loose")))
     fig.canvas.draw()
     lo, hi = ax.get_ylim()
     assert lo < 30
@@ -390,7 +389,7 @@ def test_log_loose_pair_view_limits_cover_only_the_loose_end():
 
 
 def test_log_loose_extends_an_under_covering_grid():
-    ticks = LogBreaksLocator(base=2, loose=True).tick_values(3, 700)
+    ticks = LogBreaksLocator(base=2, placement="loose").tick_values(3, 700)
     assert ticks.min() <= 3
     assert ticks.max() >= 700
     np.testing.assert_allclose(ticks, [2, 8, 32, 128, 512, 2048])
@@ -416,7 +415,7 @@ def test_log_view_limits_loose_uses_data_interval():
     fig, ax = plt.subplots()
     ax.set_yscale("log")
     ax.plot([1, 2, 3], [30, 400, 4000])
-    ax.yaxis.set_major_locator(LogBreaksLocator(loose=True))
+    ax.yaxis.set_major_locator(LogBreaksLocator(placement="loose"))
     fig.canvas.draw()
     lo, hi = ax.get_ylim()
     assert lo <= 30
@@ -461,7 +460,7 @@ def test_log_huge_constant_value_does_not_raise():
 
 
 def test_log_base_below_one_loose_ticks_are_positive():
-    ticks = LogBreaksLocator(base=0.5, loose=True).tick_values(1, 100)
+    ticks = LogBreaksLocator(base=0.5, placement="loose").tick_values(1, 100)
     assert ticks.size > 0
     assert np.all(ticks > 0)
 
@@ -510,14 +509,14 @@ def test_date_intraday_ticks_are_hour_marks():
 
 def test_date_loose_ticks_bound_the_range():
     vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
-    ticks = DateBreaksLocator(loose=True).tick_values(vmin, vmax)
+    ticks = DateBreaksLocator(placement="loose").tick_values(vmin, vmax)
     assert ticks.min() <= vmin
     assert ticks.max() >= vmax
 
 
 def test_date_loose_pair_frees_only_the_low_end():
     vmin, vmax = _date_interval(dt.datetime(2023, 2, 14), dt.datetime(2024, 11, 3))
-    ticks = DateBreaksLocator(loose=(True, False)).tick_values(vmin, vmax)
+    ticks = DateBreaksLocator(placement=("loose", "inside")).tick_values(vmin, vmax)
     assert ticks.min() <= vmin
     assert ticks.max() <= vmax
     assert ticks.min() == mdates.date2num(dt.datetime(2023, 1, 1))
@@ -527,7 +526,7 @@ def test_date_loose_pair_view_limits_cover_only_the_loose_end():
     fig, ax = plt.subplots()
     days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
     ax.plot(days, range(32))
-    ax.xaxis.set_major_locator(DateBreaksLocator(loose=(True, False)))
+    ax.xaxis.set_major_locator(DateBreaksLocator(placement=("loose", "inside")))
     fig.canvas.draw()
     lo, hi = ax.get_xlim()
     first, last = mdates.date2num(days[0]), mdates.date2num(days[-1])
@@ -557,7 +556,7 @@ def test_date_view_limits_loose_uses_data_interval():
     fig, ax = plt.subplots()
     days = [dt.datetime(2023, 2, 14) + dt.timedelta(days=20 * i) for i in range(32)]
     ax.plot(days, range(32))
-    ax.xaxis.set_major_locator(DateBreaksLocator(loose=True))
+    ax.xaxis.set_major_locator(DateBreaksLocator(placement="loose"))
     fig.canvas.draw()
     lo, hi = ax.get_xlim()
     assert lo <= mdates.date2num(days[0])
@@ -660,8 +659,8 @@ def test_summary_locator_accepts_constant_positions():
 
 
 def test_view_limits_over_takes_the_interval_it_is_given():
-    loose = TalbotLocator(loose=True)
-    assert loose.view_limits_over(0, 1, (0, 11)) == (0.0, 12.5)
+    loose = TalbotLocator(placement="loose")
+    assert loose.view_limits_over(0, 1, (0, 11)) == (0.0, 12.0)
     assert loose.view_limits_over(0, 1, None) == (0.0, 1.0)
     plain = TalbotLocator()
     assert plain.view_limits_over(0, 1, (0, 11)) == (0.0, 1.0)
@@ -722,14 +721,14 @@ def test_narrow_axis_keeps_two_ticks():
 
 
 def test_unbound_default_targets_five():
-    expected = breaks_extended(n=5, only_inside=True)((0.3, 9.7))
+    expected = breaks_extended(n=5, placement="inside")((0.3, 9.7))
     np.testing.assert_allclose(TalbotLocator().tick_values(0.3, 9.7), expected)
 
 
 def test_loose_view_follows_axis_length():
     fig, ax = plt.subplots(figsize=(1.5, 3))
     ax.plot([0.3, 9.7], [0, 1])
-    ax.xaxis.set_major_locator(TalbotLocator(loose=True))
+    ax.xaxis.set_major_locator(TalbotLocator(placement="loose"))
     fig.canvas.draw()
     ticks = ax.get_xticks()
     assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
@@ -847,7 +846,7 @@ def test_unit_identity_is_bit_identical_to_default():
     # path is unchanged. Pin against the direct mizani call -- the same
     # reference test_matches_mizani_directly uses for the default.
     for vmin, vmax in [(0.3, 9.7), (0.4, 9.6), (-3.2, 7.1), (1.0, 2.0)]:
-        expected = breaks_extended(n=5, only_inside=True)((vmin, vmax))
+        expected = breaks_extended(n=5, placement="inside")((vmin, vmax))
         result = TalbotLocator(n=5, unit=1.0).tick_values(vmin, vmax)
         np.testing.assert_array_equal(result, expected)
         np.testing.assert_array_equal(
@@ -859,8 +858,8 @@ def test_unit_is_scale_invariant_with_loose():
     # unit composes with loose: the search runs in unit-space, so scaling
     # the inputs down and the ticks back up reproduces the same grid.
     u = np.pi
-    scaled = TalbotLocator(unit=u, loose=True).tick_values(0.3, 6.0)
-    plain = TalbotLocator(loose=True).tick_values(0.3 / u, 6.0 / u)
+    scaled = TalbotLocator(unit=u, placement="loose").tick_values(0.3, 6.0)
+    plain = TalbotLocator(placement="loose").tick_values(0.3 / u, 6.0 / u)
     np.testing.assert_allclose(scaled, u * plain)
 
 
@@ -948,7 +947,7 @@ def test_augmented_set_axis_forwards_to_base():
 def test_augmented_view_limits_delegate_to_base():
     fig, ax = plt.subplots()
     ax.plot([0.0, 10.0], [0.0, 1.0])
-    base = TalbotLocator(loose=True)
+    base = TalbotLocator(placement="loose")
     loc = AugmentedLocator(base, [3.0])
     ax.xaxis.set_major_locator(loc)  # binds the axis to loc and, via set_axis, to base
     np.testing.assert_allclose(loc.view_limits(0.0, 10.0), base.view_limits(0.0, 10.0))
@@ -976,7 +975,7 @@ def test_augmented_feature_tick_after_range_frame():
     range_frame(ax)
     ax.xaxis.set_major_locator(
         AugmentedLocator(
-            TalbotLocator(loose=True),
+            TalbotLocator(placement="loose"),
             FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]]),
         )
     )
@@ -1106,3 +1105,73 @@ def test_augmented_locator_forwards_feature_names():
 def test_augmented_locator_feature_names_empty_for_bare_positions():
     locator = AugmentedLocator(TalbotLocator(), [1.0, 2.0, 3.0])
     assert locator.feature_names == {}
+
+
+def test_flexible_ticks_may_sit_either_side_of_the_data():
+    # Calibrated against mizani 4f205c27: (7.5, 15.3) at n=5 gives
+    # 8..16 under flexible, inside at the bottom and past the top.
+    ticks = TalbotLocator(n=5, placement="flexible").tick_values(7.5, 15.3)
+    np.testing.assert_allclose(ticks, [8, 10, 12, 14, 16])
+
+
+def test_flexible_differs_from_inside_and_loose():
+    inside = TalbotLocator(n=5).tick_values(7.5, 15.3)
+    loose = TalbotLocator(n=5, placement="loose").tick_values(7.5, 15.3)
+    np.testing.assert_allclose(inside, [7.5, 10, 12.5, 15])
+    np.testing.assert_allclose(loose, [6, 8, 10, 12, 14, 16])
+
+
+def test_placement_matches_mizani_directly():
+    for placement in ("inside", "flexible", "loose", ("inside", "loose")):
+        expected = breaks_extended(n=5, placement=placement)((0.3, 9.7))
+        result = TalbotLocator(n=5, placement=placement).tick_values(0.3, 9.7)
+        np.testing.assert_allclose(result, expected)
+
+
+def test_flexible_view_limits_grow_only_past_the_data():
+    # Past-data top tick 16 becomes the view's top; the inside bottom
+    # tick 8 leaves the proposed limit alone.
+    loc = TalbotLocator(n=5, placement="flexible")
+    lo, hi = loc.view_limits_over(7.0, 16.0, (7.5, 15.3), n=5)
+    assert (lo, hi) == (7.0, 16.0)
+    lo, hi = loc.view_limits_over(7.0, 15.5, (7.5, 15.3), n=5)
+    assert (lo, hi) == (7.0, 16.0)
+
+
+def test_flexible_view_limits_ignore_float_dust_at_the_data_ends():
+    # mizani returns +-0.30000000000000004 for data -0.3..0.3 at n=5
+    # (calibrated): the ticks sit on the data ends, not past them, so
+    # the proposed margins stay.
+    loc = TalbotLocator(n=5, placement="flexible")
+    ticks = loc.tick_values(-0.3, 0.3)
+    assert ticks[0] < -0.3  # the dust is really there
+    assert ticks[-1] > 0.3
+    lo, hi = loc.view_limits_over(-0.33, 0.33, (-0.3, 0.3), n=5)
+    assert (lo, hi) == (-0.33, 0.33)
+
+
+def test_unit_is_scale_invariant_with_flexible():
+    u = np.pi
+    scaled = TalbotLocator(unit=u, placement="flexible").tick_values(0.3, 6.0)
+    plain = TalbotLocator(placement="flexible").tick_values(0.3 / u, 6.0 / u)
+    np.testing.assert_allclose(scaled, u * plain)
+
+
+@pytest.mark.parametrize("bad", ["nice", "tight", ("inside",), ("inside", "x")])
+def test_talbot_rejects_an_unknown_placement(bad):
+    with pytest.raises(ValueError, match="placement"):
+        TalbotLocator(placement=bad)
+
+
+@pytest.mark.parametrize("cls", [LogBreaksLocator, DateBreaksLocator])
+def test_log_and_date_reject_flexible(cls):
+    with pytest.raises(ValueError, match="linear"):
+        cls(placement="flexible")
+    with pytest.raises(ValueError, match="linear"):
+        cls(placement=("inside", "flexible"))
+
+
+def test_placements_are_declared_per_locator():
+    assert TalbotLocator.PLACEMENTS == ("inside", "flexible", "loose")
+    assert LogBreaksLocator.PLACEMENTS == ("inside", "loose")
+    assert DateBreaksLocator.PLACEMENTS == ("inside", "loose")

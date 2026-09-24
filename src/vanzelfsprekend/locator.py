@@ -2,6 +2,7 @@
 
 import datetime
 from collections.abc import Callable, Mapping, Sequence
+from typing import ClassVar, Literal
 
 import matplotlib as mpl
 import numpy as np
@@ -36,6 +37,14 @@ _DEFAULT_WEIGHTS = {
     "density": 0.5,
     "legibility": 0.05,
 }
+Placement = Literal["inside", "flexible", "loose"]
+"""How the outermost ticks sit against the interval (mizani's `placement`).
+
+Mirrors mizani's `BreaksExtendedPlacement`, which exists only for type
+checkers; ty checks the two agree at every `breaks_extended` call.
+"""
+PlacementPair = tuple[Placement, Placement]
+"""A `(low, high)` pair of placements, one per end."""
 
 
 def parse_spacing(spacing: float | tuple[float, float] | None) -> dict[str, float]:
@@ -102,6 +111,9 @@ class BreaksLocator(Locator):
         derives it from the axis's length and `spacing` at tick time.
     """
 
+    PLACEMENTS: ClassVar[tuple[Placement, ...]]
+    """The placements this locator can give; each subclass sets it."""
+
     def __init__(self, spacing: float | None, n: int | None) -> None:
         self._n = n
         self._spacing = spacing
@@ -134,16 +146,17 @@ class TalbotLocator(BreaksLocator):
     """Place ticks on nice numbers inside the data range.
 
     Delegates to `mizani.breaks.breaks_extended` (Talbot's extended
-    Wilkinson algorithm) with `only_inside=True`, so every tick lies
-    within the interval it is given. When used on an axis, ticks are
-    computed from the data interval, not the view interval, which is
-    what lets a range frame hug the data.
+    Wilkinson algorithm) with each end held by `placement`; by default
+    every tick lies within the interval it is given. When used on an
+    axis, ticks are computed from the data interval, not the view
+    interval, which is what lets a range frame hug the data.
 
-    With `loose=True`, computes nice numbers from the data range and
-    extends the tick grid outward by whole steps so the outermost ticks
-    bound the interval. A pair `(low, high)` frees each end on its
-    own: the search holds a `False` end inside the interval and lets a
-    `True` end past it, then only the `True` end is extended.
+    `placement` sets how the outermost ticks sit against the interval,
+    the three labelings of Talbot, Lin and Hanrahan (2010): `'inside'`
+    keeps them within it, `'loose'` puts them at or beyond it, and
+    `'flexible'` lets the search choose either side. Every placement
+    fills the interval: no further tick at the same step would fit
+    inside it. A pair `(low, high)` sets each end on its own.
 
     Parameters
     ----------
@@ -153,10 +166,9 @@ class TalbotLocator(BreaksLocator):
     n : int, optional
         The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
-    loose : bool or tuple of two bools
-        If True, extend the tick grid outward by whole steps so the
-        outermost ticks bound the data interval. A pair `(low, high)`
-        sets each end on its own. Default is False.
+    placement : {'inside', 'flexible', 'loose'} or tuple of two of them
+        How the outermost ticks sit against the interval. Default
+        `'inside'`.
     nice_numbers : sequence of float, optional
         Advanced tuning of the underlying Talbot extended-Wilkinson
         search: preferred step mantissas for the tick-step search
@@ -171,7 +183,9 @@ class TalbotLocator(BreaksLocator):
         criteria, merged over the defaults `{"simplicity": 0.25,
         "coverage": 0.2, "density": 0.5, "legibility": 0.05}` (mizani's
         `w`). Keys must be a subset of `{"simplicity", "coverage",
-        "density", "legibility"}`.
+        "density", "legibility"}`. The simplicity, coverage and density
+        weights must be positive (mizani's rule, checked at
+        construction).
     unit : float
         Place ticks on nice numbers measured in units of `unit`: the
         search runs on `(vmin / unit, vmax / unit)` and the result is
@@ -184,11 +198,13 @@ class TalbotLocator(BreaksLocator):
         labelled "pi/2" -- write the fraction with a `FuncFormatter`.
     """
 
+    PLACEMENTS: ClassVar[tuple[Placement, ...]] = ("inside", "flexible", "loose")
+
     def __init__(
         self,
         spacing: float | None = None,
         n: int | None = None,
-        loose: bool | tuple[bool, bool] = False,
+        placement: Placement | PlacementPair = "inside",
         nice_numbers: Sequence[float] | None = None,
         weights: dict[str, float] | None = None,
         unit: float = 1.0,
@@ -205,20 +221,6 @@ class TalbotLocator(BreaksLocator):
                     f"{sorted(valid_keys)}"
                 )
         merged_weights = {**_DEFAULT_WEIGHTS, **(weights or {})}
-        # Each of these three is the only term that decays in one of the
-        # search's three nested loops, so it alone makes that loop's pruning
-        # bound fall below the best score and stop. At zero the loop runs
-        # forever. `legibility` is mizani's constant 1 and needs no floor.
-        unbounded = sorted(
-            key
-            for key in ("simplicity", "coverage", "density")
-            if merged_weights[key] <= 0
-        )
-        if unbounded:
-            raise ValueError(
-                f"weights {unbounded} must be positive; each bounds one of the "
-                "tick search's loops, which does not terminate without it"
-            )
         self._q = tuple(nice_numbers) if nice_numbers is not None else _DEFAULT_Q
         self._w = (
             merged_weights["simplicity"],
@@ -226,20 +228,20 @@ class TalbotLocator(BreaksLocator):
             merged_weights["density"],
             merged_weights["legibility"],
         )
-        self._loose = _loose_ends(loose)
+        self._placement = _placement_ends(placement, self.PLACEMENTS, "TalbotLocator")
+        # mizani checks the weights and placement when a search is built, and
+        # searches are built per draw; build one now so a bad value fails at
+        # the call, not at the first draw.
+        self._breaks(_UNBOUND_N, self._placement)
         self._unit = float(unit)
 
-    def _breaks(self, n: int, only_inside: bool | tuple[bool, bool]) -> Callable:
-        return breaks_extended(n=n, Q=self._q, only_inside=only_inside, w=self._w)
+    def _breaks(self, n: int, placement: PlacementPair) -> Callable:
+        return breaks_extended(n=n, Q=self._q, w=self._w, placement=placement)
 
     def _ticks(self, vmin: float, vmax: float, n: int) -> np.ndarray:
-        """Search with each end held inside unless loose, then cover the loose ends."""
+        """Search in unit space with each end held by its placement."""
         u = self._unit
-        inside = (not self._loose[0], not self._loose[1])
-        ticks = self._breaks(n, only_inside=inside)((vmin / u, vmax / u))
-        if any(self._loose) and ticks.size >= 2:
-            ticks = _extend_to_cover(ticks, vmin / u, vmax / u, self._loose)
-        return ticks * u
+        return self._breaks(n, self._placement)((vmin / u, vmax / u)) * u
 
     def __call__(self) -> np.ndarray:  # ty: ignore[invalid-method-override]
         """Return tick locations computed from the axis's visible data."""
@@ -355,15 +357,16 @@ class TalbotLocator(BreaksLocator):
             vmin, vmax = vmax, vmin
         if n is None:
             n = self.target()
-        cover = self._breaks(n, only_inside=False)
 
-        if any(self._loose) and interval is not None:
+        if self._placement != ("inside", "inside") and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
                     ticks = self._ticks(dmin, dmax, n)
                     if ticks.size >= 2:
-                        return _loose_limits(ticks, vmin, vmax, self._loose)
+                        return _placed_limits(
+                            ticks, vmin, vmax, (dmin, dmax), self._placement
+                        )
                 except (OverflowError, ValueError, FloatingPointError):
                     pass
                 return super().view_limits(vmin, vmax)
@@ -374,9 +377,8 @@ class TalbotLocator(BreaksLocator):
             return super().view_limits(vmin, vmax)
         try:
             u = self._unit
-            ticks = cover((vmin / u, vmax / u))
+            ticks = self._breaks(n, ("loose", "loose"))((vmin / u, vmax / u))
             if ticks.size >= 2:
-                ticks = _extend_to_cover(ticks, vmin / u, vmax / u)
                 return float(ticks[0]) * u, float(ticks[-1]) * u
         except (OverflowError, ValueError, FloatingPointError):
             pass
@@ -393,9 +395,9 @@ class LogBreaksLocator(BreaksLocator):
     ticks are computed from the data interval, not the view interval,
     which is what lets a range frame hug the data.
 
-    With `loose=True`, keeps the covering breaks and extends the grid
-    outward by whole multiplicative steps so the outermost ticks bound
-    the interval. A pair `(low, high)` frees each end on its own.
+    With `placement='loose'`, keeps the covering breaks and extends the
+    grid outward by whole multiplicative steps so the outermost ticks
+    bound the interval. A pair `(low, high)` frees each end on its own.
 
     Parameters
     ----------
@@ -405,23 +407,29 @@ class LogBreaksLocator(BreaksLocator):
     n : int, optional
         The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
-    loose : bool or tuple of two bools
-        If True, extend the tick grid outward by whole multiplicative
-        steps so the outermost ticks bound the data interval. A pair
-        `(low, high)` sets each end on its own. Default is False.
+    placement : {'inside', 'loose'} or tuple of two of them
+        `'loose'` extends the tick grid outward by whole multiplicative
+        steps so the outermost ticks bound the data interval; `'inside'`
+        cuts them back inside it. A pair `(low, high)` sets each end on
+        its own. `'flexible'` is linear-only and raises. Default
+        `'inside'`.
     base : float
         Base of the logarithm, matching the axis scale's base.
     """
+
+    PLACEMENTS: ClassVar[tuple[Placement, ...]] = ("inside", "loose")
 
     def __init__(
         self,
         spacing: float | None = None,
         n: int | None = None,
-        loose: bool | tuple[bool, bool] = False,
+        placement: Placement | PlacementPair = "inside",
         base: float = 10,
     ) -> None:
         super().__init__(spacing, n)
-        self._loose = _loose_ends(loose)
+        self._placement = _placement_ends(
+            placement, self.PLACEMENTS, type(self).__name__
+        )
         self._base = base
 
     def _breaks(self, n: int) -> Callable:
@@ -431,11 +439,12 @@ class LogBreaksLocator(BreaksLocator):
         """Covering breaks, extended at a loose end and cut back at the others."""
         ticks = np.asarray(self._breaks(n)((vmin, vmax)), dtype=float)
         ticks = ticks[ticks > 0]
-        ticks = _extend_to_cover_log(ticks, vmin, vmax, self._loose)
+        loose = (self._placement[0] == "loose", self._placement[1] == "loose")
+        ticks = _extend_to_cover_log(ticks, vmin, vmax, loose)
         keep = np.ones(ticks.size, dtype=bool)
-        if not self._loose[0]:
+        if not loose[0]:
             keep &= ticks >= vmin * (1 - 1e-9)
-        if not self._loose[1]:
+        if not loose[1]:
             keep &= ticks <= vmax * (1 + 1e-9)
         return ticks[keep]
 
@@ -554,13 +563,15 @@ class LogBreaksLocator(BreaksLocator):
             n = self.target()
         breaks = self._breaks(n)
 
-        if any(self._loose) and interval is not None:
+        if self._placement != ("inside", "inside") and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and 0 < dmin < dmax:
                 try:
                     ticks = self._ticks(dmin, dmax, n)
                     if ticks.size >= 2:
-                        return _loose_limits(ticks, vmin, vmax, self._loose)
+                        return _placed_limits(
+                            ticks, vmin, vmax, (dmin, dmax), self._placement
+                        )
                 except (OverflowError, ValueError, FloatingPointError):
                     pass
             return super().view_limits(vmin, vmax)
@@ -643,8 +654,9 @@ class DateBreaksLocator(BreaksLocator):
     converted to datetimes at the boundary with `matplotlib.dates`, so
     any matplotlib epoch setting is respected.
 
-    With `loose=True`, keeps the covering breaks so the outermost ticks
-    bound the interval. A pair `(low, high)` frees each end on its own.
+    With `placement='loose'`, keeps the covering breaks so the outermost
+    ticks bound the interval. A pair `(low, high)` frees each end on its
+    own.
 
     Parameters
     ----------
@@ -654,29 +666,34 @@ class DateBreaksLocator(BreaksLocator):
     n : int, optional
         The number of ticks to aim for, overriding `spacing`. See
         `BreaksLocator`.
-    loose : bool or tuple of two bools
-        If True, keep the covering breaks so the outermost ticks bound
-        the data interval. A pair `(low, high)` sets each end on its
-        own. Default is False.
+    placement : {'inside', 'loose'} or tuple of two of them
+        `'loose'` keeps the covering breaks so the outermost ticks bound
+        the data interval; `'inside'` cuts them back inside it. A pair
+        `(low, high)` sets each end on its own. `'flexible'` is
+        linear-only and raises. Default `'inside'`.
     """
+
+    PLACEMENTS: ClassVar[tuple[Placement, ...]] = ("inside", "loose")
 
     def __init__(
         self,
         spacing: float | None = None,
         n: int | None = None,
-        loose: bool | tuple[bool, bool] = False,
+        placement: Placement | PlacementPair = "inside",
     ) -> None:
         super().__init__(spacing, n)
-        self._loose = _loose_ends(loose)
+        self._placement = _placement_ends(
+            placement, self.PLACEMENTS, type(self).__name__
+        )
 
     def _ticks(self, vmin: float, vmax: float, n: int) -> np.ndarray:
         """Covering breaks, cut back inside the interval at each end not loose."""
         ticks = self._covering_breaks(vmin, vmax, n)
         tol = 1e-9 * (vmax - vmin)
         keep = np.ones(ticks.size, dtype=bool)
-        if not self._loose[0]:
+        if self._placement[0] != "loose":
             keep &= ticks >= vmin - tol
-        if not self._loose[1]:
+        if self._placement[1] != "loose":
             keep &= ticks <= vmax + tol
         return ticks[keep]
 
@@ -784,13 +801,15 @@ class DateBreaksLocator(BreaksLocator):
         if n is None:
             n = self.target()
 
-        if any(self._loose) and interval is not None:
+        if self._placement != ("inside", "inside") and interval is not None:
             dmin, dmax = interval
             if np.isfinite([dmin, dmax]).all() and dmin != dmax:
                 try:
                     ticks = self._ticks(dmin, dmax, n)
                     if ticks.size >= 2:
-                        return _loose_limits(ticks, vmin, vmax, self._loose)
+                        return _placed_limits(
+                            ticks, vmin, vmax, (dmin, dmax), self._placement
+                        )
                 except (OverflowError, ValueError, FloatingPointError):
                     pass
             return super().view_limits(vmin, vmax)
@@ -1118,42 +1137,44 @@ def visible_interval(
     return (lo, hi)
 
 
-def _loose_ends(loose: bool | tuple[bool, bool]) -> tuple[bool, bool]:
-    """Read `loose` as a `(low, high)` pair of ends."""
-    if isinstance(loose, bool):
-        return (loose, loose)
-    low, high = loose
-    return (bool(low), bool(high))
+def _placement_ends(
+    placement: Placement | PlacementPair, allowed: tuple[Placement, ...], owner: str
+) -> PlacementPair:
+    """Read `placement` as a `(low, high)` pair, each end one of `allowed`."""
+    pair = (placement, placement) if isinstance(placement, str) else tuple(placement)
+    if len(pair) != 2 or any(p not in allowed for p in pair):
+        linear_only = "; flexible needs a linear axis" if "flexible" in pair else ""
+        raise ValueError(
+            f"{owner} takes placement {allowed} or a (low, high) pair of them, "
+            f"got {placement!r}{linear_only}"
+        )
+    return pair
 
 
-def _loose_limits(
-    ticks: np.ndarray, vmin: float, vmax: float, loose: tuple[bool, bool]
-) -> tuple[float, float]:
-    """View limits at the outermost tick on each loose end, else as proposed."""
-    return (
-        float(ticks[0]) if loose[0] else vmin,
-        float(ticks[-1]) if loose[1] else vmax,
-    )
-
-
-def _extend_to_cover(
+def _placed_limits(
     ticks: np.ndarray,
     vmin: float,
     vmax: float,
-    ends: tuple[bool, bool] = (True, True),
-) -> np.ndarray:
-    if ticks.size < 2:
-        return ticks
-    step = ticks[1] - ticks[0]
-    tol = 1e-9 * step
-    down = up = 0
-    if ends[0] and ticks[0] - vmin > tol:
-        down = int(np.ceil((ticks[0] - vmin - tol) / step))
-    if ends[1] and vmax - ticks[-1] > tol:
-        up = int(np.ceil((vmax - ticks[-1] - tol) / step))
-    if down == 0 and up == 0:
-        return ticks
-    return ticks[0] + step * np.arange(-down, ticks.size + up)
+    interval: tuple[float, float],
+    placement: PlacementPair,
+) -> tuple[float, float]:
+    """Return view limits reaching each outermost tick the placement lets past the data.
+
+    A loose end always takes its outermost tick; a flexible end takes it
+    only when it lies past the data, and otherwise keeps the proposed
+    limit, as an inside end does. "Past" allows `1e-9 * step` of float
+    dust: mizani returns `-0.30000000000000004` for a tick at `-0.3`,
+    which a raw comparison would read as past the data, dropping the
+    margin. `ticks` has at least two entries (the callers check).
+    """
+    dmin, dmax = interval
+    low, high = float(ticks[0]), float(ticks[-1])
+    tol = 1e-9 * float(ticks[1] - ticks[0])
+    past_low = low < dmin - tol
+    past_high = high > dmax + tol
+    reach_low = placement[0] == "loose" or (placement[0] == "flexible" and past_low)
+    reach_high = placement[1] == "loose" or (placement[1] == "flexible" and past_high)
+    return (low if reach_low else vmin, high if reach_high else vmax)
 
 
 def _extend_to_cover_log(

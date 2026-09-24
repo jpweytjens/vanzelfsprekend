@@ -13,8 +13,10 @@ from matplotlib.ticker import FixedLocator, Locator, NullLocator
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state
 from vanzelfsprekend.locator import (
     AugmentedLocator,
+    BreaksLocator,
     DateBreaksLocator,
     LogBreaksLocator,
+    PlacementPair,
     TalbotLocator,
     visible_interval,
 )
@@ -184,9 +186,20 @@ def skip_if_not_rectilinear(ax: Axes, stacklevel: int) -> bool:
     return True
 
 
+def locator_class(kind: AxisKind | None) -> type[BreaksLocator] | None:
+    """Return the range-frame locator class `kind` gets, or `None` to leave it."""
+    if kind is None or kind.scale not in ("linear", "log") or not kind.supported:
+        return None
+    if kind.is_date:
+        return DateBreaksLocator
+    if kind.scale == "log":
+        return LogBreaksLocator
+    return TalbotLocator
+
+
 def build_major_locator(
     kind: AxisKind,
-    loose: tuple[bool, bool],
+    placement: PlacementPair,
     n: int | None,
     spacing: float,
     nice_numbers: Sequence[float] | None,
@@ -197,14 +210,20 @@ def build_major_locator(
 
     A `DateBreaksLocator` for a date axis, a `LogBreaksLocator` (using
     `base`) for a log axis, a `TalbotLocator` otherwise. Does not touch
-    the axis; the caller installs it.
+    the axis; the caller installs it. The class comes from
+    `locator_class`, the one dispatch the placement pre-check reads too.
     """
-    if kind.is_date:
-        return DateBreaksLocator(n=n, spacing=spacing, loose=loose)
-    if kind.scale == "log":
-        return LogBreaksLocator(n=n, spacing=spacing, loose=loose, base=base)  # ty: ignore[invalid-argument-type]
+    cls = locator_class(kind)
+    if cls is DateBreaksLocator:
+        return DateBreaksLocator(n=n, spacing=spacing, placement=placement)
+    if cls is LogBreaksLocator:
+        return LogBreaksLocator(n=n, spacing=spacing, placement=placement, base=base)  # ty: ignore[invalid-argument-type]
     return TalbotLocator(
-        n=n, spacing=spacing, loose=loose, nice_numbers=nice_numbers, weights=weights
+        n=n,
+        spacing=spacing,
+        placement=placement,
+        nice_numbers=nice_numbers,
+        weights=weights,
     )
 
 
@@ -297,7 +316,10 @@ def install_frame(
                 stacklevel=stacklevel,
             )
             continue
-        loose = (mode[name][0] == "loose", mode[name][1] == "loose")
+        placement: PlacementPair = (
+            "loose" if mode[name][0] == "loose" else "inside",
+            "loose" if mode[name][1] == "loose" else "inside",
+        )
         base = axis.get_transform().base if kind.scale == "log" else None  # ty: ignore[unresolved-attribute]
         installed = frame_state["installed"]
         may_clobber = name in grouped
@@ -306,8 +328,10 @@ def install_frame(
             f"majloc:{name}",
             axis.isDefault_majloc or may_clobber,
             axis.get_major_locator(),
-            lambda kind=kind, loose=loose, name=name, base=base: build_major_locator(
-                kind, loose, n[name], spacing[name], nice_numbers, weights, base
+            lambda kind=kind, placement=placement, name=name, base=base: (
+                build_major_locator(
+                    kind, placement, n[name], spacing[name], nice_numbers, weights, base
+                )
             ),
             axis.set_major_locator,
         )

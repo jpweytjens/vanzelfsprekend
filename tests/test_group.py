@@ -36,7 +36,7 @@ def test_group_locator_falls_back_to_inner_when_union_empty():
 
 def test_group_locator_view_limits_cover_the_union():
     # Loose spans of (0, 1) and (10, 11) are (0, 1) and (10, 11); the
-    # loose span of their union (0, 11) is (0, 12.5). The group must
+    # loose span of their union (0, 11) is (0, 12). The group must
     # report the latter, not the panel's own span.
     fig, axes = plt.subplots(1, 2)
     axes[0].plot([0, 1], [0, 1])
@@ -44,7 +44,7 @@ def test_group_locator_view_limits_cover_the_union():
     vzs.range_frame(axes[0], frame="loose", n=5)
     inner = axes[0].xaxis.get_major_locator()
     grouped = GroupLocator(inner, list(axes), "x")
-    assert grouped.view_limits(0, 1) == (0.0, 12.5)
+    assert grouped.view_limits(0, 1) == (0.0, 12.0)
     assert inner.view_limits(0, 1) == (0.0, 1.0)
     plt.close(fig)
 
@@ -200,10 +200,10 @@ def test_loose_shared_pair_autoscales_to_the_union_span():
     b.plot([10, 11], [0, 1])
     vzs.apply(a, frame="loose", n=5)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.5)
-    assert b.get_xlim() == (0.0, 12.5)
+    assert a.get_xlim() == (0.0, 12.0)
+    assert b.get_xlim() == (0.0, 12.0)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.5)
+    assert a.get_xlim() == (0.0, 12.0)
     plt.close(fig)
 
 
@@ -213,10 +213,10 @@ def test_loose_compare_grid_autoscales_to_the_union_span():
     b.plot([10, 11], [0, 1])
     vzs.small_multiples((a, b), frame="loose", n=5)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.5)
-    assert b.get_xlim() == (0.0, 12.5)
+    assert a.get_xlim() == (0.0, 12.0)
+    assert b.get_xlim() == (0.0, 12.0)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.5)
+    assert a.get_xlim() == (0.0, 12.0)
     plt.close(fig)
 
 
