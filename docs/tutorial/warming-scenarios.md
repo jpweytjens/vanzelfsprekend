@@ -34,7 +34,7 @@ Every mark carries its name in `label=`. The legend reads those names now, and t
 <figcaption markdown>Step two. The bottom spine runs from the first observed year to the last projected one, and the left spine from 0 to 4, the last round numbers inside the data.</figcaption>
 </figure>
 
-The two axes get different frame modes because they mean different things. The years are a record with two ends, so `data` runs the bottom spine exactly from 1850 to 2100, past the last tick label at 2050. The degrees are a scale, so `nice` ends the left spine at the outermost round ticks inside the data, and the worst scenario runs past the top of it: SSP5-8.5 goes, literally, off the chart. `loose` would have carried the spine to 5 and covered the line, which is the conventional look and one the spine can drop when the overrun is the story. The [frame modes how-to](../how-to/frame-modes.md) has the four modes side by side. The same call turned the spines and ticks grey; the points and lines are untouched.
+The two axes get different frame modes because they mean different things. The years are a record with two ends, so `data` runs the bottom spine exactly from 1850 to 2100, past the last tick label at 2050. The degrees are a scale, so `inside` ends the left spine at the outermost round ticks inside the data, and the worst scenario runs past the top of it: SSP5-8.5 goes, literally, off the chart. `loose` would have carried the spine to 5 and covered the line, which is the conventional look and one the spine can drop when the overrun is the story. The [frame modes how-to](../how-to/frame-modes.md) has the five modes side by side. The same call turned the spines and ticks grey; the points and lines are untouched.
 
 ## Name the axis
 

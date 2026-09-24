@@ -10,8 +10,8 @@ Every figure below the comparison comes from the [gallery script](https://github
 </figure>
 
 <figure markdown>
-![The same rising warming curve four times under the four frame modes, feature running the left spine up to a 2 °C mark beyond the data](figures/frame_modes.svg)
-<figcaption markdown>**One record, four frame modes.** [`nice`](how-to/frame-modes.md) ends the spines at the outermost ticks, `loose` at round numbers bracketing the data with the spine standing off, `data` at the record's own extremes. Those three share their ticks and move only the spine; `feature` ticks the marks you place instead and runs the left spine out to the 2 °C target the warming has not reached.</figcaption>
+![The same rising warming curve five times under the five frame modes, feature running the left spine up to a 2 °C mark beyond the data](figures/frame_modes.svg)
+<figcaption markdown>**One record, five frame modes.** [`inside`](how-to/frame-modes.md) ends the spines at the outermost ticks inside the data, `flexible` at ticks on whichever side of the data reads better, here the same as `inside`, and `loose` at round numbers bracketing the data with the spine standing off. `data` keeps the inside ticks and ends at the record's own extremes; `feature` ticks the marks you place instead and runs the left spine out to the 2 °C target the warming has not reached.</figcaption>
 </figure>
 
 <figure markdown>

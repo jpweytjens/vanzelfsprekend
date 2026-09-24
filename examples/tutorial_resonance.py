@@ -80,13 +80,13 @@ def main() -> None:
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
     # --8<-- [start:step2]
-    vzs.apply(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, 0))
     # --8<-- [end:step2]
     ax.legend()
     save(fig, 2)
 
     fig, ax = draw(frequency, calculated, random_sampled, measured)
-    vzs.apply(ax, frame="loose", offset=(24, -6))
+    vzs.apply(ax, frame="loose", offset=(24, 0))
     # --8<-- [start:step3]
     vzs.xlabel(ax, "frequency (GHz)")
     vzs.ylabel(ax, "output power (mW)")

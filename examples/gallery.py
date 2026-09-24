@@ -189,12 +189,15 @@ def old_faithful() -> None:
 
 
 def frame_modes() -> None:
-    """Render one warming record under the four frame modes."""
+    """Render one warming record under the five frame modes."""
     table = vzs.datasets.load("hadcrut5_annual")
     year, anomaly = table["year"], table["anomaly_c"]
-    fig, axes = plt.subplots(2, 2, figsize=(6.5, 5))
+    # The three labelings on the top row, the two spine modes below.
+    fig, axes = plt.subplots(2, 3, figsize=(9.5, 5))
     fig.subplots_adjust(hspace=0.55, wspace=0.4)
-    for ax, mode in zip(axes.flat, ("inside", "loose", "data", "feature"), strict=True):
+    axes.flat[5].remove()
+    modes = ("inside", "flexible", "loose", "data", "feature")
+    for ax, mode in zip(axes.flat[:5], modes, strict=True):
         if mode == "feature":
             # Mark the 2 °C Paris target the record has not reached: the spine
             # climbs to it while the low end stays at the data. Set the marks

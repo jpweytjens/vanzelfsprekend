@@ -30,7 +30,7 @@ Jean-luc Doumont's *Trees, maps and theorems* redraws a resonance curve three ti
 <figcaption markdown>Step two. `loose` ends each spine at the round number just past the data, and the offset stands the spines off the plot to say they are a reference scale, not the data's edge.</figcaption>
 </figure>
 
-The bottom spine stands 24 points off and the left spine sits 6 points inside, which is where Doumont puts them: the frequency axis is a scale read against, the power axis is a baseline the curve rises from.
+The bottom spine stands 24 points off and the left spine sits flush at 15.5 GHz, just short of where the curve begins, which is where Doumont puts them: the frequency axis is a scale read against, the power axis is a baseline the curve rises from.
 
 ## Move the labels to the spine ends
 

@@ -36,7 +36,7 @@ The data ship with the package, and `vzs.datasets.describe("old_faithful")` name
 
 The box becomes two spines, and the tick marks, tick labels and spines turn grey. The ticks stayed on round numbers but only the ones inside the data survive, so the x spine runs from 2 to 5 and the y spine from 50 to 90. The points are untouched.
 
-That leaves the extremes outside the frame. The eruptions run from 1.6 minutes to 5.1 against a spine that stops at 2 and at 5, and the waits from 43 minutes to 96 against a spine from 50 to 90. Nothing is broken: a bare `apply` uses the `nice` mode, which ends each spine at the outermost tick, and the outermost tick is inside the data by construction.
+That leaves the extremes outside the frame. The eruptions run from 1.6 minutes to 5.1 against a spine that stops at 2 and at 5, and the waits from 43 minutes to 96 against a spine from 50 to 90. Nothing is broken: a bare `apply` uses the `inside` mode, which ends each spine at the outermost tick, and the outermost tick is inside the data by construction.
 
 ## End the spines at the data
 
@@ -51,7 +51,7 @@ That leaves the extremes outside the frame. The eruptions run from 1.6 minutes t
 
 The ticks do not move. Each spine now runs from that variable's minimum to its maximum and no further, reaching a little past its outermost tick at both ends, so the frame says that the shortest eruption was a little under two minutes and the longest a little over five, and that nobody waited less than about forty-five minutes or more than about ninety-five. That reading is free: it costs no caption and no extra ink, and it is where the range frame gets its name.
 
-Which mode suits a figure depends on where the extremes fall. Under `nice` the spine ends on a labelled tick, which reads cleanly when the extremes sit near round numbers and strands points outside the frame when they do not, as here. `loose` strands nothing, and pays for it in air: on this data it brackets out to 1 and 6 minutes, where no eruption is near. `data` is the one that does not depend on where the round numbers happen to fall, since the ends are the extremes themselves. The [frame modes how-to](../how-to/frame-modes.md) has the four side by side.
+Which mode suits a figure depends on where the extremes fall. Under `inside` the spine ends on a labelled tick, which reads cleanly when the extremes sit near round numbers and strands points outside the frame when they do not, as here. `loose` strands nothing, and pays for it in air: on this data it brackets out to 1.5 and 5.5 minutes and to waits of 40 and 100. `flexible` decides each end on its own, keeping 2 and 5 minutes but bracketing the waits at 40 and 100. `data` is the one that does not depend on where the round numbers happen to fall, since the ends are the extremes themselves. The [frame modes how-to](../how-to/frame-modes.md) has the five side by side.
 
 The same call is also a method on the axes, `ax.vzs.apply(frame="data")`. Every entry point is, with matplotlib's spelling where it has one, so the `vzs.xlabel(ax, ...)` below is also `ax.vzs.set_xlabel(...)`. The how-to pages use that form; the [registration reference](../reference/registration.md) has the rule.
 

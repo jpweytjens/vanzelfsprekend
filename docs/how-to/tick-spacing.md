@@ -18,9 +18,9 @@ ax.vzs.range_frame(n=3)
 
 Both go to the default locator, so a locator you set afterwards replaces them along with the rest of it; the [locators how-to](locators.md) has that order. The count is read when the ticks are computed, not when you call `apply`, which is why the figure above needs no per-panel argument; [the frame follows the axes](../explanation/hook.md) says how.
 
-## The count sets how far a `nice` spine reaches
+## The count sets how far an `inside` spine reaches
 
-More ticks is not only a denser axis. Under the default `nice` frame each spine ends at the outermost tick, so the tick step also decides how much of the data the frame covers, and a step too coarse for the data leaves the extremes outside it.
+More ticks is not only a denser axis. Under the default `inside` frame each spine ends at the outermost tick, so the tick step also decides how much of the data the frame covers, and a step too coarse for the data leaves the extremes outside it.
 
 Old Faithful's waits run from 43 minutes to 96. At the count this panel chooses, the y axis steps by ten, the outermost ticks inside the data are 50 and 90, and the spine between them leaves the shortest and longest waits outside. Asking for more ticks on that axis moves the step to five, and the spine reaches 45 and 95 instead:
 
