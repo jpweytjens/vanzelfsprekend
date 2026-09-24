@@ -789,8 +789,8 @@ wheels = [
 
 [[package]]
 name = "mizani"
-version = "0.14.6"
-source = { registry = "https://pypi.org/simple" }
+version = "0.14.6.post9+g4f205c271"
+source = { git = "https://github.com/has2k1/mizani?rev=4f205c2714b79554209c9dfd89432517649dfb72#4f205c2714b79554209c9dfd89432517649dfb72" }
 dependencies = [
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
@@ -801,10 +801,6 @@ dependencies = [
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "scipy", version = "1.18.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "tzdata", marker = "sys_platform == 'emscripten' or sys_platform == 'win32'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/df/74/e03c87e8884a486909f9f254a9d0d6b34395a7379e6bf2331bbc8453b1d4/mizani-0.14.6.tar.gz", hash = "sha256:5b37ec00adb30420f18272844688b91137297068c707f18d6fd32673aed58a23", size = 774581, upload-time = "2026-09-07T16:14:38.634Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d9/a8/4463130becffe3e091feed0f459008aeebc806998dff53166cc12063f6b0/mizani-0.14.6-py3-none-any.whl", hash = "sha256:a3d3ec364018efaa0e259d530303576156bac7741faa66167c9b50aaf19c3d73", size = 134163, upload-time = "2026-09-07T16:14:36.791Z" },
 ]
 
 [[package]]
@@ -1940,7 +1936,7 @@ examples = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.9" },
-    { name = "mizani", specifier = ">=0.14.6" },
+    { name = "mizani", git = "https://github.com/has2k1/mizani?rev=4f205c2714b79554209c9dfd89432517649dfb72" },
     { name = "numpy", specifier = ">=2.2.6" },
 ]
 

@@ -110,3 +110,8 @@ convention = "numpy"
 # Pin the venv so the ty language server resolves third-party imports
 # even when a stale VIRTUAL_ENV is exported in the parent shell.
 python = "./.venv"
+
+[tool.uv.sources]
+# mizani main carries `placement=` (has2k1/mizani#82) and the zero-weight
+# rejection (#81). Drop this and raise the floor to >=0.15 when it ships.
+mizani = { git = "https://github.com/has2k1/mizani", rev = "4f205c2714b79554209c9dfd89432517649dfb72" }
