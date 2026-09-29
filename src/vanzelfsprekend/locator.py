@@ -1160,9 +1160,12 @@ def _placed_limits(
 ) -> tuple[float, float]:
     """Return view limits reaching each outermost tick the placement lets past the data.
 
-    A loose end always takes its outermost tick; a flexible end takes it
-    only when it lies past the data, and otherwise keeps the proposed
-    limit, as an inside end does. "Past" allows `1e-9 * step` of float
+    A loose end always reaches its outermost tick; a flexible end reaches
+    it only when it lies past the data, and otherwise keeps the proposed
+    limit, as an inside end does. Reaching extends the proposed limit and
+    never shrinks it, so the margin around the data survives a tick that
+    falls inside it: a view ending on a tick at the data's extreme would
+    cut the marks drawn there in half. "Past" allows `1e-9 * step` of float
     dust: mizani returns `-0.30000000000000004` for a tick at `-0.3`,
     which a raw comparison would read as past the data, dropping the
     margin. `ticks` has at least two entries (the callers check).
@@ -1174,7 +1177,10 @@ def _placed_limits(
     past_high = high > dmax + tol
     reach_low = placement[0] == "loose" or (placement[0] == "flexible" and past_low)
     reach_high = placement[1] == "loose" or (placement[1] == "flexible" and past_high)
-    return (low if reach_low else vmin, high if reach_high else vmax)
+    return (
+        min(low, vmin) if reach_low else vmin,
+        max(high, vmax) if reach_high else vmax,
+    )
 
 
 def _extend_to_cover_log(

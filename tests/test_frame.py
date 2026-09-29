@@ -149,8 +149,9 @@ def test_per_end_loose_view_covers_only_the_loose_end(scatter_ax):
     ax.figure.canvas.draw()
     xmin, xmax = ax.xaxis.get_data_interval()
     lo, hi = ax.get_xlim()
-    assert lo == ax.xaxis.get_majorticklocs().min()
-    assert hi == pytest.approx(xmax + 0.05 * (xmax - xmin))
+    margin = 0.05 * (xmax - xmin)
+    assert lo == min(ax.xaxis.get_majorticklocs().min(), xmin - margin)
+    assert hi == pytest.approx(xmax + margin)
 
 
 def test_per_end_loose_offsets_that_spine(scatter_ax):
@@ -387,9 +388,14 @@ def test_loose_frame_view_equals_tick_span():
     ax.scatter(rng.uniform(0.3, 9.7, 50), rng.uniform(-3.2, 4.1, 50))
     range_frame(ax, frame="loose")
     fig.canvas.draw()
+    # Each end reaches the further of its outermost tick and the margin.
     for axis, get_lim in ((ax.xaxis, ax.get_xlim), (ax.yaxis, ax.get_ylim)):
         ticks = axis.get_majorticklocs()
-        assert get_lim() == pytest.approx((ticks.min(), ticks.max()))
+        dmin, dmax = axis.get_data_interval()
+        margin = 0.05 * (dmax - dmin)
+        assert get_lim() == pytest.approx(
+            (min(ticks.min(), dmin - margin), max(ticks.max(), dmax + margin))
+        )
     plt.close(fig)
 
 

@@ -200,10 +200,12 @@ def test_loose_shared_pair_autoscales_to_the_union_span():
     b.plot([10, 11], [0, 1])
     vzs.apply(a, frame="loose", n=5)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.0)
-    assert b.get_xlim() == (0.0, 12.0)
+    # The low tick sits on the union's own minimum, so the margin bounds
+    # the view there; the high tick reaches past the margin.
+    assert a.get_xlim() == pytest.approx((-0.55, 12.0))
+    assert b.get_xlim() == pytest.approx((-0.55, 12.0))
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.0)
+    assert a.get_xlim() == pytest.approx((-0.55, 12.0))
     plt.close(fig)
 
 
@@ -213,10 +215,13 @@ def test_loose_compare_grid_autoscales_to_the_union_span():
     b.plot([10, 11], [0, 1])
     vzs.small_multiples((a, b), frame="loose", n=5)
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.0)
-    assert b.get_xlim() == (0.0, 12.0)
+    # The low tick sits on the union's own minimum, so the margin bounds
+    # the view there; the high tick reaches past the margin. A grid takes
+    # each end's margin from the panel holding that extreme, a's 0..1.
+    assert a.get_xlim() == pytest.approx((-0.05, 12.0))
+    assert b.get_xlim() == pytest.approx((-0.05, 12.0))
     fig.canvas.draw()
-    assert a.get_xlim() == (0.0, 12.0)
+    assert a.get_xlim() == pytest.approx((-0.05, 12.0))
     plt.close(fig)
 
 
@@ -315,9 +320,13 @@ def test_loose_unequal_pair_view_matches_its_ticks():
     axes[1].plot([6.2, 9.7], [0, 1])
     vzs.apply(axes[0], frame="loose")
     fig.canvas.draw()
+    # Union data 0.3..9.7: each end reaches the further of tick and margin.
+    margin = 0.05 * 9.4
     for ax in axes:
         ticks = ax.xaxis.get_majorticklocs()
-        assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
+        assert ax.get_xlim() == pytest.approx(
+            (min(ticks[0], 0.3 - margin), max(ticks[-1], 9.7 + margin))
+        )
     plt.close(fig)
 
 

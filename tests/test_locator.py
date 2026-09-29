@@ -148,9 +148,30 @@ def test_loose_pair_view_limits_cover_only_the_loose_end():
     ax.xaxis.set_major_locator(TalbotLocator(placement=("loose", "inside")))
     fig.canvas.draw()
     lo, hi = ax.get_xlim()
-    assert lo <= 0.3
-    assert lo == ax.xaxis.get_majorticklocs().min()
+    assert lo == pytest.approx(
+        min(ax.xaxis.get_majorticklocs().min(), 0.3 - 0.05 * 9.4)
+    )
     assert hi == pytest.approx(9.7 + 0.05 * 9.4)
+    plt.close(fig)
+
+
+# A tick past the data extends the view but never takes back the margin:
+# loose on 0..11 ticks 0 (the lowest value itself, whose marks a view
+# ending there would cut in half) and 12; flexible on 0.3..9.7 ticks 0
+# and 10, both inside the margin (calibrated at the default figure size).
+@pytest.mark.parametrize(
+    ("placement", "data", "view"),
+    [
+        ("loose", (0.0, 11.0), (-0.55, 12.0)),
+        ("flexible", (0.3, 9.7), (-0.17, 10.17)),
+    ],
+)
+def test_reaching_view_keeps_the_margin(placement, data, view):
+    fig, ax = plt.subplots()
+    ax.scatter([0.0, 1.0], data)
+    ax.yaxis.set_major_locator(TalbotLocator(placement=placement))
+    fig.canvas.draw()
+    assert ax.get_ylim() == pytest.approx(view)
     plt.close(fig)
 
 
@@ -731,7 +752,10 @@ def test_loose_view_follows_axis_length():
     ax.xaxis.set_major_locator(TalbotLocator(placement="loose"))
     fig.canvas.draw()
     ticks = ax.get_xticks()
-    assert tuple(ax.get_xlim()) == (ticks[0], ticks[-1])
+    margin = 0.05 * 9.4
+    assert ax.get_xlim() == pytest.approx(
+        (min(ticks[0], 0.3 - margin), max(ticks[-1], 9.7 + margin))
+    )
     plt.close(fig)
 
 
