@@ -21,11 +21,23 @@ function escapeHtml(value) {
 // is also sent as a wildcard: lunr ORs the two clauses, matching both
 // stemmed prose and an exact, unstemmed class name.
 function withPrefixes(query) {
-  return query.split(/\s+/).filter(function (term) {
+  return query.split(/\s+/).map(asIndexed).filter(function (term) {
     return term.length > 0;
   }).map(function (term) {
     return term.charAt(term.length - 1) === '*' ? term : term + ' ' + term + '*';
   }).join(' ');
+}
+
+// A reader types text, not lunr query syntax: `tol:orange` would name a
+// field, `~` and `^` demand a number, and a leading `+` or `-` makes a
+// term required or excluded. Each term is trimmed of non-word ends as
+// lunr's trimmer trimmed the indexed words, keeping a trailing `*`,
+// and what syntax remains inside it is escaped. A hyphen inside a term
+// stays bare, so the query splits there as the index did.
+function asIndexed(term) {
+  var wildcard = term.charAt(term.length - 1) === '*' ? '*' : '';
+  var word = term.replace(/^\W+/, '').replace(/\W+$/, '');
+  return word ? word.replace(/[:^~]/g, '\\$&') + wildcard : '';
 }
 
 var pageTitles = {};
@@ -78,15 +90,18 @@ searchWorker.onmessage = function (e) {
     // The index just became searchable: run whatever was typed while
     // it was still loading, instead of leaving the panel empty.
     ready = true;
-    if (searchInput.value.length > 0) searchWorker.postMessage({ query: withPrefixes(searchInput.value) });
+    var pending = withPrefixes(searchInput.value);
+    if (pending.length > 0) searchWorker.postMessage({ query: pending });
   }
 };
 
 searchInput.addEventListener('input', function () {
-  var query = this.value;
+  // A query of nothing but syntax trims to empty, and lunr would
+  // return every page for it.
+  var query = withPrefixes(this.value);
   if (query.length === 0) {
     document.getElementById("mkdocs-search-results").innerHTML = "";
   } else if (ready) {
-    searchWorker.postMessage({ query: withPrefixes(query) });
+    searchWorker.postMessage({ query: query });
   }
 });
