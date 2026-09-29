@@ -665,15 +665,34 @@ def _two_values_ax():
     return fig, ax
 
 
-def test_loose_frame_view_covers_a_fixed_tick_outside_the_data():
+def test_loose_frame_view_covers_the_fixed_ticks_bracketing_the_data():
+    # 7600 and 8000 bracket the data (7680..7938); 0 lies further out, a
+    # `feature` end's to reach, so the loose spine stops at 7600.
     fig, ax = _two_values_ax()
     range_frame(ax, frame="loose")
-    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7600, 7700, 8000]))
     fig.canvas.draw()
-    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
+    assert ax.spines["left"].get_bounds() == (7600.0, 8000.0)
     lo, hi = ax.get_ylim()
-    assert lo <= 0.0
-    assert hi >= 7938.0
+    assert lo <= 7600.0
+    assert hi >= 8000.0
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("mode", ["loose", "flexible"])
+def test_view_settles_under_a_locator_that_ticks_the_view(mode):
+    # MultipleLocator ticks the view plus one step past each edge; ending
+    # the spine on that outermost tick grew the view by a step every draw.
+    fig, ax = plt.subplots()
+    ax.plot([-10, 18], [0, 1])
+    ax.xaxis.set_major_locator(MultipleLocator(4))
+    range_frame(ax, frame=mode)
+    limits = []
+    for _ in range(3):
+        fig.canvas.draw()
+        limits.append(ax.get_xlim())
+    assert limits == [(-12.0, 20.0)] * 3
+    assert ax.spines["bottom"].get_bounds() == (-12.0, 20.0)
     plt.close(fig)
 
 
@@ -815,10 +834,10 @@ def test_feature_warns_once_across_draws(recwarn):
 def test_per_end_loose_frame_view_covers_a_fixed_tick_past_that_end():
     fig, ax = _two_values_ax()
     range_frame(ax, frame=("inside", ("loose", "data")))
-    ax.yaxis.set_major_locator(FixedLocator([0, 7680, 7938]))
+    ax.yaxis.set_major_locator(FixedLocator([0, 7600, 7700, 7938]))
     fig.canvas.draw()
-    assert ax.spines["left"].get_bounds() == (0.0, 7938.0)
-    assert ax.get_ylim()[0] <= 0.0
+    assert ax.spines["left"].get_bounds() == (7600.0, 7938.0)
+    assert ax.get_ylim()[0] <= 7600.0
     plt.close(fig)
 
 

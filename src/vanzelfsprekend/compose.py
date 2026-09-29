@@ -104,11 +104,13 @@ def range_frame(
         Where each spine ends. `'inside'`, `'flexible'` and `'loose'`
         end it at the outermost tick and differ in where that tick may
         fall: inside the data, either side of it as the tick search
-        prefers, or at or beyond it. `'data'` ends it at the exact data
-        minimum and maximum. `'feature'` ends it at the outermost mark
-        a `FixedLocator` sets on that axis (as `FeatureLocator`,
-        `SummaryLocator`, and `QuartileLocator` do, or as an
-        `AugmentedLocator`'s `.extra` side does), even when it lies
+        prefers, or at or beyond it. Over a locator you set, `'loose'`
+        and `'flexible'` stop at the tick nearest the data at or beyond
+        it; a tick further out is `'feature'`'s to reach. `'data'` ends
+        it at the exact data minimum and maximum. `'feature'` ends it at
+        the outermost mark a `FixedLocator` sets on that axis (as
+        `FeatureLocator`, `SummaryLocator`, and `QuartileLocator` do, or
+        as an `AugmentedLocator`'s `.extra` side does), even when it lies
         beyond the data. A tick or mark past the data grows the view to
         keep it on screen. `'flexible'` needs a linear axis and raises
         on a log or date axis. A tuple `(x_mode, y_mode)` sets the

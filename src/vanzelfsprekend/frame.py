@@ -574,11 +574,12 @@ def _frame_span(
             return datum
         if mode == "inside":
             return outer(inside) if inside else None
-        if mode == "flexible" or interval is None:
-            return outer(ticks)
-        # Loose over an injected interval: end at the drawn tick
-        # bounding it, since ticks inside the interval cannot bracket
-        # the data. Tolerance absorbs mizani's float dust.
+        # Loose or flexible: end at the tick nearest the data at or beyond
+        # it. A locator that ticks the view runs a step past it, and ending
+        # there would grow the view every draw; a tick further out is a
+        # `feature` end's to reach. A Talbot labeling holds at most one such
+        # tick per end, and a flexible end with none keeps its outermost,
+        # inside tick. Tolerance absorbs mizani's float dust.
         return nearest(beyond) if beyond else outer(ticks)
 
     lo = end(ends[0], dmin, min, max, [t for t in ticks if t <= dmin + tol])
