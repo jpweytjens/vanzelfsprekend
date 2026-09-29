@@ -53,15 +53,28 @@ def run_appliers(ax: Axes) -> bool:
     return changed
 
 
+def drawing(ax: Axes) -> bool:
+    """Whether `ax`'s appliers are running inside a draw, not at a call.
+
+    An entry point runs the appliers once at the call, before the caller
+    has finished setting the axes up; a check that only a finished figure
+    can fail, such as a mark still missing, waits for a draw.
+    """
+    state = get_state(ax)
+    return bool(state is not None and state.get("drawing"))
+
+
 def _make_on_draw(ax: Axes) -> Callable[[Event], None]:
     # `Event`, not `DrawEvent`: matplotlib 3.10's `mpl_connect` stub takes a
     # plain `Callable[[Event], Any]`, so a `DrawEvent` handler is rejected
     # under contravariance. The body only needs `Event.canvas`.
     def _on_draw(event: Event) -> None:
+        state = get_state(ax)
+        if state is not None:
+            state["drawing"] = True
         try:
             changed = run_appliers(ax)
         except Exception:
-            state = get_state(ax)
             if state is not None and not state.get("draw_warned"):
                 state["draw_warned"] = True
                 warnings.warn(
@@ -70,6 +83,9 @@ def _make_on_draw(ax: Axes) -> Callable[[Event], None]:
                     stacklevel=2,
                 )
             return
+        finally:
+            if state is not None:
+                state["drawing"] = False
         if changed:
             event.canvas.draw_idle()
 

@@ -769,9 +769,9 @@ def test_feature_per_end_tuple_sets_each_end_independently():
 def test_feature_spine_is_flush_by_default():
     fig, ax = _two_values_ax()
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
+    range_frame(ax, frame="feature")
     with pytest.warns(UserWarning, match="no FixedLocator"):
-        range_frame(ax, frame="feature")  # x-axis has no marks; y already does
-    fig.canvas.draw()
+        fig.canvas.draw()  # x-axis has no marks; y already does
     assert ax.spines["left"].get_position() == ("outward", 0.0)
     plt.close(fig)
 
@@ -779,26 +779,34 @@ def test_feature_spine_is_flush_by_default():
 def test_feature_is_a_valid_mode():
     fig, ax = _two_values_ax()
     ax.yaxis.set_major_locator(FixedLocator([7750, 7850]))
-    with pytest.warns(UserWarning, match="no FixedLocator"):
-        range_frame(ax, frame="feature")  # must not raise; x-axis has no marks
+    range_frame(ax, frame="feature")  # must not raise; x-axis has no marks
     plt.close(fig)
 
 
 def test_feature_without_marks_warns_and_falls_back_to_data(scatter_ax):
-    # frame_unit applies the frame once synchronously on install (as the
-    # symlog/categorical/3d "warns and is skipped" tests above rely on
-    # too), so with no FixedLocator ever set the fallback warning fires
-    # right here, not on the later draw.
+    # The call frames once before the caller could set marks, so the
+    # fallback warns only when a draw still finds none.
+    ax = range_frame(scatter_ax, frame="feature")  # plain Talbot, no marks
     with pytest.warns(UserWarning, match="no FixedLocator"):
-        ax = range_frame(scatter_ax, frame="feature")  # plain Talbot, no marks
-    ax.figure.canvas.draw()
+        ax.figure.canvas.draw()
     assert ax.spines["left"].get_bounds() == tuple(ax.yaxis.get_data_interval())
+
+
+def test_feature_marks_set_after_framing_draw_without_warning(recwarn):
+    # Framing runs once at the call, before marks set afterwards exist;
+    # only a draw that still finds none has anything to warn about.
+    fig, ax = _two_values_ax()
+    range_frame(ax, frame=("data", "feature"))
+    ax.yaxis.set_major_locator(FixedLocator([7600, 7938]))
+    fig.canvas.draw()
+    assert not [w for w in recwarn if "no FixedLocator" in str(w.message)]
+    assert ax.spines["left"].get_bounds() == (7600.0, 7938.0)
+    plt.close(fig)
 
 
 def test_feature_single_mark_warns_and_falls_back_to_data():
     fig, ax = _two_values_ax()
-    with pytest.warns(UserWarning, match="no FixedLocator"):
-        range_frame(ax, frame=("data", "feature"))
+    range_frame(ax, frame=("data", "feature"))
     ax.yaxis.set_major_locator(FixedLocator([7800]))  # one mark -> degenerate
     with pytest.warns(UserWarning, match="single feature mark"):
         fig.canvas.draw()
@@ -808,8 +816,7 @@ def test_feature_single_mark_warns_and_falls_back_to_data():
 
 def test_feature_over_reach_warns_with_shrink_factor():
     fig, ax = _two_values_ax()  # y span 7680..7938 -> data span 258
-    with pytest.warns(UserWarning, match="no FixedLocator"):
-        range_frame(ax, frame=("data", "feature"))
+    range_frame(ax, frame=("data", "feature"))
     ax.yaxis.set_major_locator(FixedLocator([7000, 7938]))  # 7000 is 680 below
     with pytest.warns(UserWarning, match="beyond the data"):
         fig.canvas.draw()

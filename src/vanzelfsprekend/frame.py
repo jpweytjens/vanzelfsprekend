@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from matplotlib.axis import Axis
 from matplotlib.ticker import FixedLocator, Locator, NullLocator
 
-from vanzelfsprekend.hook import add_applier, ensure_state, get_state
+from vanzelfsprekend.hook import add_applier, drawing, ensure_state, get_state
 from vanzelfsprekend.locator import (
     AugmentedLocator,
     BreaksLocator,
@@ -415,8 +415,9 @@ def _resolve_feature_ends(
 ) -> tuple[tuple[str, str], list[float] | None]:
     """Effective ends and marks for a spine with a `feature` end.
 
-    Replaces a `feature` end with `data` (warning once) when the axis has
-    no fixed marks, or when a single mark would collapse the spine. Warns
+    Replaces a `feature` end with `data` when the axis has no fixed marks
+    (warning once, at a draw, since marks may still be set after
+    framing), or when a single mark would collapse the spine. Warns
     once when a mark strays more than one data-span beyond the data.
     """
     warned = frame_state.setdefault("warned", set())
@@ -432,6 +433,10 @@ def _resolve_feature_ends(
         "data" if ends[1] == "feature" else ends[1],
     )
     if marks is None:
+        # Marks set after framing are not there yet at the call; only a
+        # draw that still finds none has anything to warn about.
+        if not drawing(ax):
+            return to_data, None
         warn(
             ("no_marks", name),
             f"frame='feature' but the {name}-axis has no FixedLocator "
