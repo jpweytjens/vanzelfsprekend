@@ -20,7 +20,7 @@ The same plotting calls twice, matplotlib's defaults on the left. The right pane
 
 It frames the data. The box becomes two spines, each ending at the last labelled tick inside its data, so a spine's end always carries a value. Between the ends the ticks fall on round numbers,[^talbot] chosen by a [locator](https://vanzelfsprekend.johannesweytjens.be/how-to/locators/) that reads the data rather than the view limits.
 
-It mutes the furniture. The spines, tick marks and labels go grey and the grid goes, so the data carry the only dark ink on the page. `vzs.apply(ax)` does these first two in one call.
+It mutes the furniture. The spines, tick marks and labels go grey and the grid goes, so the data carry the only dark ink on the page. `ax.vzs.apply()` does these first two in one call.
 
 It accents the features. A line is named where it ends instead of in a legend (`line_labels`), a point you name gets a label beside it in the plot (`label`), and a feature the locator already ticks, a peak or a median, gets its tick label pulled forward in colour (`accent`).
 
@@ -47,13 +47,13 @@ import vanzelfsprekend as vzs
 rng = np.random.default_rng(0)
 fig, ax = plt.subplots(figsize=(5, 3.5))
 ax.scatter(rng.uniform(0.3, 9.7, 60), rng.uniform(-3.2, 4.1, 60), s=12, color="0.2")
-vzs.apply(ax)
-vzs.xlabel(ax, "time (s)")
-vzs.ylabel(ax, "voltage")
+ax.vzs.apply()
+ax.vzs.set_xlabel("time (s)")
+ax.vzs.set_ylabel("voltage")
 fig.savefig("scatter.png", dpi=150, bbox_inches="tight")
 ```
 
-`apply` installs a draw hook that keeps the frame glued to the data through autoscaling and tick changes, and `restore(ax)` undoes it exactly.
+`apply` installs a draw hook that keeps the frame glued to the data through autoscaling and tick changes, and `ax.vzs.restore()` undoes it exactly.
 
 ## Documentation
 
