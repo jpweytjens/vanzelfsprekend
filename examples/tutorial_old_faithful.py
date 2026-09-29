@@ -11,10 +11,13 @@ import matplotlib
 
 matplotlib.use("Agg")
 
+# --8<-- [start:imports]
 import matplotlib.pyplot as plt
 import numpy as np
 
 import vanzelfsprekend as vzs
+
+# --8<-- [end:imports]
 
 FIGURES = Path(__file__).parents[1] / "docs" / "figures"
 

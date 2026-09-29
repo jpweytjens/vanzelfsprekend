@@ -9,6 +9,7 @@ Start with the scatter as matplotlib draws it, then add the frame and the labels
 ## Draw the data
 
 ```{.python}
+--8<-- "tutorial_old_faithful.py:imports"
 --8<-- "tutorial_old_faithful.py:data"
 ```
 
