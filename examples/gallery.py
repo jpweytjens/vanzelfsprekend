@@ -189,24 +189,24 @@ def old_faithful() -> None:
 
 
 def frame_modes() -> None:
-    """Render one warming record under the five frame modes."""
-    table = vzs.datasets.load("hadcrut5_annual")
-    year, anomaly = table["year"], table["anomaly_c"]
+    """Render the Challenger O-ring record under the five frame modes."""
+    table = vzs.datasets.load("challenger_o_rings")
+    temperature, damage = table["temperature_f"], table["damage_index"]
     # The three labelings on the top row, the two spine modes below.
     fig, axes = plt.subplots(2, 3, figsize=(9.5, 5))
     fig.subplots_adjust(hspace=0.55, wspace=0.4)
     axes.flat[5].remove()
     modes = ("inside", "flexible", "loose", "data", "feature")
     for ax, mode in zip(axes.flat[:5], modes, strict=True):
+        vzs.apply(
+            ax, frame=(("feature", "data"), "data") if mode == "feature" else mode
+        )
         if mode == "feature":
-            # Mark the 2 °C Paris target the record has not reached: the spine
-            # climbs to it while the low end stays at the data. Set the marks
-            # before apply so mute's ink cycle still colours the line below.
-            ax.yaxis.set_major_locator(vzs.FeatureLocator(year, anomaly, [0, 1, 2]))
-            vzs.apply(ax, frame=("data", ("data", "feature")))
-        else:
-            vzs.apply(ax, frame=mode)
-        ax.plot(year, anomaly)
+            # Mark the 26-29 °F forecast for the launch among the round ticks:
+            # the spine runs out to it, far colder than any flight before.
+            base = ax.xaxis.get_major_locator()
+            ax.xaxis.set_major_locator(vzs.AugmentedLocator(base, [28]))
+        ax.scatter(temperature, damage, s=12, color=vzs.palettes.DATA_INK)
         ax.set_title(f'frame="{mode}"', color=vzs.palettes.TEXT_INK)
     save(fig, "frame_modes")
 

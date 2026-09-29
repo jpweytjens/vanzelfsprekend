@@ -10,8 +10,8 @@ Every figure below the comparison comes from the [gallery script](https://github
 </figure>
 
 <figure markdown>
-![The same rising warming curve five times under the five frame modes, feature running the left spine up to a 2 °C mark beyond the data](figures/frame_modes.svg)
-<figcaption markdown>**One record, five frame modes.** [`inside`](how-to/frame-modes.md) ends the spines at the outermost ticks inside the data, `flexible` at ticks on whichever side of the data reads better, here the same as `inside`, and `loose` at round numbers bracketing the data with the spine standing off. `data` keeps the inside ticks and ends at the record's own extremes; `feature` ticks the marks you place instead and runs the left spine out to the 2 °C target the warming has not reached.</figcaption>
+![O-ring damage against launch temperature for the 23 flights before Challenger, five times under the five frame modes, feature running the bottom spine out to a 28 °F mark far colder than any flight](figures/frame_modes.svg)
+<figcaption markdown>**One record, five frame modes.** O-ring damage against launch temperature for the shuttle flights before Challenger, as [Tufte](https://www.edwardtufte.com/book/visual-explanations-images-and-quantities-evidence-and-narrative/) redrew them. [`inside`](how-to/frame-modes.md) ends the spines at the outermost ticks inside the data and strands the coldest, most damaged flight; `flexible` brackets the cold end and stops inside the warm one, and `loose` rounds out past the data with the spines standing off. `data` ends at the record's own extremes; `feature` adds the launch-morning forecast to the ticks and runs the bottom spine out to it, colder than any flight before.</figcaption>
 </figure>
 
 <figure markdown>
