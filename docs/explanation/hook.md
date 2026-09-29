@@ -6,7 +6,7 @@ A matplotlib call edits the axes once. `set_xlim` sets the limits and returns, a
 
 ## The order of your calls stops mattering
 
-Because the hook reads the axes at draw time, the order of your calls is mostly free. The [tick spacing figure](../how-to/tick-spacing.md) calls `apply` on an empty axes and plots afterwards; the frame meets the data when the figure is drawn. A `set_xlim` after `apply` crops the frame to the data left on screen, and a locator set after `apply` is read like any other ticks. A locator you set survives `apply` on a lone axes, before or after. Panels framed together take the frame's ticks at the call, the one order that matters, and the [locators how-to](../how-to/locators.md) states it.
+Because the hook reads the axes at draw time, the order of your calls is mostly free. The [tick spacing figure](../how-to/tick-spacing.md) calls `apply` on an empty axes and plots afterwards; the frame meets the data when the figure is drawn. A `set_xlim` after `apply` crops the frame to the data left on screen, and a locator set after `apply` is read like any other ticks. Locators on panels framed together are the one exception, which the [locators how-to](../how-to/locators.md) covers.
 
 ## The ticks follow the figure
 
