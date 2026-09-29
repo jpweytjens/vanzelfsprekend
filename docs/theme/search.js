@@ -47,6 +47,8 @@ fetch(joinUrl(base_url, "search/search_index.json"))
     data.docs.forEach(function (doc) {
       if (doc.location.indexOf('#') === -1) pageTitles[doc.location] = doc.title;
     });
+    titlesLoaded = true;
+    runPending();
   });
 
 function displayResults(results) {
@@ -80,18 +82,26 @@ function displayResults(results) {
 }
 
 var searchInput = document.getElementById('mkdocs-search-query');
-var ready = false;
+// Search waits for the page titles as well as the index, or a result
+// arriving first would head its group with a section title.
+var titlesLoaded = false;
+var indexLoaded = false;
+
+// Run whatever was typed while either was still loading, instead of
+// leaving the panel empty.
+function runPending() {
+  if (!(titlesLoaded && indexLoaded)) return;
+  var pending = withPrefixes(searchInput.value);
+  if (pending.length > 0) searchWorker.postMessage({ query: pending });
+}
 
 var searchWorker = new Worker(joinUrl(base_url, "search/worker.js"));
 searchWorker.postMessage({ init: true });
 searchWorker.onmessage = function (e) {
   if (e.data.results) displayResults(e.data.results);
   if (e.data.allowSearch) {
-    // The index just became searchable: run whatever was typed while
-    // it was still loading, instead of leaving the panel empty.
-    ready = true;
-    var pending = withPrefixes(searchInput.value);
-    if (pending.length > 0) searchWorker.postMessage({ query: pending });
+    indexLoaded = true;
+    runPending();
   }
 };
 
@@ -101,7 +111,7 @@ searchInput.addEventListener('input', function () {
   var query = withPrefixes(this.value);
   if (query.length === 0) {
     document.getElementById("mkdocs-search-results").innerHTML = "";
-  } else if (ready) {
+  } else if (titlesLoaded && indexLoaded) {
     searchWorker.postMessage({ query: query });
   }
 });
