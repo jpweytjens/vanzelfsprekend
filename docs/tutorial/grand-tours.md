@@ -56,7 +56,7 @@ Each race gets a column in the file and a row of `NaN` where no edition was held
 ```
 
 <figure markdown>
-![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, each y spine running from that race's slowest to its fastest winner with the median marked between, with gaps during the world wars](../figures/grand_tours_step_4.svg)
+![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, on one speed scale whose spines all run from the slowest winner of any race to the fastest, with each race's own slowest, median and fastest winner ticked along it and gaps during the world wars](../figures/grand_tours_step_4.svg)
 <figcaption markdown>Step four. Each race is named at the end of its line, in its jersey's colour, and the three legends go.</figcaption>
 </figure>
 
@@ -65,6 +65,8 @@ The colour is the jersey's: yellow, pink and red are the data here, not decorati
 ## What the frame says without a caption
 
 The y ticks answer the question a reader brings. Which race is fastest? The top ticks say so. Is the Giro's median higher than the Vuelta's? Two numbers, one glance. No round number sits between them to be read past.
+
+The spines answer a second question. There is one speed axis, drawn once per race, so every left spine has the same span, from the slowest winner of any race, the Giro's 23.4, to the fastest of any, the Tour's 43.4. Each race's own ticks sit on that span, and the spine past them belongs to the other races. The Giro's spine climbs on from its fastest winner at 41.9 to 43.4, because someone rode the Tour faster. The Vuelta's runs past its ticks at both ends, so it holds neither extreme. Where a tick sits at the spine's end, as the Tour's top tick and the Giro's bottom one do, that race holds the extreme for all three.
 
 The gaps are data too. Both world wars are holes in every record, because no race was run and the line is not interpolated across the years. The Vuelta starts late, in 1935, and its first decade is broken, which the frame reports by starting the line where the data starts rather than at a round 1900.
 

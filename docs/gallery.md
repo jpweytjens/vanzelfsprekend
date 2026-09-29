@@ -60,8 +60,8 @@ Every figure below the comparison comes from the [gallery script](https://github
 </figure>
 
 <figure markdown>
-![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, each y spine running from that race's slowest to its fastest winner with the median marked between, with gaps during the world wars](figures/grand_tours.svg)
-<figcaption markdown>**The grand tours.** [Small multiples](how-to/small-multiples.md) on one shared scale, each panel [ticked at its own race's slowest, median and fastest winner](how-to/locators.md). The wars are holes in every record and the Vuelta's broken start is its own story. The [tutorial](tutorial/grand-tours.md) reads it.</figcaption>
+![Three stacked panels of winners' average speeds at the Tour, Giro and Vuelta since 1903, each named at its line's end, on one speed scale whose spines all run from the slowest winner of any race to the fastest, with each race's own slowest, median and fastest winner ticked along it and gaps during the world wars](figures/grand_tours.svg)
+<figcaption markdown>**The grand tours.** [Small multiples](how-to/small-multiples.md) on one shared scale, each panel [ticked at its own race's slowest, median and fastest winner](how-to/locators.md). Every spine spans all three races, so one that runs past a panel's own ticks says another race had a slower or a faster winner. The wars are holes in every record and the Vuelta's broken start is its own story. The [tutorial](tutorial/grand-tours.md) reads it.</figcaption>
 </figure>
 
 <figure markdown>
