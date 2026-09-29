@@ -1,0 +1,29 @@
+# Space shuttle O-ring damage against launch temperature (deg F), the 23 flights
+# before Challenger. The damage index is a severity-weighted count of O-ring
+# erosion, heating and blow-by incidents. E. R. Tufte, Visual Explanations
+# (Cheshire, CT: Graphics Press, 1997). Via the Random Services Challenger data,
+# retrieved 2026-09-29 from https://www.randomservices.org/random/data/Challenger.html
+temperature_f,damage_index
+53,11
+57,4
+58,4
+63,2
+66,0
+67,0
+67,0
+67,0
+68,0
+69,0
+70,4
+70,0
+70,4
+70,0
+72,0
+73,0
+75,0
+75,4
+76,0
+76,0
+78,0
+79,0
+81,0

@@ -5,9 +5,10 @@ import vanzelfsprekend as vzs
 from vanzelfsprekend import datasets
 
 
-def test_names_are_the_eight_shipped_files():
+def test_names_are_the_nine_shipped_files():
     assert datasets.NAMES == (
         "anscombe",
+        "challenger_o_rings",
         "co2_stations_monthly",
         "grand_tour_speeds",
         "hadcrut5_annual",

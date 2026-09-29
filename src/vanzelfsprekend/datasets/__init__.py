@@ -4,6 +4,7 @@ Each is a CSV whose header comments name its source and licence;
 `describe` returns them and `load` reads the table. The names:
 
 - `anscombe`: Anscombe's quartet, four x,y sets with near-identical summary statistics.
+- `challenger_o_rings`: O-ring damage by launch temperature, flights before Challenger.
 - `co2_stations_monthly`: monthly mean CO2 at four stations.
 - `grand_tour_speeds`: winners' average speed per grand tour edition, gaps as `nan`.
 - `hadcrut5_annual`: annual global mean temperature anomaly, HadCRUT5.
