@@ -18,12 +18,4 @@ ax.yaxis.set_major_locator(vzs.AugmentedLocator(base, [8.51, 8.76]))
 
 Build it after `apply`, from the locator the frame installed. Built before, it would wrap matplotlib's default locator, which ticks the view rather than the data, and the frame would keep that. The added values can be a list or any of the fixed locators above, so a `FeatureLocator` brings its named features along, and [`accent`](accent.md) picks the added ticks out by value or by name. Under `frame="feature"` the spine runs between the added values and leaves the round numbers to the ticks. The [labour-income tutorial](../tutorial/labour-income.md) adds a component's two recovered levels, a tick at zero, and the months holiday pay and a bonus recur in this way.
 
-`SummaryLocator` and `FeatureLocator` read only the points matplotlib draws. A value that is `NaN`, infinite or masked is left out before your reducers or features run, so `np.argmax` finds a peak without its `nan` variant. `FeatureLocator` leaves out the whole pair when either coordinate is missing, and that has one cost: a `NaN` placed to break a line no longer separates its segments. A feature that compares neighbours, such as where a curve falls through a level, would see the jump across the gap as a crossing. `skipna=False` hands such a feature every pair as given, the gap included:
-
-```python
-def falls_through_half(x, y):
-    return x[1:][(y[:-1] >= 0.5) & (y[1:] < 0.5)]
-
-
-ax.xaxis.set_major_locator(vzs.FeatureLocator(x, y, [falls_through_half], skipna=False))
-```
+`SummaryLocator` and `FeatureLocator` read only the points matplotlib draws: a `NaN`, infinite or masked value is left out before your reducers or features run, so `np.argmax` needs no `nan` variant. A feature that relies on the `NaN`s themselves, to see where a line breaks, takes `skipna=False`.
