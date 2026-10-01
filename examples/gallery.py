@@ -91,7 +91,7 @@ def grand_tours() -> None:
     )
     for ax, speeds in speeds_of.items():
         ax.yaxis.set_major_locator(
-            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+            vzs.SummaryLocator(speeds, [np.min, np.median, np.max])
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
     for ax in axes:

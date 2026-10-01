@@ -99,7 +99,7 @@ def main() -> None:
     # --8<-- [start:step3]
     for ax, speeds in zip(axes, speeds_of.values(), strict=True):
         ax.yaxis.set_major_locator(
-            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+            vzs.SummaryLocator(speeds, [np.min, np.median, np.max])
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
     # --8<-- [end:step3]
@@ -117,7 +117,7 @@ def main() -> None:
     )
     for ax, speeds in zip(axes, speeds_of.values(), strict=True):
         ax.yaxis.set_major_locator(
-            vzs.SummaryLocator(speeds, [np.nanmin, np.nanmedian, np.nanmax])
+            vzs.SummaryLocator(speeds, [np.min, np.median, np.max])
         )
         ax.yaxis.set_major_formatter("{x:.1f}")
     # --8<-- [start:step4]

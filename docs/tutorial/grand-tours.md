@@ -45,7 +45,7 @@ Each race gets a column in the file and a row of `NaN` where no edition was held
 <figcaption markdown>Step three. The round numbers give way to three numbers per race: its slowest winner, its median and its fastest.</figcaption>
 </figure>
 
-`SummaryLocator` reduces one axis's own values, here with `nanmin`, `nanmedian` and `nanmax`, so each panel is ticked by its own race while the scale behind it stays common to all three.[^shared] Read the ticks straight down and the question a reader brings is answered: which race is fastest, and by how much.
+`SummaryLocator` reduces one axis's own values, here with NumPy's `min`, `median` and `max`, so each panel is ticked by its own race while the scale behind it stays common to all three.[^shared] The `NaN` rows of the years without a race are left out before the reducers run, as the line leaves them out, so the reducers need no `nan` variants. Read the ticks straight down and the question a reader brings is answered: which race is fastest, and by how much.
 
 [^shared]: Because the scale is shared, the comparison is on the page as well as in the numbers: the Tour's top tick sits higher than the Giro's, and the gap between them is to scale.
 
