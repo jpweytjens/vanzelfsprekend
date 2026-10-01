@@ -643,6 +643,31 @@ def test_feature_locator_reads_masked_values_as_nan():
     np.testing.assert_allclose(locator(), [2.0])
 
 
+def test_feature_locator_drops_pairs_matplotlib_does_not_draw():
+    x = np.array([0.0, 1.0, np.nan, 3.0, 4.0])
+    y = np.array([0.0, np.nan, 9.0, np.inf, 1.0])
+    locator = FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])
+    np.testing.assert_allclose(locator(), [4.0])
+
+
+def test_feature_locator_without_skipna_keeps_a_line_break():
+    x = np.array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0])
+    y = np.array([0.0, 1.0, np.nan, 0.0, 1.0, 0.0])
+
+    def falls_through_half(x, y):
+        return x[1:][(y[:-1] >= 0.5) & (y[1:] < 0.5)]
+
+    np.testing.assert_allclose(FeatureLocator(x, y, [falls_through_half])(), [3.0, 5.0])
+    kept = FeatureLocator(x, y, [falls_through_half], skipna=False)
+    np.testing.assert_allclose(kept(), [5.0])
+
+
+@pytest.mark.parametrize("y", [[], [np.nan, np.inf]])
+def test_feature_locator_without_finite_pairs_raises(y):
+    with pytest.raises(ValueError, match="finite"):
+        FeatureLocator(np.zeros(len(y)), y, [0])
+
+
 def test_feature_locator_marks_the_peak_on_axes():
     fig, ax = plt.subplots()
     x, y = _lorentzian_peak()

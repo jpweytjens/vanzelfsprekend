@@ -848,14 +848,14 @@ class FeatureLocator(FixedLocator):
     resonance plot labels the peak with
     `FeatureLocator(x, y, [lambda x, y: x[np.argmax(y)]])`.
 
-    The arrays are captured at construction. The features' results are
-    flattened, non-finite positions dropped, and coincident positions
-    collapsed to a single tick, since a tick cannot show multiplicity.
-    Inputs are not cleaned: a feature over arbitrary `(x, y)` has no
-    universal non-finite policy, so the feature owns it (use
-    `np.nanargmax`, or filter the pair first). Tick labels follow the
-    axis formatter; pass a format string such as
-    `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
+    The arrays are captured at construction. A feature reads the points
+    matplotlib draws: a pair with a non-finite or masked coordinate is
+    dropped first, so `np.argmax` needs no `nan` variant. The features'
+    results are flattened, non-finite positions dropped, and coincident
+    positions collapsed to a single tick, since a tick cannot show
+    multiplicity. Tick labels follow the axis formatter; pass a format
+    string such as `ax.xaxis.set_major_formatter("{x:.1f}")` to round
+    them.
 
     Parameters
     ----------
@@ -866,11 +866,17 @@ class FeatureLocator(FixedLocator):
         the labelled axis. A plain number (or array) is taken as a fixed
         position, so a constant baseline can sit beside a computed
         feature, as in `[0, lambda x, y: y.max()]`.
+    skipna : bool, default True
+        Drop the pairs matplotlib does not draw before the features run.
+        `False` passes them through, for a feature that compares
+        neighbours across a NaN that breaks a line: dropping would join
+        the segments, and a crossing could appear in the gap.
 
     Raises
     ------
     ValueError
-        If the features yield no finite position.
+        If `skipna` leaves no finite pair, or the features yield no
+        finite position.
     """
 
     def __init__(
@@ -879,9 +885,14 @@ class FeatureLocator(FixedLocator):
         y: ArrayLike,
         features: Sequence[Callable[..., ArrayLike] | ArrayLike]
         | Mapping[str, Callable[..., float] | float],
+        *,
+        skipna: bool = True,
     ) -> None:
-        xs = _unmasked(x)
-        ys = _unmasked(y)
+        xs, ys = _unmasked(x), _unmasked(y)
+        if skipna:
+            xs, ys = _finite_pairs(xs, ys)
+            if xs.size == 0:
+                raise ValueError("data has no finite (x, y) pairs")
         positions, names = _named_positions(features, xs, ys)
         super().__init__(positions)
         self._feature_names = names
@@ -900,8 +911,9 @@ class SummaryLocator(FixedLocator):
     single-axis special case of `FeatureLocator`: a reducer is a
     feature that ignores the other axis, so both funnel through the
     same flatten, drop-non-finite, and collapse-coincident pipeline.
-    Unlike `FeatureLocator`, the input is cleaned first: non-finite
-    and masked values are dropped before the reducers run. Tick labels follow the
+    As in `FeatureLocator`, non-finite and masked values are dropped
+    before the reducers run; a summary ignores order, so there is no
+    line break to keep and no `skipna` to turn it off. Tick labels follow the
     axis formatter; pass a format string such as
     `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
 
@@ -1077,6 +1089,16 @@ def _unmasked(values: ArrayLike) -> np.ndarray:
     Matplotlib does not draw a masked value, so neither does a mark.
     """
     return np.ma.filled(np.ma.asarray(values, dtype=float), np.nan).ravel()
+
+
+def _finite_pairs(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Return the `(x, y)` pairs whose coordinates are both finite.
+
+    These are the points matplotlib draws, and what a feature reads,
+    whether it places a tick or anchors a label.
+    """
+    drawn = np.isfinite(x) & np.isfinite(y)
+    return x[drawn], y[drawn]
 
 
 def _named_positions(

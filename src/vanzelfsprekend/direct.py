@@ -26,6 +26,7 @@ from matplotlib.typing import ColorType
 from vanzelfsprekend import placement
 from vanzelfsprekend.hook import add_applier, ensure_state, get_state, run_appliers
 from vanzelfsprekend.lines import _ink_rise, _reject_color_kwarg, _resolve_colors
+from vanzelfsprekend.locator import _finite_pairs
 
 Side = Literal["right", "left", "above", "below"]
 Feature = Callable[[np.ndarray, np.ndarray], float]
@@ -142,10 +143,10 @@ def _resolve(helper: Helper | None, artist: Artist) -> Fixed | None:
     if isinstance(feature, float | int):
         return (which, feature)
     points = _points(artist)
-    finite = points[np.isfinite(points).all(axis=1)]
-    if not len(finite):
+    x, y = _finite_pairs(points[:, 0], points[:, 1])
+    if not x.size:
         return (which, np.nan)
-    return (which, float(feature(finite[:, 0], finite[:, 1])))
+    return (which, float(feature(x, y)))
 
 
 def _anchor(ax: Axes, artist: Artist, helper: Fixed | None) -> tuple[float, float]:

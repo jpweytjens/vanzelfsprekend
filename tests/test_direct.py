@@ -400,6 +400,17 @@ def test_label_feature_bypasses_the_axis_units():
     plt.close(fig)
 
 
+def test_label_feature_reads_only_the_drawn_points():
+    fig, ax = plt.subplots()
+    x = np.array([0.0, 1.0, np.nan, 3.0, 4.0])
+    y = np.array([0.0, np.nan, 9.0, 2.0, 1.0])
+    ax.plot(x, y, label="series")
+    (text,) = vzs.label(ax, "series", x=lambda x, y: x[np.argmax(y)], side="right")
+    fig.canvas.draw()
+    assert text.xy == pytest.approx((3.0, 2.0))
+    plt.close(fig)
+
+
 def test_label_feature_re_resolves_on_every_draw():
     fig, ax = plt.subplots()
     x = np.arange(10.0)
