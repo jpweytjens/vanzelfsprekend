@@ -636,6 +636,13 @@ def test_feature_locator_without_finite_positions_raises():
         FeatureLocator([0.0, 1.0], [0.0, 1.0], [lambda x, y: np.nan])
 
 
+def test_feature_locator_reads_masked_values_as_nan():
+    x = np.array([0.0, 1.0, 2.0])
+    y = np.ma.array([0.0, 9.0, 4.0], mask=[False, True, False])
+    locator = FeatureLocator(x, y, [lambda x, y: x[np.nanargmax(y)]])
+    np.testing.assert_allclose(locator(), [2.0])
+
+
 def test_feature_locator_marks_the_peak_on_axes():
     fig, ax = plt.subplots()
     x, y = _lorentzian_peak()
@@ -665,6 +672,12 @@ def test_summary_locator_flattens_array_valued_reducers():
 
 def test_summary_locator_ignores_non_finite_values():
     locator = SummaryLocator([0.0, np.nan, 2.0, np.inf, 4.0], [np.min, np.max])
+    np.testing.assert_allclose(locator(), [0.0, 4.0])
+
+
+def test_summary_locator_ignores_masked_values():
+    values = np.ma.array([0.0, 9.0, 4.0], mask=[False, True, False])
+    locator = SummaryLocator(values, [np.min, np.max])
     np.testing.assert_allclose(locator(), [0.0, 4.0])
 
 

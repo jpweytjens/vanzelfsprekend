@@ -880,8 +880,8 @@ class FeatureLocator(FixedLocator):
         features: Sequence[Callable[..., ArrayLike] | ArrayLike]
         | Mapping[str, Callable[..., float] | float],
     ) -> None:
-        xs = np.asarray(x, dtype=float).ravel()
-        ys = np.asarray(y, dtype=float).ravel()
+        xs = _unmasked(x)
+        ys = _unmasked(y)
         positions, names = _named_positions(features, xs, ys)
         super().__init__(positions)
         self._feature_names = names
@@ -901,7 +901,7 @@ class SummaryLocator(FixedLocator):
     feature that ignores the other axis, so both funnel through the
     same flatten, drop-non-finite, and collapse-coincident pipeline.
     Unlike `FeatureLocator`, the input is cleaned first: non-finite
-    values are dropped before the reducers run. Tick labels follow the
+    and masked values are dropped before the reducers run. Tick labels follow the
     axis formatter; pass a format string such as
     `ax.xaxis.set_major_formatter("{x:.1f}")` to round them.
 
@@ -925,7 +925,7 @@ class SummaryLocator(FixedLocator):
         reducers: Sequence[Callable[..., ArrayLike] | ArrayLike]
         | Mapping[str, Callable[..., float] | float],
     ) -> None:
-        vals = np.asarray(values, dtype=float).ravel()
+        vals = _unmasked(values)
         vals = vals[np.isfinite(vals)]
         if vals.size == 0:
             raise ValueError("data has no finite values")
@@ -1069,6 +1069,14 @@ def _tick_positions(
     # tolist: FixedLocator's stub wants Sequence[float], which an ndarray
     # does not satisfy structurally.
     return np.unique(values).tolist()
+
+
+def _unmasked(values: ArrayLike) -> np.ndarray:
+    """Return `values` as a flat float array with masked entries as NaN.
+
+    Matplotlib does not draw a masked value, so neither does a mark.
+    """
+    return np.ma.filled(np.ma.asarray(values, dtype=float), np.nan).ravel()
 
 
 def _named_positions(
