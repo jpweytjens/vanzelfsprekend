@@ -10,7 +10,7 @@ legible as three lines down to 16 px.
 
     uv run icon/make_icon.py
     # writes icon/vanzelfsprekend-plotted.svg + .png
-    # and docs/theme/favicon.svg + favicon.ico
+    # and docs/theme/favicon.svg + favicon.ico + apple-touch-icon.png
 """
 
 import io
@@ -40,6 +40,9 @@ COLORS = (
 FAVICON_SPREAD = 0.09  # minor extra gap between the lines; keeps the fan
 FAVICON_LINE_WIDTH = 36.0  # fat strokes survive rasterisation at tab size
 FAVICON_ICO_SIZES = (16, 32, 48)  # sizes bundled into the .ico fallback
+TOUCH_ICON_SIZE = 180  # px; the size iOS asks for on a home screen
+TOUCH_ICON_MARK = 0.8  # share of the side the mark fills, clear of the corners
+TOUCH_ICON_GROUND = "#fbfbfb"  # the docs' light --ground in style.css
 
 
 def rise_shapes(x: np.ndarray) -> list[np.ndarray]:
@@ -75,10 +78,13 @@ def favicon_series() -> tuple[np.ndarray, list[np.ndarray]]:
 
 
 def make_favicon() -> None:
-    """Render the favicon to docs/theme/favicon.svg and favicon.ico.
+    """Render the favicon and touch icon into docs/theme.
 
-    No frame, ticks or labels: three fat round-capped lines that read at
-    tab size.
+    Writes favicon.svg, favicon.ico and apple-touch-icon.png. No frame,
+    ticks or labels: three fat round-capped lines that read at tab size.
+    The touch icon sets the same mark on an opaque ground, since
+    iOS fills transparency with black, and smaller, since it rounds the
+    corners off.
     """
     mpl.rcParams.update({"figure.facecolor": "none", "axes.facecolor": "none"})
     fig, ax = plt.subplots(figsize=(SIZE_IN, SIZE_IN))
@@ -109,9 +115,15 @@ def make_favicon() -> None:
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=100, transparent=True)
     buf.seek(0)
-    Image.open(buf).convert("RGBA").save(
-        THEME / "favicon.ico", sizes=[(s, s) for s in FAVICON_ICO_SIZES]
-    )
+    mark = Image.open(buf).convert("RGBA")
+    mark.save(THEME / "favicon.ico", sizes=[(s, s) for s in FAVICON_ICO_SIZES])
+
+    side = round(TOUCH_ICON_SIZE * TOUCH_ICON_MARK)
+    inset = (TOUCH_ICON_SIZE - side) // 2
+    touch = Image.new("RGBA", (TOUCH_ICON_SIZE, TOUCH_ICON_SIZE), TOUCH_ICON_GROUND)
+    small = mark.resize((side, side), Image.Resampling.LANCZOS)
+    touch.alpha_composite(small, (inset, inset))
+    touch.convert("RGB").save(THEME / "apple-touch-icon.png")
     plt.close(fig)
 
 
