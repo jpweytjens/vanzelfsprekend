@@ -154,6 +154,25 @@ nav a:hover, nav a.current:hover { color: var(--link-hover); }
 }
 .sidenote p { display: inline; margin: 0; }
 
+/* The marker that opens a folded sidenote on narrow screens, which
+   sidenotes.js puts in the number's place. It is drawn as the copy
+   button's icon is, but in the quieter ink: it stands in the text on every
+   phone, where the link colour would pull the eye from the words. The
+   icon's square spans 3 to 21 of its 24 units, so the box is sized and
+   lowered for the square itself to stand on the baseline and reach the
+   ascender. An invisible pad around it makes a target a thumb can find. */
+.note-toggle {
+  display: none; position: relative;
+  width: 0.99em; height: 0.99em; margin: 0 -0.04em 0 0.1em; padding: 0;
+  vertical-align: -0.125em;
+  background: none; border: 0; color: var(--ink-soft); cursor: pointer;
+}
+.note-toggle::after { content: ""; position: absolute; inset: -0.7rem -0.45rem; }
+/* A tap leaves :hover behind on a touch screen, so only a pointer that can
+   hover gets the hover colour. */
+@media (hover: hover) { .note-toggle:hover { color: var(--link-hover); } }
+.note-toggle svg { display: block; width: 100%; height: 100%; }
+
 /* Figures */
 figure { margin: 2rem 0; display: flow-root; }
 figure svg, figure img { display: block; width: 100%; height: auto; }
@@ -333,6 +352,14 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
 @media (max-width: 1000px) {
   .page { padding: 1.5rem 1.25rem 3rem; }
   .sidenote { float: none; display: block; width: auto; margin: 0.5rem 0 0.9rem 1.5rem; }
+  /* With the script, the marker stands for the number, and a note waits
+     below its paragraph, folded until its marker opens it, close under the
+     text it belongs to. The number still counts, unseen, so the wide
+     layout's numbers hold. */
+  .note-toggle { display: inline-block; }
+  .sidenote-number:has(+ .note-toggle)::after, .sidenote.foldable::before { content: none; }
+  .sidenote.folded { display: none; }
+  p + .sidenote { margin-top: -0.4rem; }
   /* No sidenote column to seat the box in, so it wraps under the nav. */
   .masthead { grid-template-columns: 1fr; row-gap: 0.6rem; }
   pre { width: auto; max-width: 100%; margin-left: 0; }
