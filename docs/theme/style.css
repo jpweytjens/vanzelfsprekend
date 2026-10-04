@@ -273,7 +273,7 @@ pre {
   opacity: 0; transition: opacity 0.15s;
 }
 .highlight:hover > .copy, .highlight > .copy:focus-visible, .highlight > .copy.copied { opacity: 1; }
-.highlight > .copy:hover { color: var(--link-hover); }
+@media (hover: hover) { .highlight > .copy:hover { color: var(--link-hover); } }
 .highlight > .copy.copied { color: var(--link); }
 @media (hover: none) { .highlight > .copy { opacity: 1; } }
 
