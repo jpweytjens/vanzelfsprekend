@@ -60,4 +60,4 @@ Only the ratios matter, so raising one entry is the same edit as lowering the re
 
 If the spine ends are what you want rather than a labelling that happens to reach them, `frame="data"` puts them there and leaves the ticks alone. The [frame modes how-to](frame-modes.md) has the modes side by side.
 
-[^adhoc]: "To some extent, our proposed optimization components and the chosen weights are ad hoc." Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043.
+[^adhoc]: "To some extent, our proposed optimization components and the chosen weights are ad hoc." Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](https://web.archive.org/web/20190608162515id_/http://vis.stanford.edu/files/2010-TickLabels-InfoVis.pdf), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043.

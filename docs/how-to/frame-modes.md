@@ -56,6 +56,6 @@ ax.yaxis.set_major_locator(vzs.FeatureLocator(...))
 ax.vzs.apply(frame=("data", "feature"))
 ```
 
-[^labelings]: Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](http://vis.stanford.edu/papers/tick-labels), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043. Their search requires every labeling to fill the data, so no further tick at the same step would fit inside it; `inside`, `flexible` and `loose` add only the constraint on the outermost ticks.
+[^labelings]: Justin Talbot, Sharon Lin and Pat Hanrahan, ["An Extension of Wilkinson's Algorithm for Positioning Tick Labels on Axes"](https://web.archive.org/web/20190608162515id_/http://vis.stanford.edu/files/2010-TickLabels-InfoVis.pdf), *IEEE Transactions on Visualization and Computer Graphics* 16, no. 6 (2010): 1036-1043. Their search requires every labeling to fill the data, so no further tick at the same step would fit inside it; `inside`, `flexible` and `loose` add only the constraint on the outermost ticks.
 
 [^challenger]: Edward R. Tufte, [*Visual Explanations*](https://www.edwardtufte.com/book/visual-explanations-images-and-quantities-evidence-and-narrative/) (Graphics Press, 1997), whose Challenger chapter redraws the engineers' evidence as this scatter and marks the forecast. The damage index is his, a severity-weighted count of O-ring erosion, heating and blow-by.
