@@ -26,6 +26,16 @@ jobs:
       - run: uv run examples/tutorial_old_faithful.py
       - run: uv run examples/tutorial_income.py
       - run: uv run mkdocs build --strict
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+      - run: gem install html-proofer -v '~> 5.0' --no-document
+      # Links, images, scripts and the favicon in the built site.
+      - name: Check links and images
+        run: >-
+          htmlproofer site
+          --disable-external
+          --checks Links,Images,Scripts,Favicon
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
