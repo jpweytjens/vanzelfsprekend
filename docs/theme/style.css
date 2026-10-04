@@ -67,7 +67,10 @@ body { margin: 0; }
 .page { max-width: 1100px; padding: 2.5rem 4rem 4rem; }
 article { max-width: 66ch; }
 p { margin: 0 0 1.1rem; text-wrap: pretty; }
-h1, h2, h3 { text-wrap: balance; line-height: 1.25; }
+/* A long title fills its lines like the text below it, sparing only a lone
+   last word; balanced lines would stop short of the paragraph's edge and
+   read as a mistake. */
+h1, h2, h3 { text-wrap: pretty; line-height: 1.25; }
 h1 { font-size: 1.6rem; font-weight: 700; margin: 2.2rem 0 0.3rem; }
 h2 { font-size: 1.25rem; font-weight: 700; font-style: italic; margin: 2.6rem 0 0.6rem; }
 h3 { font-size: 1.0625rem; font-weight: 600; font-style: italic; margin: 1.8rem 0 0.4rem; }
