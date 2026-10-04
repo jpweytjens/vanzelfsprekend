@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% if page.title and not page.is_homepage %}{{ page.title }} · {% endif %}{{ config.site_name }}</title>
   {% if config.site_description %}<meta name="description" content="{{ config.site_description }}">{% endif %}
+  <link rel="canonical" href="{{ page.canonical_url }}">
+  <!-- Link previews: what Slack, Bluesky and LinkedIn show for a shared page -->
+  <meta property="og:title" content="{% if page.title and not page.is_homepage %}{{ page.title }}{% else %}{{ config.site_name }}{% endif %}">
+  {% if config.site_description %}<meta property="og:description" content="{{ config.site_description }}">{% endif %}
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:image" content="{{ config.site_url }}apple-touch-icon.png">
+  <meta name="twitter:card" content="summary">
   <link rel="icon" href="{{ 'favicon.svg' | url }}" type="image/svg+xml">
   <link rel="icon" href="{{ 'favicon.ico' | url }}" sizes="32x32">
   <link rel="apple-touch-icon" href="{{ 'apple-touch-icon.png' | url }}">
