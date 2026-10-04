@@ -262,7 +262,7 @@ pre {
    so its corner is the code's. It shows on hover or keyboard focus, and
    always on screens that cannot hover. It is a bare icon in the link
    colour, since it can be pressed. */
-.highlight:has(> .copy) { position: relative; width: max-content; max-width: calc(100% + 45%); }
+.highlight:has(> .copy) { position: relative; width: max-content; max-width: calc(100% + 45% + 1.5rem); /* the pre's own cap, past its indent */ }
 .highlight:has(> .copy) > pre { width: auto; max-width: none; padding-right: 2.6rem; }
 .highlight > .copy {
   position: absolute; top: 0; right: 0;
