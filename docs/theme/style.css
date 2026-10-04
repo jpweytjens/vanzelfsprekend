@@ -236,6 +236,28 @@ pre {
 }
 .highlight { background: none; }
 
+/* The copy button sits in the block's top-right corner, in padding kept
+   free for it, so it never covers the first line. It hangs from the block's
+   wrapper rather than the pre, since a pre that scrolls sideways would carry
+   the button off with its code; the wrapper takes the pre's width instead,
+   so its corner is the code's. It shows on hover or keyboard focus, and
+   always on screens that cannot hover. It is a bare icon in the link
+   colour, since it can be pressed. */
+.highlight:has(> .copy) { position: relative; width: max-content; max-width: calc(100% + 45%); }
+.highlight:has(> .copy) > pre { width: auto; max-width: none; padding-right: 2.6rem; }
+.highlight > .copy {
+  position: absolute; top: 0; right: 0;
+  display: flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; padding: 0;
+  background: none; border: 0; border-radius: 4px;
+  color: var(--link); cursor: pointer;
+  opacity: 0; transition: opacity 0.15s;
+}
+.highlight:hover > .copy, .highlight > .copy:focus-visible, .highlight > .copy.copied { opacity: 1; }
+.highlight > .copy:hover { color: var(--link-hover); }
+.highlight > .copy.copied { color: var(--link); }
+@media (hover: none) { .highlight > .copy { opacity: 1; } }
+
 /* mkdocstrings (markup verified: material templates under a nameless theme)
    Each rank gets its own instrument rather than a wider gap: a size for the
    member name, an indent for the signature and the arguments it takes, air
@@ -316,6 +338,7 @@ p:has(> .doc-section-title) { margin: 1.9rem 0 0.35rem; }
   pre { width: auto; max-width: 100%; margin-left: 0; }
   /* No sidenote margin to borrow, so the colours wrap in the measure. */
   .palettes { width: 100%; max-width: 100%; }
+  .highlight:has(> .copy) { max-width: 100%; }
   /* The class rule beats the bare pre above it, so the signature needs
      naming to go flush with the rest of the code. */
   .doc-signature pre { margin-left: 0; }
